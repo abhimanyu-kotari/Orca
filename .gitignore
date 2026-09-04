@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.DS_Store
+venv/
+.venv/
+env/
+ENV/
+.agents/
+.claude/
+.dist/
+memory/chroma_db/
+data/shapefiles/*.zip
+
