@@ -132,23 +132,47 @@ div[data-testid="stRadio"],
 }
 
 /* Clean, simple horizontal persona selector buttons */
-div[role="radiogroup"] {
-    justify-content: center !important;
-}
 .stRadio > label,
 div[data-testid="stRadio"] > label {
     display: none !important;
 }
-div[data-testid="stRadio"] > div[role="radiogroup"] {
+
+/* Force the outer Streamlit radio container to stretch across the screen and center its contents */
+div.stRadio,
+div[data-testid="stRadio"] {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+/* Force the inner radiogroup to center the buttons */
+div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
-    gap: 12px !important;
-    width: 100% !important;
-    align-items: center !important;
     justify-content: center !important;
+    width: 100% !important;
+    max-width: 900px !important; /* Keeps the buttons from looking weirdly stretched on ultra-wide monitors */
+    margin: 0 auto !important;
+    gap: 12px !important;
+    align-items: center !important;
 }
-div[data-testid="stRadio"] [data-baseweb="radio"],
-div[data-testid="stRadio"] label {
+
+/* Ensure the buttons themselves are equal sizes */
+div[role="radiogroup"] > label {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: #FFFFFF !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    margin: 0 !important;
+    text-align: center !important;
+}
+div[data-testid="stRadio"] [data-baseweb="radio"] {
     flex: 1 1 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -1866,19 +1890,41 @@ with sticky_persona_container:
         background-color: #F8FAFC !important;
         padding-bottom: 10px !important;
         border-bottom: 1px solid #E2E8F0 !important;
+        width: 100% !important;
     }
     div.st-key-sticky_persona_container div[data-testid="stRadio"] {
         border-bottom: none !important;
     }
-    /* Center the radio buttons */
+
+    /* Force the outer Streamlit radio container to stretch across the screen and center its contents */
+    div.stRadio {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+
+    /* Force the inner radiogroup to center the buttons */
     div[role="radiogroup"] {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+        max-width: 900px !important; /* Keeps the buttons from looking weirdly stretched on ultra-wide monitors */
+        margin: 0 auto !important;
+    }
+
+    /* Ensure the buttons themselves are equal sizes */
+    div[role="radiogroup"] > label {
+        flex: 1 !important;
+        display: flex !important;
         justify-content: center !important;
     }
+
     /* Hide label fallback */
     .stRadio > label,
     div[data-testid="stRadio"] > label {
         display: none !important;
     }
+
     /* Fallback directly on .stRadio if container wrapper is not matched */
     div[data-testid="stRadio"]:not(div.st-key-sticky_persona_container div[data-testid="stRadio"]),
     .stRadio:not(div.st-key-sticky_persona_container .stRadio) {
