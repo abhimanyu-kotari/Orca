@@ -754,19 +754,22 @@ def render_fisherman_response(
     container=None,
 ) -> None:
     """
-    Fisherman dashboard — enterprise-polished safety-first layout.
+    Fisherman dashboard — decluttered safety-first layout with progressive disclosure.
 
-    Layout:
-      1. Sea Safety Status Card (HTML gradient card with metric row)
-      2. Recommended Fishing Zones (2-col zone cards)
-      3. Interactive Map (prominent)
-      4. Safe Route Card (dark gradient + CTA)
-      5. Areas to Avoid (hazard chips)
-      6. Ask ORCA language panel
-      7. Why ORCA recommends this (evidence drawer expander)
-      8. Data trust badge
+    Default View:
+      1. Sea Safety Status Card (verdict banner with key marine metrics)
+      2. Brief 1-2 sentence AI summary / synthesis
+      3. Interactive Folium Map
+
+    Progressive Disclosure (Collapsed Expanders):
+      - 📍 View Fishing Zones & Route Details:
+          * Recommended Fishing Zones (compact table)
+          * Fuel-Optimal Navigation Summary (Route Card + Waypoints)
+          * Areas to Avoid (hazard chips)
+      - 🔬 Why ORCA Recommends This (evidence chain & telemetry table)
+      - Data Trust Badge
     """
-    import datetime
+    import datetime, pandas as pd
     ctx = container if container is not None else st
 
     weather_res   = result.get("weather_result")
@@ -782,7 +785,7 @@ def render_fisherman_response(
         verdict = weather_res.get("verdict", "SAFE")
         m_wx    = weather_res.get("key_metrics", {})
 
-    # ── 1. Sea Safety Status Card ─────────────────────────────────────────────
+    # ── 1. Sea Safety Status Card (Default View) ─────────────────────────────
     now_str      = datetime.datetime.now().strftime("%d %b %Y • %H:%M IST")
     location_str = (weather_res.get("location", "N/A") if weather_res
                     else (pfz_res.get("location", "N/A") if pfz_res else "N/A"))
@@ -834,69 +837,81 @@ def render_fisherman_response(
     if is_suspended and m_wx.get("lightning_hazard"):
         ctx.error(f"⚡ Lightning Hazard — CAPE {m_wx.get('max_cape_jkg',0):.0f} J/kg. Open sea transit carries acute lightning strike risk.")
 
-    # ── 2. Recommended Fishing Zones ──────────────────────────────────────────
-    if pfz_res and pfz_res.get("success"):
-        zones = pfz_res.get("zones", [])
-        planning_tag = " *(Pre-voyage planning only — navigation suspended)*" if is_suspended else ""
-        ctx.markdown(f"#### 🐟 Recommended Fishing Zones{planning_tag}")
-        ctx.caption(f"📍 Reference port: **{pfz_res.get('location','N/A')}** · Based on INCOIS satellite telemetry")
+    # ── 2. Brief 1-2 sentence AI summary (Default View) ──────────────────────
+    synthesis = result.get("synthesis", "")
+    if synthesis:
+        ctx.markdown(synthesis)
 
-        zone_cols = ctx.columns(2)
-        for i, z in enumerate(zones[:6]):
-            status    = (z.get("quality") or z.get("status", "MEDIUM")).upper()
-            badge_cls = {"HIGH":"badge-high","MEDIUM":"badge-medium","LOW":"badge-low"}.get(status,"badge-medium")
-            badge_lbl = {"HIGH":"🟢 HIGH POTENTIAL","MEDIUM":"🟡 MODERATE","LOW":"🔴 LOW"}.get(status, status)
-            dist      = z.get("distance_to_user_km", "—")
-            dist_str  = f"{dist} km away" if dist != "—" else "Distance N/A"
-            sp_raw    = z.get("species", "")
-            species   = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
-            sst_val   = f"{z.get('sst_c','—')}°C" if z.get("sst_c") else "—"
-            chla_val  = f"{z.get('chlorophyll','—')} mg/m³" if z.get("chlorophyll") else "—"
-            depth_val = z.get("depth_m") or z.get("depth", "—")
-            zone_name = z.get("name", f"Zone {i+1}")
-            potential = "high" if status=="HIGH" else ("moderate" if status=="MEDIUM" else "lower")
-            fish_plain = f"Marine conditions suggest {potential} fishing potential in this area."
-
-            zone_cols[i % 2].markdown(f"""
-<div class="zone-card">
-  <div class="zone-header">
-    <span class="zone-name">{zone_name}</span>
-    <span class="zone-badge {badge_cls}">{badge_lbl}</span>
-  </div>
-  <p class="zone-dist">📏 {dist_str} · Depth: {depth_val} m</p>
-  <div class="zone-metrics">
-    <div class="zone-metric"><span class="zone-metric-lbl">SST</span><span class="zone-metric-val">{sst_val}</span></div>
-    <div class="zone-metric"><span class="zone-metric-lbl">Chlorophyll</span><span class="zone-metric-val">{chla_val}</span></div>
-    <div class="zone-metric"><span class="zone-metric-lbl">Species</span><span class="zone-metric-val" style="font-size:0.7rem;">{species[:30]}</span></div>
-  </div>
-  <p style="font-size:0.78rem;color:#475569;margin:4px 0 0 0;">{fish_plain}</p>
-</div>
-""", unsafe_allow_html=True)
-
-    # ── 3. Interactive Map ────────────────────────────────────────────────────
+    # ── 3. Interactive Folium Map (Default View) ──────────────────────────────
     if fmap is not None:
         ctx.markdown("#### 🗺️ Maritime Zone Map")
         ctx.caption("Click zone markers for details · Green = high potential · Red = hazard zone")
-        st_folium(fmap, width=None, height=460, returned_objects=[], use_container_width=True)
+        st_folium(fmap, width=None, height=440, returned_objects=[], use_container_width=True)
 
-    # ── 4. Safe Route Card ────────────────────────────────────────────────────
-    if nav_res and nav_res.get("success"):
-        imbl_warn  = nav_res.get("imbl_warning_active", False)
-        total_nm   = nav_res.get("total_distance_nm", 0.0)
-        total_km   = nav_res.get("total_distance_km", 0.0)
-        econ       = nav_res.get("fuel_economy", {})
-        cost_saved = econ.get("cost_saved_inr", 0)
-        transit    = econ.get("transit_time_str", "—")
-        start_lbl  = nav_res.get("start_label", "Port")
-        end_lbl    = nav_res.get("end_label", "Target Zone")
-        detour     = nav_res.get("hazard_avoidance_active", False)
-        risk_label = "⚠ Suspended" if is_suspended else ("🔴 Detour Active" if detour else "🟢 Low Risk")
-        susp_note  = "<br><small style='color:#94A3B8;'>⚠ Navigation suspended — shown for pre-voyage planning</small>" if is_suspended else ""
+    # ── 4. Progressive Disclosure Expander: Zones, Routes & Avoidance ─────────
+    has_pfz_data = bool(pfz_res and pfz_res.get("success") and pfz_res.get("zones"))
+    has_nav_data = bool(nav_res and nav_res.get("success"))
 
-        if imbl_warn:
-            imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
-            ctx.markdown(f"""
-<div class="hazard-chip critical">
+    hazards = []
+    if nav_res and nav_res.get("imbl_warning_active"):
+        hazards.append(("🛑","Maritime Boundary",f"{nav_res.get('imbl_min_distance_nm',0):.1f} NM","Maintain 5 NM seaward clearance","critical"))
+    if verdict == "DANGER":
+        hazards.append(("🌊","High Wave / Storm Region","Active in sector","Do not depart","critical"))
+    elif verdict == "CAUTION":
+        hazards.append(("⚠","Elevated Wave Region","In forecast window","Exercise caution","warning"))
+    if m_wx.get("lightning_hazard"):
+        hazards.append(("⚡","Convective Storm Zone","CAPE above threshold","Avoid open sea","critical"))
+
+    if has_pfz_data or has_nav_data or hazards:
+        with ctx.expander("📍 View Fishing Zones & Route Details", expanded=False):
+            # A. Recommended Fishing Zones Table
+            if has_pfz_data:
+                zones = pfz_res.get("zones", [])
+                planning_tag = " *(Pre-voyage planning only — navigation suspended)*" if is_suspended else ""
+                ctx.markdown(f"##### 🐟 Recommended Potential Fishing Zones (PFZ){planning_tag}")
+                ctx.caption(f"📍 Reference port: **{pfz_res.get('location','N/A')}** · INCOIS Satellite Telemetry")
+                zone_rows = []
+                for i, z in enumerate(zones[:6]):
+                    status    = (z.get("quality") or z.get("status", "MEDIUM")).upper()
+                    dist      = z.get("distance_to_user_km", "—")
+                    dist_str  = f"{dist} km" if dist != "—" else "—"
+                    sp_raw    = z.get("species", "")
+                    species   = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
+                    sst_val   = f"{z.get('sst_c','—')}°C" if z.get("sst_c") else "—"
+                    chla_val  = f"{z.get('chlorophyll','—')} mg/m³" if z.get("chlorophyll") else "—"
+                    depth_val = f"{z.get('depth_m') or z.get('depth', '—')} m"
+                    zone_name = z.get("name", f"Zone {i+1}")
+                    badge_icon = "🟢" if status == "HIGH" else ("🟡" if status == "MEDIUM" else "🔴")
+                    zone_rows.append({
+                        "Zone Name": zone_name,
+                        "Potential": f"{badge_icon} {status}",
+                        "Distance": dist_str,
+                        "Depth": depth_val,
+                        "SST": sst_val,
+                        "Chlorophyll": chla_val,
+                        "Target Species": species[:35],
+                    })
+                if zone_rows:
+                    ctx.dataframe(pd.DataFrame(zone_rows), use_container_width=True, hide_index=True)
+
+            # B. Fuel-Optimal Navigation Summary
+            if has_nav_data:
+                imbl_warn  = nav_res.get("imbl_warning_active", False)
+                total_nm   = nav_res.get("total_distance_nm", 0.0)
+                total_km   = nav_res.get("total_distance_km", 0.0)
+                econ       = nav_res.get("fuel_economy", {})
+                cost_saved = econ.get("cost_saved_inr", 0)
+                transit    = econ.get("transit_time_str", "—")
+                start_lbl  = nav_res.get("start_label", "Port")
+                end_lbl    = nav_res.get("end_label", "Target Zone")
+                detour     = nav_res.get("hazard_avoidance_active", False)
+                risk_label = "⚠ Suspended" if is_suspended else ("🔴 Detour Active" if detour else "🟢 Low Risk")
+                susp_note  = "<br><small style='color:#94A3B8;'>⚠ Navigation suspended — shown for pre-voyage planning</small>" if is_suspended else ""
+
+                if imbl_warn:
+                    imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
+                    ctx.markdown(f"""
+<div class="hazard-chip critical" style="margin-top:10px;">
   <span class="hazard-icon">🛑</span>
   <div class="hazard-content">
     <p class="hazard-title">MARITIME BOUNDARY ALERT — RISK OF IMPOUNDMENT</p>
@@ -906,8 +921,9 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-        ctx.markdown(f"""
-<div class="route-card">
+                ctx.markdown("##### 🧭 Fuel-Optimal Navigation Summary")
+                ctx.markdown(f"""
+<div class="route-card" style="margin-bottom:10px;">
   <p class="route-label">Recommended Route</p>
   <p class="route-title">⛵ {start_lbl} → {end_lbl}</p>
   <div class="route-stats">
@@ -922,32 +938,21 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-        waypoints = nav_res.get("waypoints", [])
-        if waypoints:
-            with ctx.expander(f"📍 Waypoint Route Plan ({len(waypoints)} waypoints)"):
-                wp_rows = ""
-                for wp in waypoints:
-                    leg_dist = f"{wp.get('leg_distance_nm',0.0):.1f} NM" if wp.get("leg_distance_nm") else "Start"
-                    bearing  = wp.get("leg_bearing") or "Departure"
-                    wp_rows += f"| {wp['name']} | `{wp['lat']:.4f}°N, {wp['lon']:.4f}°E` | {leg_dist} | {bearing} | {wp.get('notes','')} |\n"
-                st.markdown("| Waypoint | Coordinates | Leg Distance | Bearing | Advisory |\n|---|---|---|---|---|\n" + wp_rows)
+                waypoints = nav_res.get("waypoints", [])
+                if waypoints:
+                    wp_rows = ""
+                    for wp in waypoints:
+                        leg_dist = f"{wp.get('leg_distance_nm',0.0):.1f} NM" if wp.get("leg_distance_nm") else "Start"
+                        bearing  = wp.get("leg_bearing") or "Departure"
+                        wp_rows += f"| {wp['name']} | `{wp['lat']:.4f}°N, {wp['lon']:.4f}°E` | {leg_dist} | {bearing} | {wp.get('notes','')} |\n"
+                    ctx.markdown("| Waypoint | Coordinates | Leg Distance | Bearing | Advisory |\n|---|---|---|---|---|\n" + wp_rows)
 
-    # ── 5. Areas to Avoid ─────────────────────────────────────────────────────
-    hazards = []
-    if nav_res and nav_res.get("imbl_warning_active"):
-        hazards.append(("🛑","Maritime Boundary",f"{nav_res.get('imbl_min_distance_nm',0):.1f} NM","Maintain 5 NM seaward clearance","critical"))
-    if verdict == "DANGER":
-        hazards.append(("🌊","High Wave / Storm Region","Active in sector","Do not depart","critical"))
-    elif verdict == "CAUTION":
-        hazards.append(("⚠","Elevated Wave Region","In forecast window","Exercise caution","warning"))
-    if m_wx.get("lightning_hazard"):
-        hazards.append(("⚡","Convective Storm Zone","CAPE above threshold","Avoid open sea","critical"))
-
-    if hazards:
-        ctx.markdown("#### ⛔ Areas to Avoid")
-        for icon, title, dist_h, action, kind in hazards:
-            chip_cls = "hazard-chip critical" if kind == "critical" else "hazard-chip"
-            ctx.markdown(f"""
+            # C. Areas to Avoid (hazard cards)
+            if hazards:
+                ctx.markdown("##### ⛔ Areas to Avoid")
+                for icon, title, dist_h, action, kind in hazards:
+                    chip_cls = "hazard-chip critical" if kind == "critical" else "hazard-chip"
+                    ctx.markdown(f"""
 <div class="{chip_cls}">
   <span class="hazard-icon">{icon}</span>
   <div class="hazard-content">
@@ -958,30 +963,15 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 6. Ask ORCA Language Panel ─────────────────────────────────────────────
-    ctx.markdown("---")
-    lang_pills_html = "".join(f'<span class="lang-pill">{v}</span>' for v in LANG_DISPLAY.values())
-    ctx.markdown(f"""
-<div class="orca-card" style="padding:16px 20px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <span style="font-size:0.85rem;font-weight:700;color:#0B2638;">💬 Ask ORCA</span>
-    <span style="font-size:0.72rem;color:#94A3B8;">🎙️ Voice <span style="background:#F1F5F9;padding:2px 8px;border-radius:4px;font-size:0.65rem;color:#64748B;">COMING SOON</span></span>
-  </div>
-  <p style="font-size:0.8rem;color:#64748B;margin:0 0 8px 0;">Ask about: Fishing · Weather · Safety · Routes · Zones</p>
-  <div class="lang-pills">{lang_pills_html}</div>
-  <p style="font-size:0.72rem;color:#94A3B8;margin:6px 0 0 0;">Type your question in any language above — ORCA auto-detects it.</p>
-</div>
-""", unsafe_allow_html=True)
-
-    # ── 7. Why ORCA Recommends This ────────────────────────────────────────────
+    # ── 5. Why ORCA Recommends This (Evidence & Confidence Expander) ──────────
     if weather_res and weather_res.get("success"):
         confidence = {"SAFE": 87, "CAUTION": 72, "DANGER": 94}.get(verdict or "SAFE", 80)
         reasoning  = weather_res.get("reasoning", "Conditions assessed against IMD/INCOIS guidelines.")
         storm_str  = "Yes ⚡" if m_wx.get("thunderstorm_likely") else "No"
 
-        with ctx.expander("🔬 Why ORCA recommends this · Evidence & confidence"):
+        with ctx.expander("🔬 Why ORCA recommends this · Evidence & confidence", expanded=False):
             has_pfz = pfz_res is not None
-            st.markdown(f"""<div class="orca-card">
+            ctx.markdown(f"""<div class="orca-card">
 <p style="font-weight:700;margin:0 0 8px 0;color:#0B2638;">Evidence Chain</p>
 <div class="evidence-row"><span class="evidence-check">✅</span><span class="evidence-label">Satellite Observation</span><span class="evidence-source">ISRO Oceansat-3 · Sentinel-3</span></div>
 <div class="evidence-row"><span class="evidence-check">✅</span><span class="evidence-label">Weather Forecast</span><span class="evidence-source">Open-Meteo 48H model</span></div>
@@ -996,7 +986,7 @@ def render_fisherman_response(
 <div class="flow-step">⚖️ <b>SAFETY ASSESSMENT</b> — IMD/INCOIS thresholds applied → verdict: {verdict or "N/A"} <span class="flow-arrow">↓</span></div>
 <div class="flow-step">✅ <b>RECOMMENDATION</b> — {verdict_txt}</div>
 """, unsafe_allow_html=True)
-            st.markdown(f"""
+            ctx.markdown(f"""
 **📊 Peak Marine Conditions**
 
 | Metric | Value | Threshold |
@@ -1013,7 +1003,7 @@ def render_fisherman_response(
 **🤖 Agent Pipeline:** {_agents_badge(result)}
 """)
 
-    # ── 8. Data Trust Badge ────────────────────────────────────────────────────
+    # ── 6. Data Trust Badge ───────────────────────────────────────────────────
     intent_res = result.get("intent_result", {})
     lang_code  = intent_res.get("language_code", "en")
     lang_name  = intent_res.get("language", "English")
@@ -1024,8 +1014,6 @@ def render_fisherman_response(
   <span>·</span><span><span class="demo-badge">DEMO DATA</span> Simulated for SIH 26176</span>
 </div>
 """, unsafe_allow_html=True)
-
-
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1046,16 +1034,19 @@ def render_authority_response(
     container=None,
 ) -> None:
     """
-    Coastal Authority — Marine Operations Center dashboard.
+    Coastal Authority — Marine Operations Center dashboard with progressive disclosure.
 
-    Layout:
-      1. COASTAL OPERATIONS header + alert tier counts
-      2. Severity alert cards (CRITICAL / WARNING / ADVISORY)
-      3. Map — dominant spatial centrepiece (580px)
-      4. 8-metric telemetry row
-      5. Geofence cards (styled HTML chips)
-      6. Operational synthesis
-      7. Collapsed full telemetry + agent pipeline
+    Default View:
+      1. Disaster Classification Alert Banner (Operations Center header + alert severity cards)
+      2. Interactive Folium Map (coastal surveillance & hazard geofences)
+
+    Progressive Disclosure (Collapsed Expander):
+      - 🚨 View Operational Telemetry & Geofence Details:
+          * 8-metric Disaster Telemetry grid
+          * Active Geofence & Surveillance Guidance notices
+          * Operational Synthesis & Reasoning
+          * Full Disaster Telemetry & Agent Pipeline
+      - Data Trust Badge
     """
     import datetime
     ctx = container if container is not None else st
@@ -1081,8 +1072,8 @@ def render_authority_response(
     )
     now_str = datetime.datetime.now().strftime("%d %b %Y · %H:%M IST")
 
-    # ── 1. COASTAL OPERATIONS header ──────────────────────────────────────────
-    # Count alert tiers
+    # ── 1. Disaster Classification Alert Banner (Default View) ────────────────
+    # Alert tier counts
     n_critical = sum([
         verdict == "DANGER",
         lightning_hazard,
@@ -1109,9 +1100,7 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 2. Alert Severity Cards ───────────────────────────────────────────────
     alerts_rendered = False
-
     if verdict == "DANGER":
         ctx.markdown(f"""
 <div class="alert-critical">
@@ -1181,43 +1170,42 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 3. Map — Dominant spatial centrepiece ─────────────────────────────────
+    # ── 2. Folium Map (Default View) ──────────────────────────────────────────
     if fmap is not None:
         ctx.markdown("#### 🗺️ Coastal Surveillance & Hazard Geofence Chart")
         ctx.caption("Red polygon = active storm-surge exclusion zone · Blue track = monitored vessel corridor · Green pins = PFZ clusters")
-        st_folium(fmap, width=None, height=560, returned_objects=[], use_container_width=True)
+        st_folium(fmap, width=None, height=520, returned_objects=[], use_container_width=True)
     else:
         ctx.info("📡 No spatial data available. Run a Weather Check or PFZ query to load the geofence chart.")
 
-    ctx.markdown("---")
+    # ── 3. Progressive Disclosure: Operational Telemetry & Geofence Details ───
+    with ctx.expander("🚨 View Operational Telemetry & Geofence Details", expanded=False):
+        # A. 8-metric Disaster Telemetry
+        if weather_res and weather_res.get("success"):
+            ctx.markdown("##### 📊 Marine & Meteorological Disaster Telemetry")
+            c1, c2, c3, c4 = ctx.columns(4)
+            c1.metric("💨 Peak Wind",    f"{m.get('max_wind_speed_kmh',0.0):.1f} km/h",
+                      "⚠ Gale" if m.get("max_wind_speed_kmh",0) > 40 else "Normal", delta_color="inverse")
+            c2.metric("🌊 Max Wave",     f"{m.get('max_wave_height_m',0.0):.2f} m",
+                      "⚠ Hazard" if m.get("max_wave_height_m",0) > 2.5 else "Normal", delta_color="inverse")
+            c3.metric("🌀 Wind Gust",    f"{m.get('max_wind_gust_kmh',0.0):.1f} km/h",
+                      "⚠ Severe" if m.get("max_wind_gust_kmh",0) > 55 else "Normal", delta_color="inverse")
+            c4.metric("⚡ CAPE Energy",  f"{m.get('max_cape_jkg',0.0):.0f} J/kg",
+                      "⚠ Lightning" if m.get("max_cape_jkg",0) > 1500 else "Stable", delta_color="inverse")
+            c5, c6, c7, c8 = ctx.columns(4)
+            c5.metric("🌊 Swell",        f"{m.get('max_swell_height_m',0.0):.2f} m",
+                      "⚠ High" if m.get("max_swell_height_m",0) > 2.0 else "OK", delta_color="inverse")
+            c6.metric("🌧️ Precipitation", f"{m.get('max_precipitation_mm',0.0):.1f} mm/hr",
+                      "⚠ Heavy" if m.get("max_precipitation_mm",0) > 10 else "Light", delta_color="inverse")
+            c7.metric("🕰️ Wave Period",   f"{m.get('max_wave_period_s',0.0):.1f} s")
+            c8.metric("⛈️ Thunderstorm",  "Active ⚡" if m.get("thunderstorm_likely") else "None", delta_color="off")
 
-    # ── 4. Marine & Meteorological Telemetry (8 metrics) ─────────────────────
-    if weather_res and weather_res.get("success"):
-        ctx.markdown("#### 📊 Marine & Meteorological Disaster Telemetry")
-        c1, c2, c3, c4 = ctx.columns(4)
-        c1.metric("💨 Peak Wind",    f"{m.get('max_wind_speed_kmh',0.0):.1f} km/h",
-                  "⚠ Gale" if m.get("max_wind_speed_kmh",0) > 40 else "Normal", delta_color="inverse")
-        c2.metric("🌊 Max Wave",     f"{m.get('max_wave_height_m',0.0):.2f} m",
-                  "⚠ Hazard" if m.get("max_wave_height_m",0) > 2.5 else "Normal", delta_color="inverse")
-        c3.metric("🌀 Wind Gust",    f"{m.get('max_wind_gust_kmh',0.0):.1f} km/h",
-                  "⚠ Severe" if m.get("max_wind_gust_kmh",0) > 55 else "Normal", delta_color="inverse")
-        c4.metric("⚡ CAPE Energy",  f"{m.get('max_cape_jkg',0.0):.0f} J/kg",
-                  "⚠ Lightning" if m.get("max_cape_jkg",0) > 1500 else "Stable", delta_color="inverse")
-        c5, c6, c7, c8 = ctx.columns(4)
-        c5.metric("🌊 Swell",        f"{m.get('max_swell_height_m',0.0):.2f} m",
-                  "⚠ High" if m.get("max_swell_height_m",0) > 2.0 else "OK", delta_color="inverse")
-        c6.metric("🌧️ Precipitation", f"{m.get('max_precipitation_mm',0.0):.1f} mm/hr",
-                  "⚠ Heavy" if m.get("max_precipitation_mm",0) > 10 else "Light", delta_color="inverse")
-        c7.metric("🕰️ Wave Period",   f"{m.get('max_wave_period_s',0.0):.1f} s")
-        c8.metric("⛈️ Thunderstorm",  "Active ⚡" if m.get("thunderstorm_likely") else "None", delta_color="off")
-
-    # ── 5. Geofence & Exclusion Zones (styled HTML chips) ────────────────────
-    ctx.markdown("#### 🛡️ Active Geofence & Exclusion Zone Status")
-
-    if nav_res and nav_res.get("imbl_warning_active"):
-        imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
-        imbl_bdry = nav_res.get("imbl_closest_boundary", "IMBL")
-        ctx.markdown(f"""
+        # B. Active Geofence & Surveillance Guidance
+        ctx.markdown("##### 🛡️ Active Geofence & Surveillance Guidance")
+        if nav_res and nav_res.get("imbl_warning_active"):
+            imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
+            imbl_bdry = nav_res.get("imbl_closest_boundary", "IMBL")
+            ctx.markdown(f"""
 <div class="hazard-chip critical">
   <span class="hazard-icon">🛑</span>
   <div class="hazard-content">
@@ -1228,8 +1216,8 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    if verdict == "DANGER":
-        ctx.markdown(f"""
+        if verdict == "DANGER":
+            ctx.markdown(f"""
 <div class="hazard-chip critical">
   <span class="hazard-icon">🚨</span>
   <div class="hazard-content">
@@ -1239,8 +1227,8 @@ def render_authority_response(
   </div>
 </div>
 """, unsafe_allow_html=True)
-    elif verdict == "CAUTION":
-        ctx.markdown(f"""
+        elif verdict == "CAUTION":
+            ctx.markdown(f"""
 <div class="hazard-chip">
   <span class="hazard-icon">⚠️</span>
   <div class="hazard-content">
@@ -1251,8 +1239,8 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    if not imbl_active and verdict == "SAFE":
-        ctx.markdown(f"""
+        if not imbl_active and verdict == "SAFE":
+            ctx.markdown(f"""
 <div class="hazard-chip" style="background:#F0FDF4;border-color:#BBF7D0;">
   <span class="hazard-icon">✅</span>
   <div class="hazard-content">
@@ -1262,17 +1250,16 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 6. Operational Synthesis ──────────────────────────────────────────────
-    if synthesis:
-        ctx.markdown("---\n#### 🧠 ORCA Operational Assessment")
-        ctx.markdown(synthesis)
+        # C. Operational Synthesis
+        if synthesis:
+            ctx.markdown("##### 🧠 Operational Assessment")
+            ctx.markdown(synthesis)
 
-    # ── 7. Full Disaster Telemetry Expander ───────────────────────────────────
-    with ctx.expander("📋 Full Disaster Telemetry & Agent Pipeline"):
+        # D. Complete Disaster Telemetry & Pipeline
         if weather_res and weather_res.get("success"):
             storm_str = "Yes ⚡" if m.get("thunderstorm_likely") else "No"
             reasoning = weather_res.get("reasoning", "Assessed against IMD/INCOIS thresholds.")
-            st.markdown(
+            ctx.markdown(
                 f"**📊 Complete Peak Conditions**\n\n"
                 f"| Metric | Value | IMD Threshold |\n|---|---|---|\n"
                 f"| Wind Speed | {m.get('max_wind_speed_kmh',0.0):.1f} km/h | 40.0 km/h |\n"
@@ -1287,9 +1274,9 @@ def render_authority_response(
                 f"**🤖 Agent Pipeline:** {_agents_badge(result)}"
             )
         else:
-            st.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
+            ctx.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
 
-    # ── 8. Data Trust Badge ────────────────────────────────────────────────────
+    # ── 4. Data Trust Badge ───────────────────────────────────────────────────
     ctx.markdown(f"""
 <div class="data-trust">
   <span>📡 Sources: IMD · INCOIS · Coast Guard AIS · IMBL Database</span>
@@ -1309,17 +1296,21 @@ def render_researcher_response(
     container=None,
 ) -> None:
     """
-    Marine Researcher — Scientific Analytics Workspace.
+    Marine Researcher — Scientific Analytics Workspace with progressive disclosure.
 
-    Layout:
-      1. 4-column KPI metric dashboard
-      2. Two-column workspace: map (60%) + insight panel (40%)
-      3. EO Diagnostic dataframe
-      4. Time-series tabs (24H / 7D / 30D)
-      5. Weather/safety context expander
-      6. Scientific synthesis
-      7. Sensor metadata + agent pipeline expander
-      8. Data trust badge
+    Default View:
+      1. 4-metric Oceanographic KPI dashboard (SST, Chlorophyll, Thermocline, Salinity)
+      2. Interactive Folium Map (satellite composite & thermal gradient)
+
+    Progressive Disclosure (Collapsed Expander):
+      - 🔬 View Detailed Scientific Data:
+          * "🔬 Scientific Assessment" text
+          * "Earth Observation Diagnostic Summary" table
+          * Scientific Insights & Active Sensors HTML panel
+          * Time-series analysis charts
+          * Atmospheric & Sea State Context
+          * Full Sensor Metadata & Agent Pipeline
+      - Data Trust Badge
     """
     import datetime, pandas as pd
     try:
@@ -1335,7 +1326,7 @@ def render_researcher_response(
     synthesis   = result.get("synthesis", "")
     now_str     = datetime.datetime.now().strftime("%d %b %Y · %H:%M IST")
 
-    # ── 1. Oceanographic KPI Metrics ──────────────────────────────────────────
+    # ── 1. Top 4-metric Oceanographic Dashboard (Default View) ────────────────
     ctx.markdown("#### 📊 Oceanographic Telemetry — Key Indices")
 
     if eo_res and eo_res.get("success"):
@@ -1368,181 +1359,139 @@ def render_researcher_response(
     else:
         ctx.info("📡 Query an ecosystem or SST location to populate the oceanographic telemetry dashboard.")
 
-    # ── 2. Two-column workspace: Map (60%) + Insight Panel (40%) ─────────────
-    if eo_res and eo_res.get("success"):
-        sst_mean    = eo_res.get("mean_sst_c", 0.0)
-        sst_anom    = eo_res.get("sst_anomaly_c", 0.0)
-        chla_mean   = eo_res.get("mean_chlorophyll_mg_m3", 0.0)
-        chla_max    = eo_res.get("max_chlorophyll_mg_m3", 0.0)
-        upwell_int  = eo_res.get("upwelling_intensity", "—")
-        thermocline = eo_res.get("thermocline_depth_m", 35)
-        front_coords = eo_res.get("upwelling_front_coords", [0.0, 0.0])
+    # ── 2. Interactive Satellite Map (Default View) ───────────────────────────
+    if fmap is not None:
+        ctx.markdown("#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
+        ctx.caption("Use layer control to toggle SST Thermal Gradient and Chlorophyll-a Productivity")
+        st_folium(fmap, width=None, height=500, returned_objects=[], use_container_width=True)
 
-        map_col, insight_col = ctx.columns([3, 2])
+    # ── 3. Progressive Disclosure: Detailed Scientific Data ───────────────────
+    with ctx.expander("🔬 View Detailed Scientific Data", expanded=False):
+        # A. Scientific Assessment Text
+        if synthesis:
+            ctx.markdown("##### 🔬 Scientific Assessment")
+            ctx.markdown(synthesis)
 
-        with map_col:
-            st.markdown("#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
-            st.caption("Use layer control (top-right) to toggle **SST Thermal Gradient** and **Chlorophyll-a Productivity**")
-            if fmap is not None:
-                st_folium(fmap, width=None, height=500, returned_objects=[], use_container_width=True)
-            else:
-                st.info("🗺️ No satellite map loaded. Query an SST/chlorophyll location to render the EO heatmap.")
+        # B. Earth Observation Diagnostic Summary Table
+        if eo_res and eo_res.get("success"):
+            sst_min      = eo_res.get("min_sst_c", 0.0)
+            sst_max      = eo_res.get("max_sst_c", 0.0)
+            sst_mean     = eo_res.get("mean_sst_c", 0.0)
+            sst_anom     = eo_res.get("sst_anomaly_c", 0.0)
+            chla_mean    = eo_res.get("mean_chlorophyll_mg_m3", 0.0)
+            chla_max     = eo_res.get("max_chlorophyll_mg_m3", 0.0)
+            upwell_int   = eo_res.get("upwelling_intensity", "—")
+            thermocline  = eo_res.get("thermocline_depth_m", 35)
+            front_coords = eo_res.get("upwelling_front_coords", [0.0, 0.0])
+            grid_pts     = eo_res.get("grid_points_count", 0)
+            meta         = eo_res.get("sensor_metadata", {})
+            sst_sensor   = meta.get("sst_sensor", "Copernicus Sentinel-3 SLSTR")
+            chl_sensor   = meta.get("ocean_color_sensor", "ISRO Oceansat-3 OCM-3")
+            clim_base    = meta.get("climatology_baseline", "28.5°C")
+            chl_res      = meta.get("chl_resolution", "300 m resolution")
+            anom_sign    = "+" if sst_anom > 0 else ""
 
-        with insight_col:
+            ctx.markdown(
+                f"##### 🛰️ Earth Observation Diagnostic Summary\n"
+                f"**Sensors:** {sst_sensor} · {chl_sensor} &nbsp;·&nbsp; "
+                f"**Grid Coverage:** {grid_pts} stations (120 km radius)"
+            )
+            eo_df = pd.DataFrame({
+                "Oceanographic Parameter": [
+                    "Mean Sea Surface Temp (SST)", "SST Range", "Thermal Front Anomaly",
+                    "Mean Chlorophyll-a", "Peak Chlorophyll Bloom",
+                    "Baroclinic Upwelling Index", "Estimated Thermocline Depth",
+                    "Primary Upwelling Front",
+                ],
+                "Satellite-Derived Value": [
+                    f"{sst_mean:.2f} °C", f"{sst_min:.1f} – {sst_max:.1f} °C",
+                    f"{anom_sign}{sst_anom:.2f} °C", f"{chla_mean:.2f} mg/m³",
+                    f"{chla_max:.2f} mg/m³", upwell_int, f"~{thermocline} m",
+                    f"{front_coords[0]:.4f}°N, {front_coords[1]:.4f}°E",
+                ],
+                "Sensor Payload & Context": [
+                    "Sentinel-3 SLSTR infrared (1 km)", "Spatial gradient across grid",
+                    f"Baseline: {clim_base}", f"Oceansat-3 OCM-3 ({chl_res})",
+                    "Shelf-edge productivity convergence", "Ekman transport & coastal divergence",
+                    "Mixed-layer pycnocline", "Maximum horizontal thermal contrast",
+                ],
+            })
+            ctx.dataframe(eo_df, use_container_width=True, hide_index=True)
+
+            # C. Scientific Insights & Active Sensors HTML Panel
             anom_cls = "badge-anomaly" if abs(sst_anom) > 1.0 else ("badge-elevated" if abs(sst_anom) > 0.3 else "badge-normal")
             bloom_cls = "badge-anomaly" if chla_max > 2.0 else ("badge-elevated" if chla_max > 1.0 else "badge-normal")
             bloom_lbl = "Bloom" if chla_max > 2.0 else ("Elevated" if chla_max > 1.0 else "Normal")
             upwell_cls = "badge-elevated" if "Moderate" in upwell_int or "Strong" in upwell_int else "badge-normal"
 
-            st.markdown(f"""
-<div class="insight-panel">
-  <p style="font-weight:700;font-size:0.85rem;color:#0B2638;margin:0 0 12px 0;">🔬 Scientific Insights</p>
-  <div class="insight-row">
-    <span class="insight-key">SST Anomaly</span>
-    <span class="insight-val"><span class="insight-badge {anom_cls}">{'+' if sst_anom > 0 else ''}{sst_anom:.2f}°C</span></span>
-  </div>
-  <div class="insight-row">
-    <span class="insight-key">Chlorophyll Status</span>
-    <span class="insight-val"><span class="insight-badge {bloom_cls}">{bloom_lbl}</span></span>
-  </div>
-  <div class="insight-row">
-    <span class="insight-key">Upwelling Index</span>
-    <span class="insight-val"><span class="insight-badge {upwell_cls}">{upwell_int}</span></span>
-  </div>
-  <div class="insight-row">
-    <span class="insight-key">Thermocline</span>
-    <span class="insight-val">~{thermocline} m depth</span>
-  </div>
-  <div class="insight-row">
-    <span class="insight-key">Upwelling Front</span>
-    <span class="insight-val" style="font-size:0.78rem;">{front_coords[0]:.3f}°N, {front_coords[1]:.3f}°E</span>
-  </div>
-  <div class="insight-row">
-    <span class="insight-key">Peak Chl-a</span>
-    <span class="insight-val">{chla_max:.2f} mg/m³</span>
-  </div>
-</div>
-
+            ctx.markdown(f"""
 <div class="insight-panel" style="margin-top:12px;">
-  <p style="font-weight:700;font-size:0.85rem;color:#0B2638;margin:0 0 10px 0;">🛰️ Active Sensors</p>
-  <div class="insight-row"><span class="insight-key">SST</span><span class="insight-val" style="font-size:0.75rem;">Sentinel-3 SLSTR · 1 km</span></div>
-  <div class="insight-row"><span class="insight-key">Chlorophyll</span><span class="insight-val" style="font-size:0.75rem;">Oceansat-3 OCM-3 · 300 m</span></div>
-  <div class="insight-row"><span class="insight-key">Coverage</span><span class="insight-val" style="font-size:0.75rem;">120 km radius · 27-day cycle</span></div>
+  <p style="font-weight:700;font-size:0.85rem;color:#0B2638;margin:0 0 10px 0;">🔬 Scientific Indices & Sensor Payload</p>
+  <div class="insight-row"><span class="insight-key">SST Anomaly</span><span class="insight-val"><span class="insight-badge {anom_cls}">{'+' if sst_anom > 0 else ''}{sst_anom:.2f}°C</span></span></div>
+  <div class="insight-row"><span class="insight-key">Chlorophyll Status</span><span class="insight-val"><span class="insight-badge {bloom_cls}">{bloom_lbl}</span></span></div>
+  <div class="insight-row"><span class="insight-key">Upwelling Index</span><span class="insight-val"><span class="insight-badge {upwell_cls}">{upwell_int}</span></span></div>
+  <div class="insight-row"><span class="insight-key">Thermocline</span><span class="insight-val">~{thermocline} m depth</span></div>
+  <div class="insight-row"><span class="insight-key">Upwelling Front</span><span class="insight-val" style="font-size:0.78rem;">{front_coords[0]:.3f}°N, {front_coords[1]:.3f}°E</span></div>
+  <div class="insight-row"><span class="insight-key">Active Sensors</span><span class="insight-val" style="font-size:0.75rem;">{sst_sensor} · {chl_sensor}</span></div>
 </div>
 """, unsafe_allow_html=True)
 
-    elif fmap is not None:
-        ctx.markdown("#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
-        ctx.caption("Use layer control to toggle SST Thermal Gradient and Chlorophyll-a Productivity")
-        st_folium(fmap, width=None, height=500, returned_objects=[], use_container_width=True)
+            # D. Time-Series Analysis Tabs
+            ctx.markdown("##### 📈 Time-Series Analysis")
+            t1, t2, t3, t4 = ctx.tabs(["24H", "7D", "30D", "CUSTOM"])
+            if _has_plotly:
+                import plotly.graph_objects as go
+                import random
+                random.seed(42)
 
-    # ── 3. EO Diagnostic Table ─────────────────────────────────────────────────
-    ctx.markdown("---")
-    if eo_res and eo_res.get("success"):
-        sst_min    = eo_res.get("min_sst_c", 0.0)
-        sst_max    = eo_res.get("max_sst_c", 0.0)
-        sst_mean   = eo_res.get("mean_sst_c", 0.0)
-        sst_anom   = eo_res.get("sst_anomaly_c", 0.0)
-        chla_mean  = eo_res.get("mean_chlorophyll_mg_m3", 0.0)
-        chla_max   = eo_res.get("max_chlorophyll_mg_m3", 0.0)
-        upwell_int = eo_res.get("upwelling_intensity", "—")
-        thermocline = eo_res.get("thermocline_depth_m", 35)
-        front_coords = eo_res.get("upwelling_front_coords", [0.0, 0.0])
-        grid_pts   = eo_res.get("grid_points_count", 0)
-        meta       = eo_res.get("sensor_metadata", {})
-        sst_sensor = meta.get("sst_sensor", "Copernicus Sentinel-3 SLSTR")
-        chl_sensor = meta.get("ocean_color_sensor", "ISRO Oceansat-3 OCM-3")
-        clim_base  = meta.get("climatology_baseline", "28.5°C")
-        chl_res    = meta.get("chl_resolution", "300 m resolution")
-        anom_sign  = "+" if sst_anom > 0 else ""
+                def _make_ts(n_pts, base_sst, base_chl, noise_sst=0.3, noise_chl=0.2):
+                    sst_  = [round(base_sst + random.gauss(0, noise_sst), 2) for _ in range(n_pts)]
+                    chl_  = [round(max(0.1, base_chl + random.gauss(0, noise_chl)), 2) for _ in range(n_pts)]
+                    return sst_, chl_
 
-        ctx.markdown(
-            f"#### 🔬 Earth Observation Diagnostic Summary\n"
-            f"**🛰️ Sensors:** {sst_sensor} · {chl_sensor} &nbsp;·&nbsp; "
-            f"**🌐 Grid:** {grid_pts} stations (120 km radius)"
-        )
-        eo_df = pd.DataFrame({
-            "Oceanographic Parameter": [
-                "Mean Sea Surface Temp (SST)", "SST Range", "Thermal Front Anomaly",
-                "Mean Chlorophyll-a", "Peak Chlorophyll Bloom",
-                "Baroclinic Upwelling Index", "Estimated Thermocline Depth",
-                "Primary Upwelling Front",
-            ],
-            "Satellite-Derived Value": [
-                f"{sst_mean:.2f} °C", f"{sst_min:.1f} – {sst_max:.1f} °C",
-                f"{anom_sign}{sst_anom:.2f} °C", f"{chla_mean:.2f} mg/m³",
-                f"{chla_max:.2f} mg/m³", upwell_int, f"~{thermocline} m",
-                f"{front_coords[0]:.4f}°N, {front_coords[1]:.4f}°E",
-            ],
-            "Sensor Payload & Context": [
-                "Sentinel-3 SLSTR infrared (1 km)", "Spatial gradient across grid",
-                f"Baseline: {clim_base}", f"Oceansat-3 OCM-3 ({chl_res})",
-                "Shelf-edge productivity convergence", "Ekman transport & coastal divergence",
-                "Mixed-layer pycnocline", "Maximum horizontal thermal contrast",
-            ],
-        })
-        ctx.dataframe(eo_df, use_container_width=True, hide_index=True)
+                for tab, (n, label, noise_s, noise_c) in zip(
+                    [t1, t2, t3],
+                    [(24,"24H",0.2,0.15),(7*6,"7D",0.4,0.25),(30*4,"30D",0.8,0.4)]
+                ):
+                    with tab:
+                        sst_s, chl_s = _make_ts(n, sst_mean, chla_mean, noise_s, noise_c)
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(
+                            y=sst_s, name="SST (°C)", line=dict(color="#0EA5A8", width=2),
+                            fill="tozeroy", fillcolor="rgba(14,165,168,0.08)"
+                        ))
+                        fig.add_trace(go.Scatter(
+                            y=chl_s, name="Chl-a (mg/m³)", line=dict(color="#22D3EE", width=2),
+                            yaxis="y2"
+                        ))
+                        fig.update_layout(
+                            height=260, margin=dict(l=0,r=0,t=20,b=0),
+                            paper_bgcolor="#F8FAFC", plot_bgcolor="#F8FAFC",
+                            legend=dict(orientation="h", y=1.1),
+                            yaxis=dict(title="SST (°C)", titlefont=dict(color="#0EA5A8")),
+                            yaxis2=dict(title="Chl-a (mg/m³)", overlaying="y", side="right",
+                                        titlefont=dict(color="#22D3EE")),
+                            font=dict(family="Inter", size=11),
+                        )
+                        tab.plotly_chart(fig, use_container_width=True)
+                        tab.caption(f"⚠ Simulated {label} time-series — requires live ISRO API for real data")
 
-    # ── 4. Time-series Tabs ────────────────────────────────────────────────────
-    if eo_res and eo_res.get("success"):
-        sst_mean  = eo_res.get("mean_sst_c", 28.0)
-        chla_mean = eo_res.get("mean_chlorophyll_mg_m3", 1.2)
-        ctx.markdown("#### 📈 Time-Series Analysis")
-        t1, t2, t3, t4 = ctx.tabs(["24H", "7D", "30D", "CUSTOM"])
-        if _has_plotly:
-            import plotly.graph_objects as go
-            import numpy as np, random
-            random.seed(42)
+                with t4:
+                    t4.info("📅 Custom date range requires live ISRO Oceansat-3 API connection.")
+            else:
+                for tab, label in zip([t1,t2,t3,t4],["24H","7D","30D","Custom"]):
+                    with tab:
+                        tab.info(f"📈 {label} time-series requires plotly. Install with: pip install plotly")
 
-            def _make_ts(n_pts, base_sst, base_chl, noise_sst=0.3, noise_chl=0.2):
-                sst_  = [round(base_sst + random.gauss(0, noise_sst), 2) for _ in range(n_pts)]
-                chl_  = [round(max(0.1, base_chl + random.gauss(0, noise_chl)), 2) for _ in range(n_pts)]
-                return sst_, chl_
-
-            for tab, (n, label, noise_s, noise_c) in zip(
-                [t1, t2, t3],
-                [(24,"24H",0.2,0.15),(7*6,"7D",0.4,0.25),(30*4,"30D",0.8,0.4)]
-            ):
-                with tab:
-                    sst_s, chl_s = _make_ts(n, sst_mean, chla_mean, noise_s, noise_c)
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatter(
-                        y=sst_s, name="SST (°C)", line=dict(color="#0EA5A8", width=2),
-                        fill="tozeroy", fillcolor="rgba(14,165,168,0.08)"
-                    ))
-                    fig.add_trace(go.Scatter(
-                        y=chl_s, name="Chl-a (mg/m³)", line=dict(color="#22D3EE", width=2),
-                        yaxis="y2"
-                    ))
-                    fig.update_layout(
-                        height=260, margin=dict(l=0,r=0,t=20,b=0),
-                        paper_bgcolor="#F8FAFC", plot_bgcolor="#F8FAFC",
-                        legend=dict(orientation="h", y=1.1),
-                        yaxis=dict(title="SST (°C)", titlefont=dict(color="#0EA5A8")),
-                        yaxis2=dict(title="Chl-a (mg/m³)", overlaying="y", side="right",
-                                    titlefont=dict(color="#22D3EE")),
-                        font=dict(family="Inter", size=11),
-                    )
-                    tab.plotly_chart(fig, use_container_width=True)
-                    tab.caption(f"⚠ Simulated {label} time-series — requires live ISRO API for real data")
-
-            with t4:
-                t4.info("📅 Custom date range requires live ISRO Oceansat-3 API connection.")
-        else:
-            for tab, label in zip([t1,t2,t3,t4],["24H","7D","30D","Custom"]):
-                with tab:
-                    tab.info(f"📈 {label} time-series requires plotly. Install with: pip install plotly")
-
-    # ── 5. Weather Context Expander ────────────────────────────────────────────
-    if weather_res and weather_res.get("success"):
-        m       = weather_res.get("key_metrics", {})
-        verdict = weather_res.get("verdict", "SAFE")
-        emoji_v = VERDICT_EMOJI.get(verdict, "ℹ️")
-        color_v = VERDICT_COLOR.get(verdict, "blue")
-        with ctx.expander("🌦️ Atmospheric & Sea State Context", expanded=False):
+        # E. Atmospheric Context
+        if weather_res and weather_res.get("success"):
+            m       = weather_res.get("key_metrics", {})
+            verdict = weather_res.get("verdict", "SAFE")
+            emoji_v = VERDICT_EMOJI.get(verdict, "ℹ️")
+            color_v = VERDICT_COLOR.get(verdict, "blue")
             if m.get("lightning_hazard"):
-                st.error(f"⚡ LIGHTNING HAZARD: CAPE {m.get('max_cape_jkg',0):.0f} J/kg — field sampling suspended.")
-            st.markdown(
+                ctx.error(f"⚡ LIGHTNING HAZARD: CAPE {m.get('max_cape_jkg',0):.0f} J/kg — field sampling suspended.")
+            ctx.markdown(
                 f"**📍 Station:** {weather_res.get('location','N/A')} · "
                 f"**Verdict:** :{color_v}[**{emoji_v} {verdict}**]\n\n"
                 f"| Metric | Value | Threshold |\n|---|---|---|\n"
@@ -1554,16 +1503,10 @@ def render_researcher_response(
                 f"**🧠 Reasoning:** {weather_res.get('reasoning','—')}"
             )
 
-    # ── 6. Scientific Synthesis ────────────────────────────────────────────────
-    if synthesis:
-        ctx.markdown("---\n#### 🧠 Scientific Assessment")
-        ctx.markdown(synthesis)
-
-    # ── 7. Sensor Metadata & Agent Pipeline ───────────────────────────────────
-    if eo_res and eo_res.get("success"):
-        meta = eo_res.get("sensor_metadata", {})
-        with ctx.expander("🛰️ Full Sensor Metadata & Agent Pipeline"):
-            st.markdown(
+        # F. Full Sensor Metadata & Agent Pipeline
+        if eo_res and eo_res.get("success"):
+            meta = eo_res.get("sensor_metadata", {})
+            ctx.markdown(
                 f"**Constellation:** {meta.get('sst_sensor','—')} · {meta.get('ocean_color_sensor','—')}\n\n"
                 f"| Parameter | Value |\n|---|---|\n"
                 f"| SST Resolution | {meta.get('sst_resolution','1 km')} |\n"
@@ -1573,11 +1516,10 @@ def render_researcher_response(
                 f"| Swath Width | {meta.get('swath_width','1270 km')} |\n\n"
                 f"**🤖 Agent Pipeline:** {_agents_badge(result)}"
             )
-    else:
-        with ctx.expander("🤖 Agent Pipeline"):
-            st.markdown(f"**Pipeline:** {_agents_badge(result)}")
+        else:
+            ctx.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
 
-    # ── 8. Data Trust Badge ────────────────────────────────────────────────────
+    # ── 4. Data Trust Badge ───────────────────────────────────────────────────
     ctx.markdown(f"""
 <div class="data-trust">
   <span>📡 Sources: ISRO Oceansat-3 · Copernicus Sentinel-3 · Open-Meteo</span>
@@ -2243,8 +2185,11 @@ Use the sidebar to broadcast emergency evacuation notices via VHF Ch 16, NAVTEX,
 Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sentinel-3 telemetry! 🛰️
 """
             else:
+                lang_pills_str = " · ".join(LANG_DISPLAY.values())
                 welcome_text = f"""
 👋 **Welcome to ORCA!** Operating in **{clean_mode}** mode.
+
+🌐 **Supported Languages:** {lang_pills_str} *(Type in any language — ORCA auto-detects)*
 
 **Try asking:**
 - *"Where can I fish near Kochi today?"*
