@@ -1706,16 +1706,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    show_sst = False
-    if "Researcher" in st.session_state.current_persona:
-        st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>EO Telemetry Layers</p>", unsafe_allow_html=True)
-        show_sst = st.checkbox(
-            "🌡️ Overlay SST / Chl HeatMap",
-            value=True,
-            key="sst_heatmap_toggle",
-            help="Displays simulated Oceansat-3/Sentinel-3 ocean thermal & chlorophyll gradient.",
-        )
-        st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
+    show_sst = True
 
     # ── Contextual Query Tools ────────────────────────────────────────────────
     with st.expander("⚡ Contextual Query Tools", expanded=False):
