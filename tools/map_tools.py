@@ -24,6 +24,7 @@ from folium import plugins
 from folium.plugins import HeatMap
 
 from tools.navigation_tools import calculate_optimal_route
+from tools.eo_tools import generate_eo_grid, get_eo_legend_html
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -203,16 +204,39 @@ def create_pfz_map(
 
     plugins.MiniMap(toggle_display=True, position="bottomright").add_to(fmap)
 
-    # 2. Persona: Marine Researcher HeatMap Layer
+    # 2. Persona: Marine Researcher Multi-Layer HeatMap (SST & Chlorophyll-a)
     if persona == "researcher" or show_sst_heatmap:
-        heat_points = _generate_sst_heat_points(user_lat, user_lon)
+        eo_data = generate_eo_grid(user_lat, user_lon)
+        sst_points = eo_data["sst_points"]
+        chl_points = eo_data["chlorophyll_points"]
+
+        # Layer 1: SST Thermal Gradient (Sentinel-3 SLSTR)
+        sst_group = folium.FeatureGroup(name="🌡️ Sea Surface Temp (Sentinel-3 SLSTR)", show=True)
         HeatMap(
-            heat_points,
-            radius=26,
-            blur=16,
-            min_opacity=0.35,
+            sst_points,
+            radius=24,
+            blur=15,
+            min_opacity=0.30,
             gradient={0.2: '#08306b', 0.4: '#2171b5', 0.6: '#67a9cf', 0.8: '#fc8d59', 1.0: '#d73027'},
-        ).add_to(fmap)
+        ).add_to(sst_group)
+        sst_group.add_to(fmap)
+
+        # Layer 2: Chlorophyll-a Productivity (Oceansat-3 OCM-3)
+        chl_group = folium.FeatureGroup(name="🌿 Chlorophyll-a (Oceansat-3 OCM-3)", show=False)
+        HeatMap(
+            chl_points,
+            radius=24,
+            blur=15,
+            min_opacity=0.30,
+            gradient={0.2: '#081d58', 0.4: '#225ea8', 0.6: '#41b6c4', 0.8: '#7fcdbb', 1.0: '#006837'},
+        ).add_to(chl_group)
+        chl_group.add_to(fmap)
+
+        # Layer Control for toggling between satellite layers
+        folium.LayerControl(position="topright", collapsed=False).add_to(fmap)
+
+        # Floating color ramp legend
+        fmap.get_root().html.add_child(folium.Element(get_eo_legend_html()))
 
     # 3. Persona: Coastal Authority High-Risk Geofence Polygon
     if persona == "coastal_authority":
@@ -408,16 +432,34 @@ def create_weather_map(
 
     circle_color = VERDICT_COLOR.get(safety_verdict, "#17a2b8")
 
-    # Persona: Researcher HeatMap
+    # Persona: Researcher Multi-Layer HeatMap (SST & Chlorophyll-a)
     if persona == "researcher" or show_sst_heatmap:
-        heat_points = _generate_sst_heat_points(user_lat, user_lon)
+        eo_data = generate_eo_grid(user_lat, user_lon)
+        sst_points = eo_data["sst_points"]
+        chl_points = eo_data["chlorophyll_points"]
+
+        sst_group = folium.FeatureGroup(name="🌡️ Sea Surface Temp (Sentinel-3 SLSTR)", show=True)
         HeatMap(
-            heat_points,
-            radius=26,
-            blur=16,
-            min_opacity=0.35,
+            sst_points,
+            radius=24,
+            blur=15,
+            min_opacity=0.30,
             gradient={0.2: '#08306b', 0.4: '#2171b5', 0.6: '#67a9cf', 0.8: '#fc8d59', 1.0: '#d73027'},
-        ).add_to(fmap)
+        ).add_to(sst_group)
+        sst_group.add_to(fmap)
+
+        chl_group = folium.FeatureGroup(name="🌿 Chlorophyll-a (Oceansat-3 OCM-3)", show=False)
+        HeatMap(
+            chl_points,
+            radius=24,
+            blur=15,
+            min_opacity=0.30,
+            gradient={0.2: '#081d58', 0.4: '#225ea8', 0.6: '#41b6c4', 0.8: '#7fcdbb', 1.0: '#006837'},
+        ).add_to(chl_group)
+        chl_group.add_to(fmap)
+
+        folium.LayerControl(position="topright", collapsed=False).add_to(fmap)
+        fmap.get_root().html.add_child(folium.Element(get_eo_legend_html()))
 
     # Persona: Coastal Authority Geofence Polygon
     if persona == "coastal_authority" or safety_verdict == "DANGER":

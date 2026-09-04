@@ -255,7 +255,46 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 """
         sections.append(nav_card)
 
-    # 7. Metadata Badge
+    # 7. Earth Observation & Satellite Diagnostic Summary (if available)
+    eo_res = result.get("eo_result")
+    if eo_res and eo_res.get("success"):
+        sst_mean = eo_res.get("mean_sst_c", 0.0)
+        sst_min = eo_res.get("min_sst_c", 0.0)
+        sst_max = eo_res.get("max_sst_c", 0.0)
+        sst_anom = eo_res.get("sst_anomaly_c", 0.0)
+        anom_sign = "+" if sst_anom > 0 else ""
+        chla_mean = eo_res.get("mean_chlorophyll_mg_m3", 0.0)
+        chla_max = eo_res.get("max_chlorophyll_mg_m3", 0.0)
+        upwell_int = eo_res.get("upwelling_intensity", "Moderate Upwelling")
+        thermocline = eo_res.get("thermocline_depth_m", 35)
+        front_coords = eo_res.get("upwelling_front_coords", [0.0, 0.0])
+        grid_pts = eo_res.get("grid_points_count", 0)
+
+        meta = eo_res.get("sensor_metadata", {})
+        sst_sensor = meta.get("sst_sensor", "Copernicus Sentinel-3 SLSTR")
+        chl_sensor = meta.get("ocean_color_sensor", "ISRO Oceansat-3 OCM-3")
+
+        eo_card = f"""
+---
+### 🔬 Earth Observation Diagnostic Summary
+**🛰️ Primary Sensors:** {sst_sensor} & {chl_sensor}  
+**🌐 Sampling Grid:** {grid_pts} telemetry stations (120 km radius)
+
+| Oceanographic Parameter | Satellite Derived Value | Climatological Context & Sensor Payload |
+|---|---|---|
+| **Mean Sea Surface Temp (SST)** | **{sst_mean:.2f}°C** (Range: {sst_min:.1f}°C – {sst_max:.1f}°C) | Sentinel-3 SLSTR infrared radiometry (1 km resolution) |
+| **Thermal Front Anomaly** | **{anom_sign}{sst_anom:.2f}°C** | Climatology baseline ({meta.get('climatology_baseline', '28.5°C')}) |
+| **Mean Chlorophyll-a** | **{chla_mean:.2f} mg/m³** | ISRO Oceansat-3 OCM-3 ({meta.get('chl_resolution', '300 m resolution')}) |
+| **Peak Chlorophyll Bloom** | **{chla_max:.2f} mg/m³** | Shelf edge primary productivity convergence |
+| **Baroclinic Upwelling Index** | **{upwell_int}** | Ekman transport & coastal divergence |
+| **Estimated Thermocline Depth** | **~{thermocline} m** | Subsurface mixed-layer pycnocline |
+| **Primary Upwelling Front** | `{front_coords[0]:.4f}°N, {front_coords[1]:.4f}°E` | Maximum horizontal thermal contrast |
+
+*💡 Tip: Use the Folium layer control on the top right of the map to toggle between SST Thermal Gradient and Chlorophyll-a Productivity.*
+"""
+        sections.append(eo_card)
+
+    # 8. Metadata Badge
     sections.append(_metadata_badge(result, persona))
 
     return "\n".join(sections)
@@ -272,8 +311,11 @@ def generate_map_for_result(
     weather_res = orch_result.get("weather_result")
     pfz_res = orch_result.get("pfz_result")
     nav_res = orch_result.get("navigation_result")
+    eo_res = orch_result.get("eo_result")
     pfz_suppressed = orch_result.get("pfz_suppressed", False)
     verdict = weather_res.get("verdict") if weather_res else None
+
+    effective_sst = show_sst_heatmap or bool(eo_res) or (persona == "researcher")
 
     # Case 1: PFZ Map active (with fuel-optimal navigation track)
     if pfz_res and not pfz_suppressed and pfz_res.get("success"):
@@ -289,10 +331,9 @@ def generate_map_for_result(
                 user_location_name=loc_name,
                 safety_verdict=verdict,
                 persona=persona,
-                show_sst_heatmap=show_sst_heatmap,
+                show_sst_heatmap=effective_sst,
                 nav_route=nav_res,
             )
-
 
     # Case 2: Pure Weather or DANGER suppression hazard map
     if weather_res and weather_res.get("success"):
@@ -307,8 +348,20 @@ def generate_map_for_result(
                 user_location_name=loc_name,
                 safety_verdict=v,
                 persona=persona,
-                show_sst_heatmap=show_sst_heatmap,
+                show_sst_heatmap=effective_sst,
             )
+
+    # Case 3: Direct EO result without weather agent
+    if eo_res and eo_res.get("success"):
+        coords = eo_res.get("center_coords", [0.0, 0.0])
+        return create_weather_map(
+            user_lat=coords[0],
+            user_lon=coords[1],
+            user_location_name="Oceanographic Sector",
+            safety_verdict="SAFE",
+            persona=persona,
+            show_sst_heatmap=True,
+        )
 
     return None
 

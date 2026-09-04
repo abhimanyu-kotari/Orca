@@ -278,7 +278,7 @@ class TestOrchestratorUnit(unittest.TestCase):
         """Every orchestrator response must contain the full required key set."""
         REQUIRED_KEYS = {
             "success", "intent", "intent_result", "agents_invoked",
-            "weather_result", "pfz_result", "navigation_result",
+            "weather_result", "pfz_result", "navigation_result", "eo_result",
             "pfz_suppressed", "pfz_suppression_reason", "synthesis", "synthesis_source",
         }
         mock_i.return_value   = _intent("pfz_location")
@@ -381,6 +381,42 @@ class TestOrchestratorUnit(unittest.TestCase):
 
         self.assertTrue(result["success"])
         self.assertIn("Which departure port", result["synthesis"])
+
+    # ------------------------------------------------------------------ #
+    # 7. ecosystem_query (Earth Observation & Oceanographic Telemetry)
+    # ------------------------------------------------------------------ #
+
+    @patch("orchestrator.intent_agent_run")
+    @patch("orchestrator.weather_agent_run")
+    def test_ecosystem_query_invokes_eo_tools(self, mock_w, mock_i):
+        """ecosystem_query invokes weather_agent and eo_tools, returning eo_result."""
+        mock_i.return_value = _intent("ecosystem_query", location="Kochi")
+        mock_w.return_value = _weather("SAFE")
+
+        result = orchestrator_run({"query": "analyze sst anomaly and chlorophyll near Kochi"})
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["intent"], "ecosystem_query")
+        self.assertIn("eo_tools", result["agents_invoked"])
+        self.assertIsNotNone(result["eo_result"])
+        eo = result["eo_result"]
+        self.assertTrue(eo["success"])
+        self.assertIn("sst_points", eo)
+        self.assertIn("chlorophyll_points", eo)
+        self.assertIn("mean_sst_c", eo)
+        self.assertIn("mean_chlorophyll_mg_m3", eo)
+        self.assertIn("Earth Observation & Oceanographic Telemetry", result["synthesis"])
+
+    @patch("orchestrator.intent_agent_run")
+    def test_ecosystem_query_missing_location_graceful(self, mock_i):
+        """ecosystem_query with missing location prompts for coastal sector."""
+        mock_i.return_value = _intent("ecosystem_query", location=None)
+
+        result = orchestrator_run({"query": "check ocean productivity"})
+
+        self.assertTrue(result["success"])
+        self.assertIn("Which coastal sector", result["synthesis"])
+        self.assertIsNone(result["eo_result"])
 
 
 
