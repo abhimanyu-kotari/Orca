@@ -1454,27 +1454,35 @@ def render_researcher_response(
                     [(24,"24H",0.2,0.15),(7*6,"7D",0.4,0.25),(30*4,"30D",0.8,0.4)]
                 ):
                     with tab:
-                        sst_s, chl_s = _make_ts(n, sst_mean, chla_mean, noise_s, noise_c)
-                        fig = go.Figure()
-                        fig.add_trace(go.Scatter(
-                            y=sst_s, name="SST (°C)", line=dict(color="#0EA5A8", width=2),
-                            fill="tozeroy", fillcolor="rgba(14,165,168,0.08)"
-                        ))
-                        fig.add_trace(go.Scatter(
-                            y=chl_s, name="Chl-a (mg/m³)", line=dict(color="#22D3EE", width=2),
-                            yaxis="y2"
-                        ))
-                        fig.update_layout(
-                            height=260, margin=dict(l=0,r=0,t=20,b=0),
-                            paper_bgcolor="#F8FAFC", plot_bgcolor="#F8FAFC",
-                            legend=dict(orientation="h", y=1.1),
-                            yaxis=dict(title="SST (°C)", titlefont=dict(color="#0EA5A8")),
-                            yaxis2=dict(title="Chl-a (mg/m³)", overlaying="y", side="right",
-                                        titlefont=dict(color="#22D3EE")),
-                            font=dict(family="Inter", size=11),
-                        )
-                        tab.plotly_chart(fig, use_container_width=True)
-                        tab.caption(f"⚠ Simulated {label} time-series — requires live ISRO API for real data")
+                        try:
+                            sst_s, chl_s = _make_ts(n, sst_mean, chla_mean, noise_s, noise_c)
+                            fig = go.Figure()
+                            fig.add_trace(go.Scatter(
+                                y=sst_s, name="SST (°C)", line=dict(color="#0EA5A8", width=2),
+                                fill="tozeroy", fillcolor="rgba(14,165,168,0.08)"
+                            ))
+                            fig.add_trace(go.Scatter(
+                                y=chl_s, name="Chl-a (mg/m³)", line=dict(color="#22D3EE", width=2),
+                                yaxis="y2"
+                            ))
+                            fig.update_layout(
+                                height=260,
+                                margin=dict(l=0, r=0, t=20, b=0),
+                                paper_bgcolor="#F8FAFC",
+                                plot_bgcolor="#F8FAFC",
+                                legend=dict(orientation="h", y=1.1),
+                                yaxis=dict(title=dict(text="SST (°C)", font=dict(color="#0EA5A8"))),
+                                yaxis2=dict(
+                                    title=dict(text="Chl-a (mg/m³)", font=dict(color="#22D3EE")),
+                                    overlaying="y",
+                                    side="right",
+                                ),
+                                font=dict(family="Inter", size=11),
+                            )
+                            tab.plotly_chart(fig, use_container_width=True)
+                            tab.caption(f"⚠ Simulated {label} time-series — requires live ISRO API for real data")
+                        except Exception as e:
+                            tab.warning("Visualization temporarily unavailable.")
 
                 with t4:
                     t4.info("📅 Custom date range requires live ISRO Oceansat-3 API connection.")
