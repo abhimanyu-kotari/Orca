@@ -434,7 +434,7 @@ st.divider()
 # 1. Render message history
 render_history()
 
-# 2. Render latest interactive Folium map if available
+# 2. Render latest interactive Folium map if available, or default authority map on initial load
 if st.session_state.current_map is not None:
     st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
     st_folium(
@@ -443,11 +443,59 @@ if st.session_state.current_map is not None:
         height=500,
         returned_objects=[],
     )
+elif persona == "coastal_authority" and not st.session_state.messages:
+    st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
+    default_auth_map = create_weather_map(
+        user_lat=13.0827,
+        user_lon=80.2707,
+        user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
+        safety_verdict="CAUTION",
+        persona="coastal_authority",
+    )
+    st_folium(
+        default_auth_map,
+        width=850,
+        height=480,
+        returned_objects=[],
+    )
+    with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("Active Vessels in Geofence", "142 Small Craft", "Evacuation Ready")
+        col_b.metric("Significant Wave Height", "2.10 m", "Elevated Swell")
+        col_c.metric("Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
+        st.caption("Active surveillance baseline for Coastal Warning Zone 4. Ask a query below or use direct controls to query any port.")
 
-# 3. Welcome banner when chat is fresh
+# 3. Welcome banner when chat is fresh (tailored to active Persona)
 if not st.session_state.messages:
     with st.chat_message("assistant"):
-        st.markdown(f"""
+        if persona == "coastal_authority":
+            welcome_text = f"""
+👋 **Welcome to ORCA Operations!** Operating in **{persona_label}** mode.
+
+**Try asking:**
+- *"Check storm surge risk near Chennai"*
+- *"What is the cyclone alert level for Visakhapatnam?"*
+- *"Is vessel evacuation recommended off Paradip today?"*
+- *"Show active high-wave hazard geofence near Mumbai"*
+- *"तूफान और भारी लहरों का अलर्ट चेक करें"* (Hindi)
+
+Use the sidebar to broadcast emergency evacuation notices via VHF Ch 16, NAVTEX, and coastal SMS! 📢
+"""
+        elif persona == "researcher":
+            welcome_text = f"""
+👋 **Welcome to ORCA Research!** Operating in **{persona_label}** mode.
+
+**Try asking:**
+- *"Analyze SST anomaly and chlorophyll concentrations off Kochi"*
+- *"What is the thermocline depth and upwelling status near Mangalore?"*
+- *"Compare marine primary productivity indices off Veraval"*
+- *"Check coastal salinity and wind stress curl near Tuticorin"*
+- *"कोच्चि के पास समुद्री सतह का तापमान और क्लोरोफिल विश्लेषण"* (Hindi)
+
+Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sentinel-3 telemetry! 🛰️
+"""
+        else:
+            welcome_text = f"""
 👋 **Welcome to ORCA!** Operating in **{persona_label}** mode.
 
 **Try asking:**
@@ -458,7 +506,8 @@ if not st.session_state.messages:
 - *"ராமேஸ்வரம் அருகே மீன்பிடிக்க எங்கே போவது?"* (Tamil)
 
 Switch between **Fisherman**, **Coastal Authority**, and **Researcher** in the sidebar to inspect role-specific navigation, hazard geofences, and satellite telemetry! 🧭
-        """)
+"""
+        st.markdown(welcome_text)
 
 # ── Chat input ────────────────────────────────────────────────────────────────
 if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safety..."):
