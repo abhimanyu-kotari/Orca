@@ -1,4 +1,9 @@
-# 🌊 ORCA — Marine EcoSystem Reasoning with Collaborative Agents
+<p align="center">
+  <img src="assets/orca_logo.png" width="280" alt="ORCA Logo" style="border-radius: 12px;"/>
+</p>
+
+# 🌊 ORCA — Satellite Intelligence for Safer Oceans
+*Marine EcoSystem Reasoning with Collaborative Agents*
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/Streamlit-1.30%2B-FF4B4B.svg)](https://streamlit.io/)

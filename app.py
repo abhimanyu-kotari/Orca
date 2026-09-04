@@ -25,6 +25,7 @@ Run:
 ─────────────────────────────────────────────────────────────────────────────
 """
 
+import os
 import folium
 import streamlit as st
 from streamlit_folium import st_folium
@@ -32,13 +33,15 @@ from streamlit_folium import st_folium
 from orchestrator import run as orchestrator_run
 from tools.map_tools import create_pfz_map, create_weather_map
 
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "orca_logo.png")
+LOGO_EXISTS = os.path.exists(LOGO_PATH)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page configuration
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="ORCA — Marine EcoSystem Intelligence",
-    page_icon="🌊",
+    page_title="ORCA — Satellite Intelligence for Safer Oceans",
+    page_icon=LOGO_PATH if LOGO_EXISTS else "🌊",
     layout="wide",
 )
 
@@ -433,6 +436,8 @@ def render_history():
 # ─────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
+    if LOGO_EXISTS:
+        st.image(LOGO_PATH, use_container_width=True)
     st.header("👤 Stakeholder Profile")
     st.caption("Select your role defined in ISRO Problem Statement 26176.")
 
@@ -588,8 +593,16 @@ with st.sidebar:
 # Main Chat UI
 # ─────────────────────────────────────────────────────────────────────────────
 
-st.title("🌊 ORCA")
-st.caption("Marine EcoSystem Reasoning with Collaborative Agents · ISRO SIH Problem Statement 26176")
+if LOGO_EXISTS:
+    col_logo, col_title = st.columns([1, 6], vertical_alignment="center")
+    with col_logo:
+        st.image(LOGO_PATH, width=95)
+    with col_title:
+        st.title("ORCA")
+        st.caption("Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176")
+else:
+    st.title("🌊 ORCA")
+    st.caption("Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176")
 
 # Dynamic Persona Header Banner
 if persona == "coastal_authority":
