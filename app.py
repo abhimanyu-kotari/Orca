@@ -247,25 +247,32 @@ div[data-testid="stRadio"] {
 }
 
 /* Force the inner radiogroup row to center and stretch children equally */
-div[role="radiogroup"] {
+div[role="radiogroup"],
+div[data-testid="stRadioGroup"] {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important; /* CRITICAL: Never wrap buttons to multiple lines */
     justify-content: center !important;
     align-items: stretch !important; /* CRITICAL: All 3 buttons stretch to identical height */
+    align-content: stretch !important;
     width: 100% !important;
-    max-width: 1020px !important;
+    max-width: 960px !important;
     margin: 0 auto !important;
-    gap: 14px !important;
+    gap: 10px !important;
 }
 
 /* Strictly uniform layout for all 3 buttons: equal width, height, padding, styling */
 div[role="radiogroup"] > label,
+div[data-testid="stRadioGroup"] > label,
+label[data-testid="stRadioOption"],
+label.react-aria-Radio,
 div[data-testid="stRadio"] [data-baseweb="radio"] {
     flex: 1 1 0 !important;
     width: 0 !important; /* CRITICAL: exactly equal 1/3 width distribution */
     min-width: 0 !important;
-    min-height: 56px !important; /* Uniform height */
-    height: 100% !important;
+    height: auto !important; /* CRITICAL: Must be auto, NOT 100%, so align-self: stretch takes effect */
+    min-height: 52px !important;
+    align-self: stretch !important; /* CRITICAL: Forces all 3 buttons to identical height */
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
@@ -273,7 +280,7 @@ div[data-testid="stRadio"] [data-baseweb="radio"] {
     background: #FFFFFF !important;
     border: 1.5px solid #CBD5E1 !important;
     border-radius: 8px !important;
-    padding: 8px 12px !important;
+    padding: 6px 10px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     margin: 0 !important;
@@ -281,36 +288,53 @@ div[data-testid="stRadio"] [data-baseweb="radio"] {
     text-align: center !important;
 }
 
+/* Inner containers inside each button */
+label[data-testid="stRadioOption"] > div,
+div[role="radiogroup"] > label > div {
+    display: flex !important;
+    flex: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+label[data-testid="stRadioOption"] > div > div,
+div[role="radiogroup"] > label > div > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    gap: 6px !important;
+}
+
 /* Radio circle alignment */
+label[data-testid="stRadioOption"] div:has(> input[type="radio"]),
+label[data-testid="stRadioOption"] div[class*="eqiohyi4"],
 div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
     flex-shrink: 0 !important;
-    margin-right: 8px !important;
+    margin-right: 4px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
 /* Radio label text formatting & centering */
-div[data-testid="stRadio"] [data-baseweb="radio"] > div:last-child {
-    flex: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
 div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] {
-    width: 100% !important;
+    flex: 1 !important;
+    min-width: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
+    width: 100% !important;
 }
 
 div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-    font-size: 0.88rem !important;
+    font-size: 0.82rem !important;
     font-weight: 600 !important;
     line-height: 1.25 !important;
     color: #1E293B !important;
@@ -321,24 +345,81 @@ div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
 }
 
 /* Hover & Active States */
-div[data-testid="stRadio"] [data-baseweb="radio"]:hover,
-div[data-testid="stRadio"] label:hover {
+div[data-testid="stRadio"] label:hover,
+label[data-testid="stRadioOption"]:hover {
     border-color: #0EA5A8 !important;
     background: #F0FDFA !important;
 }
-div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
 div[data-testid="stRadio"] label:has(input:checked),
-div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"],
-div[data-testid="stRadio"] label[aria-checked="true"] {
+label[data-testid="stRadioOption"][data-selected="true"],
+label[data-testid="stRadioOption"]:has(input:checked) {
     background: #F0FDFA !important;
     border-color: #0EA5A8 !important;
     border-width: 2px !important;
     box-shadow: 0 2px 8px rgba(14, 165, 168, 0.18) !important;
 }
-div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) p,
-div[data-testid="stRadio"] label:has(input:checked) p {
+div[data-testid="stRadio"] label:has(input:checked) p,
+label[data-testid="stRadioOption"][data-selected="true"] p {
     color: #0B2638 !important;
     font-weight: 700 !important;
+}
+
+/* ── Telemetry & Metrics Responsive Styling ────────────────── */
+[data-testid="stMetric"] {
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    text-align: center !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+[data-testid="stMetricLabel"] {
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    color: #64748B !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.2 !important;
+}
+[data-testid="stMetricLabel"] p {
+    font-size: 0.74rem !important;
+    margin: 0 !important;
+    white-space: normal !important;
+}
+[data-testid="stMetricValue"] {
+    font-size: 1.12rem !important;
+    font-weight: 800 !important;
+    color: #0B2638 !important;
+    line-height: 1.2 !important;
+}
+[data-testid="stMetricValue"] div {
+    font-size: 1.12rem !important;
+}
+[data-testid="stMetricDelta"] {
+    font-size: 0.70rem !important;
+    line-height: 1.2 !important;
+    font-weight: 500 !important;
+}
+
+/* ── Alert & Info Banners Compact Styling ──────────────────── */
+div[data-testid="stAlert"] {
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+}
+div[data-testid="stAlert"] p {
+    font-size: 0.80rem !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+}
+
+/* ── Chat Message Compact Styling ──────────────────────────── */
+div[data-testid="stChatMessage"] {
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
 }
 
 /* ── Maps & Graphs Responsive Constraints ──────────────────── */
@@ -346,11 +427,11 @@ iframe[title="streamlit_folium.st_folium"],
 div[data-testid="stCustomComponentV1"] iframe {
     border-radius: 12px !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
-    max-height: 400px !important;
+    max-height: 380px !important;
     width: 100% !important;
 }
 .js-plotly-plot, .plot-container {
-    max-height: 280px !important;
+    max-height: 260px !important;
     width: 100% !important;
 }
 
@@ -361,24 +442,24 @@ div[data-testid="stCustomComponentV1"] iframe {
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
         padding-top: 3.25rem !important;
-        padding-bottom: 2.5rem !important;
+        padding-bottom: 2.25rem !important;
     }
 
     /* Compact Hero Header on mobile */
     .orca-hero-header {
         gap: 10px !important;
-        margin: 2px 0 8px 0 !important;
+        margin: 2px 0 6px 0 !important;
     }
     .orca-hero-logo {
-        width: 40px !important;
-        height: 40px !important;
+        width: 38px !important;
+        height: 38px !important;
         border-radius: 8px !important;
     }
     .orca-hero-title {
-        font-size: 1.35rem !important;
+        font-size: 1.25rem !important;
     }
     .orca-hero-subtitle {
-        font-size: 0.68rem !important;
+        font-size: 0.67rem !important;
         margin-top: 2px !important;
     }
 
@@ -387,73 +468,207 @@ div[data-testid="stCustomComponentV1"] iframe {
     div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
     div.st-key-sticky_persona_container {
         top: 2.875rem !important; /* Mobile Streamlit header height */
-        padding-top: 5px !important;
-        padding-bottom: 6px !important;
+        padding-top: 4px !important;
+        padding-bottom: 5px !important;
     }
 
     /* Tighter gap & compact buttons */
-    div[role="radiogroup"] {
+    div[role="radiogroup"],
+    div[data-testid="stRadioGroup"] {
         gap: 6px !important;
         width: 100% !important;
+        align-items: stretch !important;
     }
     div[role="radiogroup"] > label,
-    div[data-testid="stRadio"] [data-baseweb="radio"] {
-        padding: 4px 6px !important;
-        min-height: 44px !important;
+    div[data-testid="stRadioGroup"] > label,
+    label[data-testid="stRadioOption"],
+    label.react-aria-Radio {
+        padding: 4px 5px !important;
+        height: auto !important;
+        min-height: 42px !important;
+        align-self: stretch !important;
         border-radius: 6px !important;
     }
 
     /* Small radio indicator dot on mobile */
+    label[data-testid="stRadioOption"] div[class*="eqiohyi4"],
+    label[data-testid="stRadioOption"] div:has(> input[type="radio"]),
     div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
-        margin-right: 4px !important;
-        transform: scale(0.82) !important;
+        margin-right: 3px !important;
+        transform: scale(0.80) !important;
     }
 
     /* Compact typography inside buttons */
     div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-        font-size: 0.72rem !important;
+        font-size: 0.70rem !important;
         line-height: 1.15 !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    /* Compact Metrics on mobile */
+    [data-testid="stMetric"] {
+        padding: 4px 5px !important;
+        border-radius: 6px !important;
+    }
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricLabel"] p {
+        font-size: 0.63rem !important;
+        line-height: 1.15 !important;
+    }
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] div {
+        font-size: 0.92rem !important;
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: 0.60rem !important;
+    }
+
+    /* Compact Alert Banners */
+    div[data-testid="stAlert"] {
+        padding: 6px 8px !important;
+        border-radius: 6px !important;
+        margin-bottom: 6px !important;
+    }
+    div[data-testid="stAlert"] p {
+        font-size: 0.72rem !important;
+        line-height: 1.25 !important;
+    }
+
+    /* Compact Chat Messages */
+    div[data-testid="stChatMessage"] {
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+        margin-bottom: 6px !important;
+    }
+    div[data-testid="stChatMessage"] [data-testid="stChatMessageAvatar"] {
+        width: 26px !important;
+        height: 26px !important;
+    }
+    div[data-testid="stChatMessage"] p,
+    div[data-testid="stChatMessage"] li {
+        font-size: 0.78rem !important;
+        line-height: 1.3 !important;
     }
 
     /* Maps: Prevent taking 60-90% of screen height */
     iframe[title="streamlit_folium.st_folium"],
     div[data-testid="stCustomComponentV1"] iframe {
-        height: 270px !important;
-        max-height: 270px !important;
+        height: 250px !important;
+        max-height: 250px !important;
         width: 100% !important;
     }
 
     /* Plotly graphs: Compact height */
     .js-plotly-plot, .plot-container {
-        max-height: 220px !important;
+        max-height: 200px !important;
         width: 100% !important;
     }
 
     /* Compact Cards & Metrics */
     .safety-card-safe, .safety-card-caution, .safety-card-danger {
-        padding: 14px 16px !important;
+        padding: 12px 14px !important;
     }
     .safety-verdict {
-        font-size: 1.25rem !important;
+        font-size: 1.2rem !important;
     }
     .safety-subtitle {
-        font-size: 0.78rem !important;
-        margin-bottom: 12px !important;
+        font-size: 0.75rem !important;
+        margin-bottom: 10px !important;
     }
     .safety-metrics {
-        gap: 14px !important;
+        gap: 12px !important;
     }
     .safety-metric-val {
-        font-size: 0.95rem !important;
+        font-size: 0.90rem !important;
     }
     .safety-metric-lbl {
-        font-size: 0.62rem !important;
+        font-size: 0.60rem !important;
     }
     .alert-critical, .alert-warning, .alert-advisory, .alert-info {
-        padding: 10px 12px !important;
+        padding: 8px 10px !important;
     }
     .zone-card, .route-card, .orca-card, .orca-card-dark {
-        padding: 12px 14px !important;
+        padding: 10px 12px !important;
+    }
+
+    /* Compact Chat Input */
+    div[data-testid="stChatInput"] textarea {
+        font-size: 0.80rem !important;
+        min-height: 36px !important;
+    }
+}
+
+/* ── Extra Small Screens (<= 480px) ────────────────────────── */
+@media (max-width: 480px) {
+    .block-container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        padding-top: 3.0rem !important;
+        padding-bottom: 1.75rem !important;
+    }
+
+    .orca-hero-header {
+        gap: 8px !important;
+        margin: 1px 0 4px 0 !important;
+    }
+    .orca-hero-logo {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
+    }
+    .orca-hero-title {
+        font-size: 1.1rem !important;
+    }
+    .orca-hero-subtitle {
+        font-size: 0.60rem !important;
+        line-height: 1.15 !important;
+    }
+
+    div[role="radiogroup"],
+    div[data-testid="stRadioGroup"] {
+        gap: 4px !important;
+    }
+    div[role="radiogroup"] > label,
+    div[data-testid="stRadioGroup"] > label,
+    label[data-testid="stRadioOption"],
+    label.react-aria-Radio {
+        padding: 3px 3px !important;
+        min-height: 38px !important;
+        border-radius: 5px !important;
+    }
+    div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+        font-size: 0.65rem !important;
+        line-height: 1.1 !important;
+    }
+    label[data-testid="stRadioOption"] div[class*="eqiohyi4"] {
+        transform: scale(0.72) !important;
+        margin-right: 1px !important;
+    }
+
+    [data-testid="stMetric"] {
+        padding: 3px 3px !important;
+    }
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricLabel"] p {
+        font-size: 0.56rem !important;
+        line-height: 1.05 !important;
+    }
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] div {
+        font-size: 0.80rem !important;
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: 0.52rem !important;
+    }
+
+    iframe[title="streamlit_folium.st_folium"],
+    div[data-testid="stCustomComponentV1"] iframe {
+        height: 220px !important;
+        max-height: 220px !important;
+    }
+
+    .js-plotly-plot, .plot-container {
+        max-height: 175px !important;
     }
 }
 
@@ -2103,8 +2318,8 @@ st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
 persona_options = [
     "🎣 Artisanal Fisherman",
-    "🚨 Coastal Authority / Disaster Management",
-    "🔬 Marine Researcher / Oceanographer",
+    "🚨 Coastal Authority",
+    "🔬 Marine Researcher",
 ]
 
 def _on_persona_change():
@@ -2159,20 +2374,20 @@ else:
 if persona == "coastal_authority":
     st.warning("""
     🚨 **COASTAL DISASTER MONITORING & MARITIME GEOFENCE ACTIVE**  
-    **Surveillance Status:** Level-2 Marine Gale Watch | **Monitored Sector:** Coastal Warning Zone 4  
-    *High-risk storm surge & cyclone geofences are actively rendered on charts. Real-time surveillance & vessel safety protocols active.*
+    **Status:** Level-2 Marine Gale Watch | **Sector:** Coastal Warning Zone 4  
+    *High-risk storm surge & cyclone geofences actively rendered on charts.*
     """)
 elif persona == "researcher":
     st.info("""
     🔬 **EARTH OBSERVATION & OCEANOGRAPHIC TELEMETRY (ISRO Oceansat-3 / Sentinel-3 SLSTR)**  
-    **Spectral Sensors:** Ocean Colour Monitor (OCM-3) & Sea Surface Temperature (SST) Radiometer  
-    *HeatMap overlay visualizes thermal plumes and coastal upwelling fronts driving marine productivity.*
+    **Sensors:** Ocean Colour Monitor (OCM-3) & SST Radiometer · *Thermal plumes & coastal upwelling fronts.*
     """)
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Sea Surface Temp (SST)", "28.4 °C", "+0.4°C anom")
-    col2.metric("Chlorophyll-a", "2.15 mg/m³", "Upwelling front")
-    col3.metric("Thermocline Depth", "42 m", "-3 m")
-    col4.metric("Mean Salinity", "34.9 PSU", "Normal")
+    col1.metric("SST (Sea Temp)", "28.4 °C", "+0.4°C anom")
+    col2.metric("Chlorophyll-a", "2.15 mg/m³", "Upwelling")
+    col3.metric("Thermocline", "42 m", "-3 m")
+    col4.metric("Salinity", "34.9 PSU", "Normal")
+
 
 active_view = st.session_state.get("active_nav_view", "dashboard")
 
@@ -2435,7 +2650,7 @@ else:
 - *"Check coastal salinity and wind stress curl near Tuticorin"*
 - *"कोच्चि के पास समुद्री सतह का तापमान और क्लोरोफिल विश्लेषण"* (Hindi)
 
-Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sentinel-3 telemetry! 🛰️
+Use the map layer control to toggle Oceansat-3 & Sentinel-3 telemetry! 🛰️
 """
             else:
                 lang_pills_str = " · ".join(LANG_DISPLAY.values())
