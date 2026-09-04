@@ -53,10 +53,31 @@ from config import GEMINI_API_KEY, GEMINI_MODEL
 # ─────────────────────────────────────────────────────────────────────────────
 _GEMINI_TIMEOUT_S: int = 60
 
-_gemini = genai.Client(
-    api_key=GEMINI_API_KEY,
-    http_options={"timeout": _GEMINI_TIMEOUT_S},
-)
+_gemini = None
+
+
+def _get_gemini_client():
+    """Lazily and safely instantiate or return the genai.Client."""
+    global _gemini
+    if _gemini is not None:
+        return _gemini
+    from config import get_gemini_api_key
+    key = get_gemini_api_key()
+    if key:
+        try:
+            _gemini = genai.Client(
+                api_key=key,
+                http_options={"timeout": _GEMINI_TIMEOUT_S},
+            )
+        except Exception:
+            _gemini = None
+    return _gemini
+
+
+# Initialise on load if key is already available in secrets or env
+if GEMINI_API_KEY:
+    _get_gemini_client()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -310,8 +331,12 @@ def run(inputs: dict) -> dict:
     # ── Step 1: Ask Gemini ────────────────────────────────────────────────────
     prompt = _build_prompt(query)
 
+    client = _get_gemini_client()
+    if not client:
+        return _fallback_parse(query, "GEMINI_API_KEY not configured or client unavailable")
+
     try:
-        response = _gemini.models.generate_content(
+        response = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=prompt,
             config={"http_options": {"timeout": _GEMINI_TIMEOUT_S}},

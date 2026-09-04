@@ -63,10 +63,31 @@ from tools.weather_tools import (
 # 60 s covers both the SSL handshake and the Gemini response read on slow links.
 _GEMINI_TIMEOUT_S: int = 60
 
-_gemini = genai.Client(
-    api_key=GEMINI_API_KEY,
-    http_options={"timeout": _GEMINI_TIMEOUT_S},
-)
+_gemini = None
+
+
+def _get_gemini_client():
+    """Lazily and safely instantiate or return the genai.Client."""
+    global _gemini
+    if _gemini is not None:
+        return _gemini
+    from config import get_gemini_api_key
+    key = get_gemini_api_key()
+    if key:
+        try:
+            _gemini = genai.Client(
+                api_key=key,
+                http_options={"timeout": _GEMINI_TIMEOUT_S},
+            )
+        except Exception:
+            _gemini = None
+    return _gemini
+
+
+# Initialise on load if key is already available in secrets or env
+if GEMINI_API_KEY:
+    _get_gemini_client()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -274,11 +295,25 @@ Respond ONLY with a valid JSON object — no markdown fences, no extra text:
 }}
 """
 
+    client = _get_gemini_client()
+    if not client:
+        return {
+            "verdict":   rule_verdict,
+            "summary":   (
+                f"Conditions for {location} assessed from live forecast data. "
+                f"Peak wave height: {metrics['max_wave_height_m']:.2f} m, "
+                f"peak wind: {metrics['max_wind_speed_kmh']:.1f} km/h."
+            ),
+            "reasoning": (
+                f"• Rule-based assessment active (AI analysis optional).\n"
+                f"• Rule-based verdict ({rule_verdict}) applied using IMD/INCOIS thresholds.\n"
+                f"• Peak wind {metrics['max_wind_speed_kmh']:.1f} km/h (danger threshold: {THRESHOLDS['wind_danger_kmh']} km/h)\n"
+                f"• Peak wave {metrics['max_wave_height_m']:.2f} m (danger threshold: {THRESHOLDS['wave_danger_m']} m)"
+            ),
+        }
+
     try:
-        # Per-request timeout reuses the same _GEMINI_TIMEOUT object defined at
-        # module level, so both the Client transport and this call share identical
-        # ceiling values — no accidental mismatch.
-        response   = _gemini.models.generate_content(
+        response   = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=prompt,
             config={"http_options": {"timeout": _GEMINI_TIMEOUT_S}},

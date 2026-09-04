@@ -52,10 +52,31 @@ from tools.pfz_tools import find_nearest_zones
 # ─────────────────────────────────────────────────────────────────────────────
 _GEMINI_TIMEOUT_S: int = 60
 
-_gemini = genai.Client(
-    api_key=GEMINI_API_KEY,
-    http_options={"timeout": _GEMINI_TIMEOUT_S},
-)
+_gemini = None
+
+
+def _get_gemini_client():
+    """Lazily and safely instantiate or return the genai.Client."""
+    global _gemini
+    if _gemini is not None:
+        return _gemini
+    from config import get_gemini_api_key
+    key = get_gemini_api_key()
+    if key:
+        try:
+            _gemini = genai.Client(
+                api_key=key,
+                http_options={"timeout": _GEMINI_TIMEOUT_S},
+            )
+        except Exception:
+            _gemini = None
+    return _gemini
+
+
+# Initialise on load if key is already available in secrets or env
+if GEMINI_API_KEY:
+    _get_gemini_client()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -201,26 +222,31 @@ def run(inputs: dict) -> dict:
     prompt          = _build_advisory_prompt(location_name or resolved_name, zones)
     advisory_source = "gemini"
 
-    try:
-        response = _gemini.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-            config={"http_options": {"timeout": _GEMINI_TIMEOUT_S}},
-        )
-        raw_text   = response.text.strip()
-        clean_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        advice     = json.loads(clean_text)
-
-        # Validate keys
-        if not all(k in advice for k in ("summary", "top_zone", "safety_note")):
-            raise ValueError("Missing keys in Gemini advisory response.")
-
-    except (TimeoutError, httpx.TimeoutException):
+    client = _get_gemini_client()
+    if not client:
         advice          = _rule_based_advisory(location_name or resolved_name, zones)
-        advisory_source = "rule-based (Gemini timed out)"
-    except (json.JSONDecodeError, ValueError, Exception):
-        advice          = _rule_based_advisory(location_name or resolved_name, zones)
-        advisory_source = "rule-based (Gemini failed)"
+        advisory_source = "rule-based (GEMINI_API_KEY not configured)"
+    else:
+        try:
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config={"http_options": {"timeout": _GEMINI_TIMEOUT_S}},
+            )
+            raw_text   = response.text.strip()
+            clean_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            advice     = json.loads(clean_text)
+
+            # Validate keys
+            if not all(k in advice for k in ("summary", "top_zone", "safety_note")):
+                raise ValueError("Missing keys in Gemini advisory response.")
+
+        except (TimeoutError, httpx.TimeoutException):
+            advice          = _rule_based_advisory(location_name or resolved_name, zones)
+            advisory_source = "rule-based (Gemini timed out)"
+        except (json.JSONDecodeError, ValueError, Exception):
+            advice          = _rule_based_advisory(location_name or resolved_name, zones)
+            advisory_source = "rule-based (Gemini failed)"
 
     # ─ Step 4: Build best_zone reference ──────────────────────────────
     top_zone_name = advice.get("top_zone")
