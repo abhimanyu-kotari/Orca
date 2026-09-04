@@ -268,31 +268,58 @@ def _execute_orchestration(inputs: dict) -> dict:
 
         # ── Cross-Reference & Safety Override ────────────────────────────────
         if verdict == "DANGER":
-            pfz_suppressed = True
-            suppression_reason = (
-                f"DANGER weather conditions detected near {location}. "
-                f"Peak wind/waves exceed maritime safety thresholds. "
-                f"PFZ recommendations are suppressed to protect life and vessels at sea."
-            )
+            best_zone = (pfz_res.get("best_zone") or {}) if pfz_res.get("success") else {}
+            best_name = best_zone.get("name", "identified zone")
+
+            # Calculate planning route with hazard avoidance geofence
+            nav_res = None
+            if pfz_res.get("success"):
+                u_lat = pfz_res.get("lat")
+                u_lon = pfz_res.get("lon")
+                t_lat, t_lon, t_name = _extract_target_coords(pfz_res)
+                if u_lat is not None and u_lon is not None and t_lat is not None and t_lon is not None:
+                    geos = [_generate_coastal_geofence_coords(u_lat, u_lon)]
+                    nav_res = calculate_optimal_route(
+                        start_coords=[u_lat, u_lon],
+                        end_coords=[t_lat, t_lon],
+                        hazard_geofences=geos,
+                        start_label=pfz_res.get("location", location),
+                        end_label=t_name,
+                    )
+                    agents_invoked.append("navigation_tools")
+
             synthesis = (
                 f"🚨 **DANGER Alert for {location}:** Severe weather or high sea state detected.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
-                f"⚠️ **FISHING ADVISORY SUPPRESSED:** Navigating to Potential Fishing Zones is strictly "
-                f"discouraged under DANGER conditions. Small craft should not venture into the sea."
+                f"⚠️ **Navigation Suspended: Sea state / Lightning hazard active. "
+                f"Showing direct displacement metrics for planning purposes only once weather clears.**\n\n"
+                f"🐟 **Identified Hotspot (Pre-Voyage Planning):** **{best_name}**.\n"
+                f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
             )
+            if nav_res and nav_res.get("imbl_warning_active"):
+                synthesis += (
+                    f"\n\n🛑 **IMBL PROXIMITY WARNING:** Navigation track passes within "
+                    f"**{nav_res['imbl_min_distance_nm']:.1f} NM** of **{nav_res['imbl_closest_boundary']}** international border. "
+                    f"High risk of impoundment — maintain minimum 5 NM clearance!"
+                )
+
             return {
                 "success": True,
                 "intent": intent,
                 "intent_result": intent_result,
                 "agents_invoked": agents_invoked,
                 "weather_result": weather_res,
-                "pfz_result": None,  # Strictly withheld for safety
-                "navigation_result": None,
+                "pfz_result": pfz_res if pfz_res.get("success") else None,
+                "navigation_result": nav_res,
                 "eo_result": None,
-                "pfz_suppressed": pfz_suppressed,
-                "pfz_suppression_reason": suppression_reason,
+                "navigation_suspended": True,
+                "pfz_suppressed": False,
+                "pfz_suppression_reason": (
+                    "⚠️ Navigation Suspended: Sea state / Lightning hazard active. "
+                    "Showing direct displacement metrics for planning purposes only once weather clears."
+                ),
                 "synthesis": synthesis,
-                "synthesis_source": "orchestrator_safety_override",
+                "synthesis_source": "orchestrator_danger_planning",
             }
 
         elif verdict == "CAUTION":
@@ -482,31 +509,7 @@ def _execute_orchestration(inputs: dict) -> dict:
 
         agents_invoked.extend(["weather_agent", "pfz_agent", "navigation_tools"])
         verdict = weather_res.get("verdict", "SAFE") if weather_res.get("success") else "SAFE"
-
-        if verdict == "DANGER":
-            suppression_reason = (
-                f"DANGER weather conditions active near {location}. "
-                f"Navigation corridors and fishing routes are suspended for vessel survivability."
-            )
-            synthesis = (
-                f"🚨 **Navigation Suspended for {location}:** Severe weather or high sea state detected.\n\n"
-                f"{weather_res.get('summary', '')}\n\n"
-                f"⛔ **TRANSIT NOT ADVISED:** Fuel-optimal waypoint routing is suspended under DANGER status."
-            )
-            return {
-                "success": True,
-                "intent": intent,
-                "intent_result": intent_result,
-                "agents_invoked": agents_invoked,
-                "weather_result": weather_res,
-                "pfz_result": None,
-                "navigation_result": None,
-                "eo_result": None,
-                "pfz_suppressed": True,
-                "pfz_suppression_reason": suppression_reason,
-                "synthesis": synthesis,
-                "synthesis_source": "orchestrator_safety_override",
-            }
+        is_danger = (verdict == "DANGER")
 
         u_lat = pfz_res.get("lat") if pfz_res.get("success") else None
         u_lon = pfz_res.get("lon") if pfz_res.get("success") else None
@@ -522,13 +525,14 @@ def _execute_orchestration(inputs: dict) -> dict:
                 "pfz_result": pfz_res,
                 "navigation_result": None,
                 "eo_result": None,
+                "navigation_suspended": is_danger,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
                 "synthesis": f"Could not locate destination fishing coordinates near {location}.",
                 "synthesis_source": "rule-based",
             }
 
-        geos = [_generate_coastal_geofence_coords(u_lat, u_lon)] if verdict == "CAUTION" else None
+        geos = [_generate_coastal_geofence_coords(u_lat, u_lon)] if (verdict in ("CAUTION", "DANGER")) else None
         nav_res = calculate_optimal_route(
             start_coords=[u_lat, u_lon],
             end_coords=[t_lat, t_lon],
@@ -538,15 +542,30 @@ def _execute_orchestration(inputs: dict) -> dict:
         )
 
         econ = nav_res["fuel_economy"]
-        synthesis = (
-            f"🧭 **Fuel-Optimal Waypoint Navigation Plan:** {location} ➔ **{t_name}**\n\n"
-            f"- **Direct Track Distance:** {nav_res['total_distance_nm']:.1f} NM ({nav_res['total_distance_km']:.1f} km)\n"
-            f"- **Optimal Compass Heading:** **{nav_res['direct_heading_str']}**\n"
-            f"- **Estimated Cruising Duration:** ~{econ['transit_time_str']} (@ 9.0 knots)\n"
-            f"- **Marine Fuel Economy:** Saves **{econ['fuel_saved_liters']:.1f} Liters** of diesel "
-            f"(~₹{econ['cost_saved_inr']:,.0f}) versus unguided search cruising.\n"
-            f"- **Geofence Clearance Check:** {nav_res['geofence_status']}"
-        )
+        if is_danger:
+            synthesis = (
+                f"🚨 **DANGER Alert for {location}:** Severe weather or high sea state detected.\n\n"
+                f"{weather_res.get('summary', '')}\n\n"
+                f"⚠️ **Navigation Suspended: Sea state / Lightning hazard active. "
+                f"Showing direct displacement metrics for planning purposes only once weather clears.**\n\n"
+                f"🧭 **Planning Navigation Track:** {location} ➔ **{t_name}**\n\n"
+                f"- **Direct Track Distance:** {nav_res['total_distance_nm']:.1f} NM ({nav_res['total_distance_km']:.1f} km)\n"
+                f"- **Optimal Compass Heading:** **{nav_res['direct_heading_str']}**\n"
+                f"- **Estimated Cruising Duration:** ~{econ['transit_time_str']} (@ 9.0 knots)\n"
+                f"- **Marine Fuel Economy:** Saves **{econ['fuel_saved_liters']:.1f} Liters** of diesel "
+                f"(~₹{econ['cost_saved_inr']:,.0f}) versus unguided search cruising.\n"
+                f"- **Geofence Status:** {nav_res['geofence_status']}"
+            )
+        else:
+            synthesis = (
+                f"🧭 **Fuel-Optimal Waypoint Navigation Plan:** {location} ➔ **{t_name}**\n\n"
+                f"- **Direct Track Distance:** {nav_res['total_distance_nm']:.1f} NM ({nav_res['total_distance_km']:.1f} km)\n"
+                f"- **Optimal Compass Heading:** **{nav_res['direct_heading_str']}**\n"
+                f"- **Estimated Cruising Duration:** ~{econ['transit_time_str']} (@ 9.0 knots)\n"
+                f"- **Marine Fuel Economy:** Saves **{econ['fuel_saved_liters']:.1f} Liters** of diesel "
+                f"(~₹{econ['cost_saved_inr']:,.0f}) versus unguided search cruising.\n"
+                f"- **Geofence Clearance Check:** {nav_res['geofence_status']}"
+            )
         if nav_res.get("imbl_warning_active"):
             synthesis += (
                 f"\n\n🛑 **IMBL PROXIMITY WARNING: Risk of Impoundment!** "
@@ -564,8 +583,12 @@ def _execute_orchestration(inputs: dict) -> dict:
             "pfz_result": pfz_res,
             "navigation_result": nav_res,
             "eo_result": None,
+            "navigation_suspended": is_danger,
             "pfz_suppressed": False,
-            "pfz_suppression_reason": None,
+            "pfz_suppression_reason": (
+                "⚠️ Navigation Suspended: Sea state / Lightning hazard active. "
+                "Showing direct displacement metrics for planning purposes only once weather clears."
+            ) if is_danger else None,
             "synthesis": synthesis,
             "synthesis_source": "navigation_synthesis",
         }

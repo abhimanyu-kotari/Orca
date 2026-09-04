@@ -121,6 +121,9 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
     pfz_res = result.get("pfz_result")
     pfz_suppressed = result.get("pfz_suppressed", False)
     suppression_reason = result.get("pfz_suppression_reason")
+    nav_suspended = result.get("navigation_suspended", False)
+    is_danger = (weather_res and weather_res.get("verdict") == "DANGER")
+    is_suspended = nav_suspended or is_danger
 
     sections = []
 
@@ -128,8 +131,14 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
     if synthesis:
         sections.append(synthesis)
 
-    # 2. Critical Safety Suppression Alert
-    if pfz_suppressed and suppression_reason:
+    # 2. Critical Safety Suspension Alert / Planning Notice
+    suspension_banner = (
+        "> ⚠️ **Navigation Suspended: Sea state / Lightning hazard active. "
+        "Showing direct displacement metrics for planning purposes only once weather clears.**"
+    )
+    if is_suspended and "Navigation Suspended: Sea state / Lightning hazard active" not in synthesis:
+        sections.append(f"\n{suspension_banner}")
+    elif pfz_suppressed and suppression_reason and suppression_reason not in synthesis:
         sections.append(
             f"\n> 🚨 **MARITIME SAFETY OVERRIDE ENFORCED:**\n"
             f"> {suppression_reason}"
@@ -193,8 +202,8 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 """
         sections.append(weather_card)
 
-    # 5. PFZ Hotspots Table (if available and NOT suppressed)
-    if pfz_res and not pfz_suppressed and pfz_res.get("success"):
+    # 5. PFZ Hotspots Table (if available)
+    if pfz_res and pfz_res.get("success"):
         zones = pfz_res.get("zones", [])
         best = pfz_res.get("best_zone", {})
         zone_rows = ""
@@ -209,9 +218,10 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
             )
 
         best_name = best.get("name", "—") if best else "—"
+        planning_tag = " ⚠️ *(Pre-Voyage Planning — Navigation Suspended)*" if is_suspended else ""
         pfz_card = f"""
 ---
-### 🐟 Potential Fishing Zones (INCOIS Data)
+### 🐟 Potential Fishing Zones (INCOIS Data){planning_tag}
 **📍 Reference Port:** {pfz_res.get('location', 'N/A')}
 
 | # | Zone Name | Distance | Depth | Commercially Viable Species |
@@ -222,9 +232,9 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 """
         sections.append(pfz_card)
 
-    # 6. Fuel-Optimal Navigation & Waypoint Summary (if available & safe)
+    # 6. Fuel-Optimal Navigation & Waypoint Summary (if available)
     nav_res = result.get("navigation_result")
-    if nav_res and not pfz_suppressed and nav_res.get("success"):
+    if nav_res and nav_res.get("success"):
         total_nm = nav_res.get("total_distance_nm", 0.0)
         total_km = nav_res.get("total_distance_km", 0.0)
         heading = nav_res.get("direct_heading_str", "—")
@@ -246,11 +256,23 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
                 f"by foreign maritime authorities. **Maintain minimum 5 NM seaward safety clearance.**"
             )
 
-        detour_badge = (
-            "🚨 **Detour Engaged:** Course adjusted to steer clear of active coastal hazard geofence."
-            if has_detour
-            else "✅ Direct track is clear of all active storm surge and hazard geofences."
-        )
+        if is_suspended:
+            nav_title = "### ⛽ Fuel-Optimal Navigation Summary ⚠️ [TRANSIT SUSPENDED — BENCHMARK PLANNING ONLY]"
+            safety_flag_banner = (
+                "> ⚠️ **SAFETY WARNING FLAG:** Active marine hazard/convective alert prohibits immediate sailing. "
+                "Displacement distance and fuel economics shown below for judging benchmark & pre-voyage planning once weather clears.\n\n"
+            )
+            detour_badge = (
+                f"⚠️ **Transit Suspended:** Active hazard alert. Direct track: {total_nm:.1f} NM ({total_km:.1f} km) plotted for post-clearing transit."
+            )
+        else:
+            nav_title = "### ⛽ Fuel-Optimal Navigation Summary"
+            safety_flag_banner = ""
+            detour_badge = (
+                "🚨 **Detour Engaged:** Course adjusted to steer clear of active coastal hazard geofence."
+                if has_detour
+                else "✅ Direct track is clear of all active storm surge and hazard geofences."
+            )
 
         imbl_row = (
             f"| **IMBL Border Proximity** | 🛑 **{imbl_dist:.1f} NM to {imbl_boundary}** | **High Impoundment Risk** (< 5 NM limit) |\n"
@@ -265,8 +287,8 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 
         nav_card = f"""
 ---
-### ⛽ Fuel-Optimal Navigation Summary
-**🎯 Destination Hotspot:** {nav_res.get('end_label', 'Target PFZ')} | **Mooring:** {nav_res.get('start_label', 'Port')}
+{nav_title}
+{safety_flag_banner}**🎯 Destination Hotspot:** {nav_res.get('end_label', 'Target PFZ')} | **Mooring:** {nav_res.get('start_label', 'Port')}
 
 | Metric | Navigation Telemetry | Benchmark / Savings |
 |---|---|---|
@@ -349,7 +371,7 @@ def generate_map_for_result(
     effective_sst = show_sst_heatmap or bool(eo_res) or (persona == "researcher")
 
     # Case 1: PFZ Map active (with fuel-optimal navigation track)
-    if pfz_res and not pfz_suppressed and pfz_res.get("success"):
+    if pfz_res and pfz_res.get("success"):
         lat = pfz_res.get("lat")
         lon = pfz_res.get("lon")
         zones = pfz_res.get("zones", [])

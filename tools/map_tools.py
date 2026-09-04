@@ -352,6 +352,8 @@ def create_pfz_map(
     # 7. Render Navigation Track to Top Recommended Zone
     if nav_route and nav_route.get("success"):
         route_pts = nav_route.get("route_points", [])
+        if len(route_pts) < 2 and best_zone and "lat" in best_zone and "lon" in best_zone:
+            route_pts = [[user_lat, user_lon], [best_zone["lat"], best_zone["lon"]]]
         heading_str = nav_route.get("direct_heading_str", "")
         dist_nm = nav_route.get("total_distance_nm", 0.0)
         dist_km = nav_route.get("total_distance_km", 0.0)
@@ -389,28 +391,29 @@ def create_pfz_map(
             </div>
         """ if imbl_warn else ""
 
-        folium.PolyLine(
-            locations=route_pts,
-            color=line_color,
-            weight=4,
-            opacity=0.90,
-            dash_array=dash_style,
-            tooltip=route_tooltip,
-            popup=folium.Popup(
-                f"""
-                <div style="font-family:Arial;font-size:12px;min-width:220px;">
-                    <b style="color:{line_color};">🧭 Fuel-Optimal Navigation Track</b><br/>
-                    <b>Heading:</b> {heading_str}<br/>
-                    <b>Track Distance:</b> {dist_nm} NM ({dist_km} km)<br/>
-                    <b>Estimated Transit:</b> {transit_time} (@ 9 knots)<br/>
-                    <b>Diesel Savings:</b> <span style="color:#28a745;"><b>{fuel_saved} L (~₹{cost_saved:,.0f})</b></span><br/>
-                    <b>Safety Status:</b> {geofence_status}
-                    {imbl_banner_html}
-                </div>
-                """,
-                max_width=270,
-            ),
-        ).add_to(fmap)
+        if len(route_pts) >= 2:
+            folium.PolyLine(
+                locations=route_pts,
+                color=line_color,
+                weight=4,
+                opacity=0.90,
+                dash_array=dash_style,
+                tooltip=route_tooltip,
+                popup=folium.Popup(
+                    f"""
+                    <div style="font-family:Arial;font-size:12px;min-width:220px;">
+                        <b style="color:{line_color};">🧭 Fuel-Optimal Navigation Track</b><br/>
+                        <b>Heading:</b> {heading_str}<br/>
+                        <b>Track Distance:</b> {dist_nm} NM ({dist_km} km)<br/>
+                        <b>Estimated Transit:</b> {transit_time} (@ 9 knots)<br/>
+                        <b>Diesel Savings:</b> <span style="color:#28a745;"><b>{fuel_saved} L (~₹{cost_saved:,.0f})</b></span><br/>
+                        <b>Safety Status:</b> {geofence_status}
+                        {imbl_banner_html}
+                    </div>
+                    """,
+                    max_width=270,
+                ),
+            ).add_to(fmap)
 
         # If hazard detour was synthesized, render intermediate waypoint marker
         if has_detour:

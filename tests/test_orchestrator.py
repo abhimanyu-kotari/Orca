@@ -223,10 +223,11 @@ class TestOrchestratorUnit(unittest.TestCase):
     @patch("orchestrator.intent_agent_run")
     @patch("orchestrator.weather_agent_run")
     @patch("orchestrator.pfz_agent_run")
-    def test_pfz_danger_weather_suppresses_zones(self, mock_pfz, mock_w, mock_i):
+    def test_pfz_danger_weather_suspends_navigation_retains_pfz(self, mock_pfz, mock_w, mock_i):
         """
-        DANGER weather + pfz_location: PFZ MUST be suppressed.
-        This is the critical safety invariant of the whole system.
+        DANGER weather + pfz_location:
+        Navigation is suspended, but PFZ & direct track metrics are retained
+        for planning purposes with a prominent warning banner.
         """
         mock_i.return_value   = _intent("pfz_location")
         mock_w.return_value   = _weather("DANGER")
@@ -234,13 +235,17 @@ class TestOrchestratorUnit(unittest.TestCase):
 
         result = orchestrator_run({"query": "where to fish near Kochi"})
 
-        self.assertTrue(result["pfz_suppressed"],
-                        "PFZ MUST be suppressed when weather is DANGER")
-        self.assertIsNone(result["pfz_result"],
-                          "pfz_result MUST be None when suppressed")
+        self.assertFalse(result["pfz_suppressed"],
+                         "PFZ must NOT be hidden when weather is DANGER")
+        self.assertTrue(result["navigation_suspended"],
+                        "navigation_suspended must be True when weather is DANGER")
+        self.assertIsNotNone(result["pfz_result"],
+                             "pfz_result must NOT be None when navigation is suspended")
+        self.assertIsNotNone(result["navigation_result"],
+                             "navigation_result must be populated for planning")
         self.assertIsNotNone(result["pfz_suppression_reason"])
-        # The suppression reason must mention DANGER so UI can display it
-        self.assertIn("DANGER", result["pfz_suppression_reason"].upper())
+        self.assertIn("Navigation Suspended", result["synthesis"])
+        self.assertIn("planning", result["synthesis"].lower())
 
     @patch("orchestrator.intent_agent_run")
     @patch("orchestrator.weather_agent_run")
@@ -555,7 +560,7 @@ class TestOrchestratorIntegration(unittest.TestCase):
         print(f"    Agents: {result.get('agents_invoked')}")
         print(f"    Synthesis: {result.get('synthesis', '').encode('ascii', 'replace').decode()[:80]}")
 
-    def test_LIVE_danger_suppresses_pfz(self):
+    def test_LIVE_danger_suspends_navigation(self):
         """
         Regression test for the critical weather-gate safety invariant.
         Only verifiable if weather is actually DANGER at time of test.
@@ -563,16 +568,15 @@ class TestOrchestratorIntegration(unittest.TestCase):
         """
         result = orchestrator_run({"query": "Where can I fish near Kochi?"})
         verdict = (result.get("weather_result") or {}).get("verdict", "SAFE")
-        suppressed = result.get("pfz_suppressed", False)
 
         if verdict == "DANGER":
-            self.assertTrue(suppressed,
-                            "INVARIANT VIOLATED: DANGER verdict must suppress PFZ")
-            self.assertIsNone(result.get("pfz_result"),
-                              "INVARIANT VIOLATED: pfz_result must be None when suppressed")
-            print("\n    [DANGER weather detected — suppression invariant verified]")
+            self.assertTrue(result.get("navigation_suspended"),
+                            "INVARIANT VIOLATED: DANGER verdict must set navigation_suspended")
+            self.assertIsNotNone(result.get("pfz_result"),
+                                 "INVARIANT VIOLATED: pfz_result must not be None when navigation is suspended")
+            print("\n    [DANGER weather detected — suspension invariant verified]")
         else:
-            print(f"\n    [Weather is {verdict} — suppression not triggered (expected)]")
+            print(f"\n    [Weather is {verdict} — suspension not triggered (expected)]")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
