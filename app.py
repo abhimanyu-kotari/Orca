@@ -47,6 +47,119 @@ st.set_page_config(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Brand Theme — Deep Ocean Navy CSS
+# ─────────────────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Global body */
+html, body, [data-testid="stAppViewContainer"] {
+    background-color: #F8FAFC !important;
+    font-family: 'Inter', 'Segoe UI', sans-serif !important;
+    color: #1E293B !important;
+}
+
+/* Main content area */
+[data-testid="stMain"] {
+    background-color: #F8FAFC !important;
+}
+
+/* Sidebar background */
+[data-testid="stSidebar"] {
+    background-color: #F0F4F8 !important;
+    border-right: 1px solid #E2E8F0 !important;
+}
+
+/* Page headers */
+h1, h2, h3 {
+    color: #0B2638 !important;
+    font-family: 'Inter', 'Segoe UI', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+}
+h1 { font-size: 2rem !important; }
+h2 { font-size: 1.4rem !important; }
+h3 { font-size: 1.1rem !important; }
+
+/* Top nav persona selector — horizontal radio pills */
+div[data-testid="stHorizontalBlock"] .stRadio > div {
+    gap: 8px !important;
+}
+div[data-testid="stHorizontalBlock"] .stRadio > div > label {
+    background-color: #E2EBF3 !important;
+    border: 1.5px solid #CBD8E6 !important;
+    border-radius: 24px !important;
+    padding: 6px 18px !important;
+    font-weight: 500 !important;
+    color: #0B2638 !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+}
+div[data-testid="stHorizontalBlock"] .stRadio > div > label:hover {
+    background-color: #C9DCF0 !important;
+    border-color: #0B2638 !important;
+}
+
+/* Primary buttons */
+div.stButton > button[kind="primary"] {
+    background-color: #0B2638 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+div.stButton > button[kind="primary"]:hover {
+    background-color: #163C55 !important;
+}
+
+/* Secondary buttons */
+div.stButton > button {
+    border-radius: 8px !important;
+    border: 1.5px solid #CBD8E6 !important;
+    color: #0B2638 !important;
+    font-weight: 500 !important;
+}
+
+/* Top nav divider */
+.orca-nav-divider {
+    border: none;
+    border-top: 2px solid #E2E8F0;
+    margin: 4px 0 16px 0;
+}
+
+/* Metric cards */
+[data-testid="stMetricValue"] {
+    color: #0B2638 !important;
+    font-weight: 700 !important;
+}
+
+/* Info / warning banners */
+[data-testid="stAlert"] {
+    border-radius: 10px !important;
+    border-left-width: 4px !important;
+}
+
+/* Chat bubbles */
+[data-testid="stChatMessage"] {
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+}
+
+/* Expander */
+details summary {
+    font-weight: 600 !important;
+    color: #0B2638 !important;
+}
+
+/* Divider lines */
+hr {
+    border-color: #E2E8F0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Session state initialization
 # ─────────────────────────────────────────────────────────────────────────────
 if "messages" not in st.session_state:
@@ -432,57 +545,26 @@ def render_history():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Sidebar — Persona Selector & Stakeholder Controls
+# Sidebar — Secondary Controls Only (persona selector moved to top nav)
 # ─────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
     if LOGO_EXISTS:
         st.image(LOGO_PATH, use_container_width=True)
-    st.header("👤 Stakeholder Profile")
-    st.caption("Select your role defined in ISRO Problem Statement 26176.")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    persona_options = [
-        "🎣 Artisanal Fisherman",
-        "🚨 Coastal Authority / Disaster Management",
-        "🔬 Marine Researcher / Oceanographer",
-    ]
-
-    def _on_persona_change():
-        st.session_state.messages = []
-        st.session_state.current_map = None
-
-    current_stored = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
-    default_idx = 0
-    for idx, opt in enumerate(persona_options):
-        if opt == current_stored or (current_stored == "fisherman" and "Fisherman" in opt) or (current_stored == "coastal_authority" and "Authority" in opt) or (current_stored == "researcher" and "Researcher" in opt):
-            default_idx = idx
-            break
-
-    persona_label = st.radio(
-        "Active Role Perspective:",
-        persona_options,
-        index=default_idx,
-        key="stakeholder_persona_radio",
-        on_change=_on_persona_change,
-    )
-
-    # If the user changes the radio button in the sidebar to a different persona, automatically clear messages
-    if st.session_state.get("current_persona") != persona_label:
-        st.session_state.current_persona = persona_label
-        st.session_state.messages = []
-        st.session_state.current_map = None
-
-    if "Artisanal Fisherman" in persona_label or persona_label == "fisherman":
-        persona = "fisherman"
-    elif "Coastal Authority" in persona_label or persona_label == "coastal_authority":
-        persona = "coastal_authority"
+    # Persona-specific action controls (persona resolved from top nav below)
+    # We read from session_state so sidebar responds to top-nav changes
+    _sidebar_persona_label = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
+    if "Artisanal Fisherman" in _sidebar_persona_label:
+        _sidebar_persona = "fisherman"
+    elif "Coastal Authority" in _sidebar_persona_label:
+        _sidebar_persona = "coastal_authority"
     else:
-        persona = "researcher"
+        _sidebar_persona = "researcher"
 
-    # Persona-specific action controls
     show_sst = False
-    if persona == "coastal_authority":
-        st.markdown("---")
+    if _sidebar_persona == "coastal_authority":
         st.subheader("🚨 Disaster Management Panel")
         st.caption("Sector surveillance & emergency broadcast tools.")
         if st.button("📢 Broadcast Emergency Evacuation Alert", use_container_width=True, type="primary"):
@@ -493,9 +575,9 @@ with st.sidebar:
                 "• **SMS Gateway:** Dispatched to 142 registered craft\n"
                 "• **Geofence:** Maritime Exclusion Zone active"
             )
-
-    elif persona == "researcher":
         st.markdown("---")
+
+    elif _sidebar_persona == "researcher":
         st.subheader("🔬 Earth Observation Telemetry")
         st.caption("Satellite ocean colour and thermal layers.")
         show_sst = st.checkbox(
@@ -504,8 +586,9 @@ with st.sidebar:
             key="sst_heatmap_toggle",
             help="Displays simulated Oceansat-3/Sentinel-3 ocean thermal & chlorophyll gradient.",
         )
+        st.markdown("---")
 
-    st.markdown("---")
+    # Direct Query Controls
     st.header("⚙️ Direct Query Controls")
     st.caption("Trigger multi-agent orchestration for specific locations.")
 
@@ -521,10 +604,10 @@ with st.sidebar:
                     "query": f"What is the weather and sea safety near {manual_location} {manual_time}?",
                     "location": manual_location.strip(),
                     "time_context": manual_time,
-                    "persona": persona,
+                    "persona": _sidebar_persona,
                 })
-            response_md = format_orchestrator_response(orch_result, persona=persona)
-            fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
+            response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
+            fmap = generate_map_for_result(orch_result, persona=_sidebar_persona, show_sst_heatmap=show_sst)
 
             st.session_state.messages.append({
                 "role": "user",
@@ -552,10 +635,10 @@ with st.sidebar:
                 orch_result = orchestrator_run({
                     "query": f"Where can I fish near {pfz_loc} today?",
                     "location": pfz_loc.strip(),
-                    "persona": persona,
+                    "persona": _sidebar_persona,
                 })
-            response_md = format_orchestrator_response(orch_result, persona=persona)
-            fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
+            response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
+            fmap = generate_map_for_result(orch_result, persona=_sidebar_persona, show_sst_heatmap=show_sst)
 
             st.session_state.messages.append({
                 "role": "user",
@@ -572,7 +655,14 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("""
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.current_map = None
+        st.rerun()
+
+    # ORCA Architecture collapsed into expander — hide complexity from primary user
+    with st.expander("⚙️ ORCA Intelligence Architecture"):
+        st.markdown("""
 **📦 ORCA Architecture (SIH 26176)**
 - 🤖 Master Orchestrator (`orchestrator.py`)
 - 🛡️ Maritime Safety Gating (`DANGER` suppresses PFZ)
@@ -581,28 +671,79 @@ with st.sidebar:
 - 🌦️ Weather & Marine Agent
 - 🐟 INCOIS PFZ Fishing Agent
 - 🗺️ Interactive Folium Mapping (`OpenStreetMap`)
+- 🛰️ Earth Observation (Oceansat-3 / Sentinel-3)
+- ⚡ IMD Hazard & Lightning Classification
+- 🧭 Fuel-Optimal Navigation & IMBL Geofencing
 """)
 
-    if st.button("🗑️ Clear Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.current_map = None
-        st.rerun()
-
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Main Chat UI
+# Global Top Navigation — Horizontal Persona Selector
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Brand header
 if LOGO_EXISTS:
-    col_logo, col_title = st.columns([1, 6], vertical_alignment="center")
+    col_logo, col_title = st.columns([1, 7], vertical_alignment="center")
     with col_logo:
-        st.image(LOGO_PATH, width=95)
+        st.image(LOGO_PATH, width=90)
     with col_title:
         st.title("ORCA")
         st.caption("Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176")
 else:
     st.title("🌊 ORCA")
     st.caption("Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176")
+
+st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
+
+# Horizontal top-nav persona radio — stays at top of main content
+persona_options = [
+    "🎣 Artisanal Fisherman",
+    "🚨 Coastal Authority / Disaster Management",
+    "🔬 Marine Researcher / Oceanographer",
+]
+
+def _on_persona_change():
+    """Clear chat and map when persona is switched via top nav."""
+    st.session_state.messages = []
+    st.session_state.current_map = None
+
+current_stored = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
+default_idx = 0
+for idx, opt in enumerate(persona_options):
+    if (opt == current_stored
+            or (current_stored == "fisherman" and "Fisherman" in opt)
+            or (current_stored == "coastal_authority" and "Authority" in opt)
+            or (current_stored == "researcher" and "Researcher" in opt)):
+        default_idx = idx
+        break
+
+persona_label = st.radio(
+    "**Select Role:**",
+    persona_options,
+    index=default_idx,
+    key="stakeholder_persona_radio",
+    horizontal=True,
+    on_change=_on_persona_change,
+    label_visibility="collapsed",
+)
+
+# Sync session_state and clear chat if persona changed
+if st.session_state.get("current_persona") != persona_label:
+    st.session_state.current_persona = persona_label
+    st.session_state.messages = []
+    st.session_state.current_map = None
+
+# Resolve internal persona key
+if "Artisanal Fisherman" in persona_label or persona_label == "fisherman":
+    persona = "fisherman"
+elif "Coastal Authority" in persona_label or persona_label == "coastal_authority":
+    persona = "coastal_authority"
+else:
+    persona = "researcher"
+
+st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
+
+
 
 # Dynamic Persona Header Banner
 if persona == "coastal_authority":
