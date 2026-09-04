@@ -106,81 +106,157 @@ h2 { font-size: 1.3rem !important; }
 h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
 
-/* ── Top nav persona selector — Prominent Enterprise Role Cards ── */
+/* ── Layer 2: Sticky Operating Context Header ─────────── */
+div.st-key-sticky_operating_context,
+div[data-testid="stElementContainer"]:has(> div.st-key-sticky_operating_context) {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 99999 !important;
+    background: rgba(248, 250, 252, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1.5px solid #CBD5E1 !important;
+    box-shadow: 0 4px 16px rgba(11, 38, 56, 0.08) !important;
+    padding: 8px 4px 12px 4px !important;
+    margin-bottom: 14px !important;
+}
+
+/* Ensure Leaflet controls and map canvas stay below the sticky header */
+.leaflet-top, .leaflet-bottom {
+    z-index: 400 !important;
+}
+.leaflet-pane {
+    z-index: 200 !important;
+}
+
+/* ── Operating Context Cards (Stakeholder Selector Tabs) ── */
+div.st-key-sticky_operating_context div[data-testid="stRadio"],
 div[data-testid="stRadio"] {
     width: 100% !important;
-    margin: 8px 0 16px 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
+div.st-key-sticky_operating_context div[data-testid="stRadio"] > div[role="radiogroup"],
 div[data-testid="stRadio"] > div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
-    gap: 16px !important;
+    gap: 12px !important;
     width: 100% !important;
     align-items: stretch !important;
 }
+div.st-key-sticky_operating_context div[data-testid="stRadio"] [data-baseweb="radio"],
+div.st-key-sticky_operating_context div[data-testid="stRadio"] label,
 div[data-testid="stRadio"] [data-baseweb="radio"],
 div[data-testid="stRadio"] label {
     flex: 1 1 0 !important;
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     background: #FFFFFF !important;
-    border: 2px solid #CBD5E1 !important;
-    border-radius: 14px !important;
-    padding: 16px 20px !important;
-    min-height: 64px !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    min-height: 62px !important;
     cursor: pointer !important;
-    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 2px 6px rgba(11, 38, 56, 0.06) !important;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 3px rgba(11, 38, 56, 0.04) !important;
     margin: 0 !important;
+    position: relative !important;
+    text-align: center !important;
 }
-/* Hide the native round radio button circle */
+
+/* Hide default round radio circle */
 div[data-testid="stRadio"] input[type="radio"],
 div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stMarkdownContainer"]),
 div[data-testid="stRadio"] label > div:first-child:not([data-testid="stMarkdownContainer"]) {
     display: none !important;
 }
-/* Typography on inactive card */
-div[data-testid="stRadio"] [data-baseweb="radio"] p,
-div[data-testid="stRadio"] label p,
+
+/* Typography on unselected card */
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] {
+    width: 100% !important;
+    text-align: center !important;
+}
 div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-    font-size: 1.08rem !important;
-    font-weight: 700 !important;
-    color: #0B2638 !important;
-    letter-spacing: -0.01em !important;
     margin: 0 !important;
     text-align: center !important;
-    line-height: 1.35 !important;
 }
-/* Hover state */
-div[data-testid="stRadio"] [data-baseweb="radio"]:hover,
-div[data-testid="stRadio"] label:hover {
-    border-color: #0EA5A8 !important;
-    background: #F0FDFA !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(14, 165, 168, 0.2) !important;
-}
-div[data-testid="stRadio"] [data-baseweb="radio"]:hover p,
-div[data-testid="stRadio"] label:hover p {
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p:first-child {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
     color: #0B2638 !important;
+    letter-spacing: 0.01em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 2px !important;
+    line-height: 1.2 !important;
 }
-/* Selected / Active state */
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p:last-child:not(:first-child) {
+    font-size: 0.68rem !important;
+    font-weight: 500 !important;
+    color: #64748B !important;
+    letter-spacing: 0.02em !important;
+    line-height: 1.2 !important;
+}
+
+/* Hover state on unselected card */
+div[data-testid="stRadio"] [data-baseweb="radio"]:not(:has(input:checked)):hover,
+div[data-testid="stRadio"] label:not(:has(input:checked)):hover {
+    border-color: #0EA5A8 !important;
+    background: #F8FAFC !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 168, 0.12) !important;
+}
+div[data-testid="stRadio"] [data-baseweb="radio"]:not(:has(input:checked)):hover p:first-child,
+div[data-testid="stRadio"] label:not(:has(input:checked)):hover p:first-child {
+    color: #0EA5A8 !important;
+}
+
+/* Selected / Active Role Card */
 div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
 div[data-testid="stRadio"] label:has(input:checked),
 div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"],
 div[data-testid="stRadio"] label[aria-checked="true"] {
-    background: linear-gradient(135deg, #0B2638 0%, #163C55 100%) !important;
-    border-color: #0EA5A8 !important;
-    box-shadow: 0 8px 24px rgba(11, 38, 56, 0.35), 0 0 0 2px #0EA5A8 !important;
-    transform: translateY(-2px) !important;
+    background: #F0FDFA !important;
+    border: 2px solid #0EA5A8 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px rgba(14, 165, 168, 0.20) !important;
+    transform: translateY(-1px) !important;
 }
-div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) p,
-div[data-testid="stRadio"] label:has(input:checked) p,
-div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] p,
-div[data-testid="stRadio"] label[aria-checked="true"] p {
-    color: #FFFFFF !important;
+div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) [data-testid="stMarkdownContainer"] p:first-child,
+div[data-testid="stRadio"] label:has(input:checked) [data-testid="stMarkdownContainer"] p:first-child,
+div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] [data-testid="stMarkdownContainer"] p:first-child,
+div[data-testid="stRadio"] label[aria-checked="true"] [data-testid="stMarkdownContainer"] p:first-child {
+    color: #0B2638 !important;
     font-weight: 800 !important;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) [data-testid="stMarkdownContainer"] p:last-child,
+div[data-testid="stRadio"] label:has(input:checked) [data-testid="stMarkdownContainer"] p:last-child,
+div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] [data-testid="stMarkdownContainer"] p:last-child,
+div[data-testid="stRadio"] label[aria-checked="true"] [data-testid="stMarkdownContainer"] p:last-child {
+    color: #0D9488 !important;
+    font-weight: 600 !important;
+}
+
+/* Active dot indicator: ● ACTIVE */
+div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked)::before,
+div[data-testid="stRadio"] label:has(input:checked)::before,
+div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"]::before,
+div[data-testid="stRadio"] label[aria-checked="true"]::before {
+    content: "● ACTIVE";
+    position: absolute;
+    top: -9px;
+    right: 12px;
+    font-size: 0.60rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #0F766E;
+    background: #CCFBF1;
+    border: 1px solid #5EEAD4;
+    padding: 1px 7px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(14, 165, 168, 0.2);
 }
 
 /* ── Buttons ──────────────────────────────────── */
@@ -418,7 +494,7 @@ if "messages" not in st.session_state:
 if "current_map" not in st.session_state:
     st.session_state.current_map = None
 if "current_persona" not in st.session_state:
-    st.session_state.current_persona = "🎣 Artisanal Fisherman"
+    st.session_state.current_persona = "🎣 Artisanal Fisherman\n\nFishing • Safety • Navigation"
 if "orca_lang" not in st.session_state:
     st.session_state.orca_lang = "en"
 if "last_orch_result" not in st.session_state:
@@ -480,8 +556,8 @@ def _metadata_badge(result: dict, persona: str = None) -> str:
     agents = " ➔ ".join(result.get("agents_invoked", ["orchestrator"]))
     role_titles = {
         "fisherman": "🎣 Artisanal Fisherman",
-        "coastal_authority": "🚨 Coastal Authority",
-        "researcher": "🔬 Marine Researcher",
+        "coastal_authority": "🛟 Coastal Authority / Disaster Management",
+        "researcher": "🔬 Marine Researcher / Oceanographer",
     }
     role_display = role_titles.get(active_persona, active_persona)
 
@@ -1718,20 +1794,43 @@ with st.sidebar:
 
     st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
 
-    # ── Stakeholder Persona Context ──────────────────────────────────────────
+    # ── Stakeholder Persona Context Badge ─────────────────────────────────────
     if "stakeholder_persona_radio" in st.session_state and st.session_state.stakeholder_persona_radio:
         st.session_state.current_persona = st.session_state.stakeholder_persona_radio
 
     _sidebar_persona_label = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
-    if "Artisanal Fisherman" in _sidebar_persona_label:
+    if "Fisherman" in _sidebar_persona_label:
+        _sidebar_badge_icon = "🎣"
+        _sidebar_badge_name = "Artisanal Fisherman"
+        _sidebar_badge_scope = "Fishing • Safety • Navigation"
         _sidebar_persona = "fisherman"
-    elif "Coastal Authority" in _sidebar_persona_label:
+    elif "Authority" in _sidebar_persona_label:
+        _sidebar_badge_icon = "🛟"
+        _sidebar_badge_name = "Coastal Authority"
+        _sidebar_badge_scope = "Hazards • Surveillance • Response"
         _sidebar_persona = "coastal_authority"
     else:
+        _sidebar_badge_icon = "🔬"
+        _sidebar_badge_name = "Marine Researcher"
+        _sidebar_badge_scope = "Ocean Science • Analysis • Trends"
         _sidebar_persona = "researcher"
 
+    st.markdown(f"""
+    <div style="background:#0B2638; border:1px solid #1E3A52; border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+        <div style="font-size:0.65rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#0EA5A8;">
+            CURRENT MODE
+        </div>
+        <div style="font-size:0.88rem; font-weight:700; color:#F8FAFC; margin-top:2px;">
+            {_sidebar_badge_icon} {_sidebar_badge_name}
+        </div>
+        <div style="font-size:0.68rem; color:#94A3B8; margin-top:2px;">
+            {_sidebar_badge_scope}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     show_sst = False
-    if "Coastal Authority" in st.session_state.current_persona:
+    if "Coastal Authority" in st.session_state.current_persona or "Authority" in st.session_state.current_persona:
         st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>Coastal Operations</p>", unsafe_allow_html=True)
         if st.button("📢 Broadcast Evacuation Alert", use_container_width=True, type="primary"):
             st.toast("🚨 Emergency Evacuation Alert broadcasted via VHF Ch 16 and NAVTEX.", icon="📢")
@@ -1877,11 +1976,14 @@ else:
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
-# Horizontal top-nav persona radio — stays at top of main content
+# ─────────────────────────────────────────────────────────────────────────────
+# Layer 2: Sticky Operating Context Header (Stakeholder Selector)
+# ─────────────────────────────────────────────────────────────────────────────
+
 persona_options = [
-    "🎣 Artisanal Fisherman",
-    "🚨 Coastal Authority / Disaster Management",
-    "🔬 Marine Researcher / Oceanographer",
+    "🎣 Artisanal Fisherman\n\nFishing • Safety • Navigation",
+    "🛟 Coastal Authority / Disaster Management\n\nHazards • Surveillance • Response",
+    "🔬 Marine Researcher / Oceanographer\n\nOcean Science • Analysis • Trends",
 ]
 
 def _on_persona_change():
@@ -1899,37 +2001,42 @@ for idx, opt in enumerate(persona_options):
     if (opt == current_stored
             or (current_stored == "fisherman" and "Fisherman" in opt)
             or (current_stored == "coastal_authority" and "Authority" in opt)
-            or (current_stored == "researcher" and "Researcher" in opt)):
+            or (current_stored == "researcher" and "Researcher" in opt)
+            or ("Fisherman" in current_stored and "Fisherman" in opt)
+            or ("Authority" in current_stored and "Authority" in opt)
+            or ("Researcher" in current_stored and "Researcher" in opt)):
         default_idx = idx
         break
 
-st.markdown("""
-<div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:14px; padding:12px 18px 8px 18px; margin: 4px 0 10px 0; box-shadow:0 1px 4px rgba(11,38,56,0.05);">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <div>
-      <span style="font-size:0.78rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#0B2638;">
-        ⚓ OPERATIONAL STAKEHOLDER PROFILE
-      </span>
-      <p style="font-size:0.78rem; color:#64748B; margin:2px 0 0 0;">
-        Select your active role to adapt AI synthesis, risk thresholds, telemetry indices, and geospatial layers
-      </p>
+with st.container(key="sticky_operating_context"):
+    st.markdown("""
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:2px 4px 0 4px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:0.75rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#0B2638;">
+          OPERATING CONTEXT
+        </span>
+        <span style="font-size:0.72rem; color:#64748B; font-weight:500;">
+          — Adapted for your mission
+        </span>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#0EA5A8; box-shadow:0 0 6px #0EA5A8;"></span>
+        <span style="font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#0EA5A8;">
+          ORCA ADAPTIVE MODE
+        </span>
+      </div>
     </div>
-    <span style="font-size:0.72rem; font-weight:700; color:#0EA5A8; background:#F0FDFA; padding:4px 12px; border-radius:20px; border:1px solid #CCFBF1;">
-      ⚡ Adaptive AI Operating System
-    </span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-persona_label = st.radio(
-    "**Select Role:**",
-    persona_options,
-    index=default_idx,
-    key="stakeholder_persona_radio",
-    horizontal=True,
-    on_change=_on_persona_change,
-    label_visibility="collapsed",
-)
+    persona_label = st.radio(
+        "**Select Role:**",
+        persona_options,
+        index=default_idx,
+        key="stakeholder_persona_radio",
+        horizontal=True,
+        on_change=_on_persona_change,
+        label_visibility="collapsed",
+    )
 
 # Sync session_state and clear chat if persona changed
 if st.session_state.get("current_persona") != persona_label:
@@ -1938,14 +2045,12 @@ if st.session_state.get("current_persona") != persona_label:
     st.session_state.current_map = None
 
 # Resolve internal persona key
-if "Artisanal Fisherman" in persona_label or persona_label == "fisherman":
+if "Fisherman" in persona_label or persona_label == "fisherman":
     persona = "fisherman"
-elif "Coastal Authority" in persona_label or persona_label == "coastal_authority":
+elif "Authority" in persona_label or persona_label == "coastal_authority":
     persona = "coastal_authority"
 else:
     persona = "researcher"
-
-st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
 # Dynamic Persona Header Banner
 if persona == "coastal_authority":
