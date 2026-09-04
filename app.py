@@ -885,6 +885,200 @@ def render_authority_response(
     ctx.markdown(_metadata_badge(result, "coastal_authority"))
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Marine Researcher / Oceanographer — Scientific Analytics Workspace
+# ─────────────────────────────────────────────────────────────────────────────
+
+def render_researcher_response(
+    result: dict,
+    fmap,
+    container=None,
+) -> None:
+    """
+    Render a scientific analytics workspace for the Marine Researcher persona.
+
+    Layout:
+      1. 📊 Oceanographic KPI Metrics — 4-column st.metric dashboard
+      2. 🗺️ EO Satellite Map — SST / Chlorophyll heatmap centrepiece
+      3. 🔬 EO Diagnostic Table — full telemetry grid as st.dataframe
+      4. 🌊 Weather & Safety Context (if available)
+      5. 🧠 Scientific Synthesis
+      6. Collapsed expander — raw sensor metadata + agent pipeline
+    """
+    import pandas as pd
+    ctx = container if container is not None else st
+
+    eo_res      = result.get("eo_result")
+    weather_res = result.get("weather_result")
+    synthesis   = result.get("synthesis", "")
+
+    # ── 1. Oceanographic KPI Metrics ─────────────────────────────────────────
+    ctx.markdown("#### 📊 Oceanographic Telemetry — Key Indices")
+
+    if eo_res and eo_res.get("success"):
+        sst_mean   = eo_res.get("mean_sst_c", 0.0)
+        sst_anom   = eo_res.get("sst_anomaly_c", 0.0)
+        chla_mean  = eo_res.get("mean_chlorophyll_mg_m3", 0.0)
+        chla_max   = eo_res.get("max_chlorophyll_mg_m3", 0.0)
+        thermocline = eo_res.get("thermocline_depth_m", 35)
+        upwell_int  = eo_res.get("upwelling_intensity", "—")
+        meta        = eo_res.get("sensor_metadata", {})
+        salinity    = meta.get("mean_salinity_psu", 34.9)
+
+        anom_sign  = "+" if sst_anom > 0 else ""
+        anom_label = f"{anom_sign}{sst_anom:.2f}°C vs climatology"
+
+        chla_delta = "Bloom detected" if chla_max > 2.0 else "Baseline productivity"
+        tc_delta   = f"Pycnocline at ~{thermocline} m"
+
+        c1, c2, c3, c4 = ctx.columns(4)
+        c1.metric("🌡️ Mean SST",        f"{sst_mean:.2f} °C",   anom_label)
+        c2.metric("🌿 Mean Chlorophyll-a", f"{chla_mean:.2f} mg/m³", chla_delta)
+        c3.metric("📏 Thermocline Depth",  f"{thermocline} m",     tc_delta)
+        c4.metric("🧂 Mean Salinity",      f"{salinity:.1f} PSU")
+
+    elif weather_res and weather_res.get("success"):
+        # Fallback when no EO result — show available marine metrics
+        m = weather_res.get("key_metrics", {})
+        c1, c2, c3, c4 = ctx.columns(4)
+        c1.metric("💨 Wind Speed",   f"{m.get('max_wind_speed_kmh', 0.0):.1f} km/h")
+        c2.metric("🌊 Wave Height",  f"{m.get('max_wave_height_m', 0.0):.2f} m")
+        c3.metric("🌊 Swell Height", f"{m.get('max_swell_height_m', 0.0):.2f} m")
+        c4.metric("⚡ CAPE",          f"{m.get('max_cape_jkg', 0.0):.0f} J/kg")
+    else:
+        ctx.info("📡 Query an ecosystem or SST location to populate the oceanographic telemetry dashboard.")
+
+    # ── 2. EO Satellite Map — Centrepiece ─────────────────────────────────────
+    if fmap is not None:
+        ctx.markdown("---\n#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
+        ctx.caption(
+            "🛰️ Tip: Use the layer control (top-right of map) to toggle between "
+            "**SST Thermal Gradient** and **Chlorophyll-a Productivity** overlays."
+        )
+        st_folium(fmap, width=None, height=520, returned_objects=[], use_container_width=True)
+    else:
+        ctx.info(
+            "🗺️ No satellite map loaded. Ask about SST / chlorophyll near a coastal location "
+            "(e.g. *\"Analyze ocean conditions off Kochi\"*) to render the EO heatmap."
+        )
+
+    ctx.markdown("---")
+
+    # ── 3. EO Diagnostic Table ────────────────────────────────────────────────
+    if eo_res and eo_res.get("success"):
+        sst_min    = eo_res.get("min_sst_c", 0.0)
+        sst_max    = eo_res.get("max_sst_c", 0.0)
+        sst_mean   = eo_res.get("mean_sst_c", 0.0)
+        sst_anom   = eo_res.get("sst_anomaly_c", 0.0)
+        chla_mean  = eo_res.get("mean_chlorophyll_mg_m3", 0.0)
+        chla_max   = eo_res.get("max_chlorophyll_mg_m3", 0.0)
+        upwell_int = eo_res.get("upwelling_intensity", "—")
+        thermocline = eo_res.get("thermocline_depth_m", 35)
+        front_coords = eo_res.get("upwelling_front_coords", [0.0, 0.0])
+        grid_pts   = eo_res.get("grid_points_count", 0)
+        meta       = eo_res.get("sensor_metadata", {})
+        sst_sensor = meta.get("sst_sensor", "Copernicus Sentinel-3 SLSTR")
+        chl_sensor = meta.get("ocean_color_sensor", "ISRO Oceansat-3 OCM-3")
+        clim_base  = meta.get("climatology_baseline", "28.5°C")
+        chl_res    = meta.get("chl_resolution", "300 m resolution")
+
+        ctx.markdown(
+            f"#### 🔬 Earth Observation Diagnostic Summary\n"
+            f"**🛰️ Primary Sensors:** {sst_sensor} · {chl_sensor}  \n"
+            f"**🌐 Sampling Grid:** {grid_pts} telemetry stations (120 km radius)"
+        )
+
+        anom_sign = "+" if sst_anom > 0 else ""
+        eo_df = pd.DataFrame({
+            "Oceanographic Parameter": [
+                "Mean Sea Surface Temp (SST)",
+                "SST Range",
+                "Thermal Front Anomaly",
+                "Mean Chlorophyll-a",
+                "Peak Chlorophyll Bloom",
+                "Baroclinic Upwelling Index",
+                "Estimated Thermocline Depth",
+                "Primary Upwelling Front Coords",
+            ],
+            "Satellite-Derived Value": [
+                f"{sst_mean:.2f} °C",
+                f"{sst_min:.1f} °C – {sst_max:.1f} °C",
+                f"{anom_sign}{sst_anom:.2f} °C",
+                f"{chla_mean:.2f} mg/m³",
+                f"{chla_max:.2f} mg/m³",
+                upwell_int,
+                f"~{thermocline} m",
+                f"{front_coords[0]:.4f}°N, {front_coords[1]:.4f}°E",
+            ],
+            "Sensor Payload & Context": [
+                f"Sentinel-3 SLSTR infrared radiometry (1 km resolution)",
+                f"Spatial gradient across 120 km grid",
+                f"Baseline: {clim_base} (climatological mean)",
+                f"ISRO Oceansat-3 OCM-3 ({chl_res})",
+                f"Shelf-edge primary productivity convergence",
+                f"Ekman transport & coastal divergence index",
+                f"Subsurface mixed-layer pycnocline",
+                f"Maximum horizontal thermal contrast point",
+            ],
+        })
+        ctx.dataframe(eo_df, use_container_width=True, hide_index=True)
+
+    # ── 4. Weather / Safety Context ───────────────────────────────────────────
+    if weather_res and weather_res.get("success"):
+        m       = weather_res.get("key_metrics", {})
+        verdict = weather_res.get("verdict", "SAFE")
+        emoji_v = VERDICT_EMOJI.get(verdict, "ℹ️")
+        color_v = VERDICT_COLOR.get(verdict, "blue")
+        is_lightning = m.get("lightning_hazard", False)
+
+        with ctx.expander("🌦️ Atmospheric & Sea State Context (Weather Agent)", expanded=False):
+            if is_lightning:
+                st.error(
+                    f"⚡ **LIGHTNING HAZARD:** CAPE {m.get('max_cape_jkg', 0):.0f} J/kg — "
+                    "convective instability above threshold. Field sampling operations suspended."
+                )
+            st.markdown(
+                f"**📍 Reference Station:** {weather_res.get('location', 'N/A')}  \n"
+                f"**Safety Verdict:** :{color_v}[**{emoji_v} {verdict}**]\n\n"
+                f"| Metric | Value | Threshold |\n"
+                f"|---|---|---|\n"
+                f"| Wind Speed | {m.get('max_wind_speed_kmh', 0.0):.1f} km/h | 40.0 km/h |\n"
+                f"| Wave Height | {m.get('max_wave_height_m', 0.0):.2f} m | 2.50 m |\n"
+                f"| Swell Height | {m.get('max_swell_height_m', 0.0):.2f} m | 2.00 m |\n"
+                f"| Precipitation | {m.get('max_precipitation_mm', 0.0):.1f} mm/hr | 10.0 mm/hr |\n"
+                f"| CAPE | {m.get('max_cape_jkg', 0.0):.0f} J/kg | 1500 J/kg |\n\n"
+                f"**🧠 Reasoning:** {weather_res.get('reasoning', '—')}"
+            )
+
+    # ── 5. Scientific Synthesis ───────────────────────────────────────────────
+    if synthesis:
+        ctx.markdown("---\n#### 🧠 Scientific Assessment")
+        ctx.markdown(synthesis)
+
+    # ── 6. Sensor Metadata Expander ───────────────────────────────────────────
+    if eo_res and eo_res.get("success"):
+        meta = eo_res.get("sensor_metadata", {})
+        with ctx.expander("🛰️ Full Sensor Metadata & Agent Pipeline"):
+            st.markdown(
+                f"**Satellite Constellation:** {meta.get('sst_sensor', '—')} · "
+                f"{meta.get('ocean_color_sensor', '—')}\n\n"
+                f"| Sensor Parameter | Value |\n"
+                f"|---|---|\n"
+                f"| SST Resolution | {meta.get('sst_resolution', '1 km')} |\n"
+                f"| Chl-a Resolution | {meta.get('chl_resolution', '300 m')} |\n"
+                f"| Climatology Baseline | {meta.get('climatology_baseline', '28.5°C')} |\n"
+                f"| Repeat Cycle | {meta.get('repeat_cycle', '27 days')} |\n"
+                f"| Swath Width | {meta.get('swath_width', '1270 km')} |\n\n"
+                f"**🤖 Agent Pipeline:** {_agents_badge(result)}"
+            )
+    else:
+        with ctx.expander("🤖 Agent Pipeline"):
+            st.markdown(f"**Pipeline:** {_agents_badge(result)}")
+
+    # ── 7. Metadata footer ────────────────────────────────────────────────────
+    ctx.markdown(_metadata_badge(result, "researcher"))
+
+
 def generate_map_for_result(
     orch_result: dict,
     persona: str = "fisherman",
@@ -954,16 +1148,18 @@ def generate_map_for_result(
 def render_history():
     """
     Replay conversation history in chronological order.
-    Fisherman and Authority assistant messages are re-rendered via their
-    respective widget renderers. All other messages use plain markdown.
+    Each persona's assistant messages are re-rendered via their dedicated
+    widget renderer. All other messages use plain markdown.
     """
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             orch_result = msg.get("orch_result")
             if orch_result and msg.get("is_fisherman_render"):
-                render_fisherman_response(orch_result, fmap=None)  # map shown live only
+                render_fisherman_response(orch_result, fmap=None)   # map shown live only
             elif orch_result and msg.get("is_authority_render"):
-                render_authority_response(orch_result, fmap=None)  # map shown live only
+                render_authority_response(orch_result, fmap=None)   # map shown live only
+            elif orch_result and msg.get("is_researcher_render"):
+                render_researcher_response(orch_result, fmap=None)  # map shown live only
             else:
                 st.markdown(msg["content"])
 
@@ -1050,8 +1246,13 @@ with st.sidebar:
                     "is_authority_render": True,
                 })
             else:
-                response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
-                st.session_state.messages.append({"role": "assistant", "content": response_md})
+                # ── Marine Researcher: Scientific Analytics Workspace ──
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": orch_result.get("synthesis", "ORCA scientific analysis complete."),
+                    "orch_result": orch_result,
+                    "is_researcher_render": True,
+                })
             st.session_state.current_map = fmap
             st.rerun()
         else:
@@ -1092,12 +1293,18 @@ with st.sidebar:
                     "is_authority_render": True,
                 })
             else:
-                response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
-                st.session_state.messages.append({"role": "assistant", "content": response_md})
+                # ── Marine Researcher: Scientific Analytics Workspace ──
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": orch_result.get("synthesis", "ORCA scientific analysis complete."),
+                    "orch_result": orch_result,
+                    "is_researcher_render": True,
+                })
             st.session_state.current_map = fmap
             st.rerun()
         else:
             st.warning("Please enter a coastal location.")
+
 
 
 
@@ -1328,14 +1535,15 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
                 "is_authority_render": True,
             })
         else:
-            # ── Marine Researcher: full markdown formatter ──
-            response_md = format_orchestrator_response(orch_result, persona=persona)
-            st.markdown(response_md)
-            # C. Render map inline for researcher persona
-            if fmap is not None:
-                st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
-                st_folium(fmap, width=850, height=500, returned_objects=[])
-            st.session_state.messages.append({"role": "assistant", "content": response_md})
+            # ── Marine Researcher: Scientific Analytics Workspace ──
+            render_researcher_response(orch_result, fmap=fmap)
+            synthesis_text = orch_result.get("synthesis", "ORCA scientific analysis complete.")
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": synthesis_text,
+                "orch_result": orch_result,
+                "is_researcher_render": True,
+            })
 
     # D. Save latest map to session state (for the persistent map panel above history)
     st.session_state.current_map = fmap
