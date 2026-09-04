@@ -299,6 +299,37 @@ class TestOrchestratorUnit(unittest.TestCase):
         result = orchestrator_run({})
         self.assertIsInstance(result, dict)
 
+    # ------------------------------------------------------------------ #
+    # 5. alert_query (IMD Disaster Scale & Hazard Evaluation)
+    # ------------------------------------------------------------------ #
+
+    @patch("orchestrator.intent_agent_run")
+    @patch("agents.hazard_agent.weather_agent_run")
+    def test_alert_query_triggers_hazard_agent(self, mock_w, mock_i):
+        """alert_query invokes hazard_agent and evaluates IMD scale."""
+        mock_i.return_value = _intent("alert_query", location="Chennai")
+        mock_w.return_value = _weather("DANGER")
+
+        result = orchestrator_run({"query": "check storm surge risk near Chennai"})
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["intent"], "alert_query")
+        self.assertIn("hazard_agent", result["agents_invoked"])
+        self.assertIn("Level-2", result["synthesis"])
+        self.assertTrue(result["pfz_suppressed"])
+
+    @patch("orchestrator.intent_agent_run")
+    def test_alert_query_no_location_graceful(self, mock_i):
+        """alert_query with missing location returns guidance prompt without crashing."""
+        mock_i.return_value = _intent("alert_query", location=None)
+
+        result = orchestrator_run({"query": "check cyclone alerts"})
+
+        self.assertTrue(result["success"])
+        self.assertIn("intent_result", result)
+        self.assertIn("Which coastal sector", result["synthesis"])
+
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 class TestOrchestratorIntegration(unittest.TestCase):

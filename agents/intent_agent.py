@@ -232,7 +232,9 @@ def _fallback_parse(query: str, error: str) -> dict:
     q = translated.lower()
 
     # --- Keyword intent classification (English keywords only, safe now) ---
-    if any(w in q for w in ["safe", "ventur", "danger", "can i go", "should i go"]):
+    if any(w in q for w in ["cyclone", "surge", "hazard", "alert", "warning", "lightning", "flood", "disaster", "evacuat"]):
+        intent = "alert_query"
+    elif any(w in q for w in ["safe", "ventur", "danger", "can i go", "should i go"]):
         intent = "safety_check"
     elif any(w in q for w in ["weather", "wave", "wind", "rain", "sea condition", "storm"]):
         intent = "weather_check"
@@ -240,8 +242,6 @@ def _fallback_parse(query: str, error: str) -> dict:
         intent = "pfz_location"
     elif any(w in q for w in ["route", "navigate", "path", "direction", "reach"]):
         intent = "route_planning"
-    elif any(w in q for w in ["cyclone", "alert", "warning", "lightning", "flood"]):
-        intent = "alert_query"
     elif any(w in q for w in ["chlorophyll", "sst", "temperature", "ecosystem", "productivity"]):
         intent = "ecosystem_query"
     elif any(w in q for w in ["hi", "hello", "hey", "thank", "good morning", "good evening"]):
@@ -256,7 +256,7 @@ def _fallback_parse(query: str, error: str) -> dict:
     skip = {"what", "where", "when", "safe", "fishing", "sea", "near", "morning",
             "today", "tomorrow", "ocean", "weather", "wave", "condition", "the",
             "is", "it", "will", "tell", "show", "check", "about", "around",
-            "does", "like", "how", "conditions"}
+            "does", "like", "how", "conditions", "surge", "storm", "risk", "alert", "level"}
     for word in translated.split():
         clean = word.strip("?,.")
         if clean and clean[0].isupper() and len(clean) > 3 and clean.lower() not in skip:

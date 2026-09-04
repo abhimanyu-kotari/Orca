@@ -47,6 +47,7 @@ from typing import Optional
 from agents.intent_agent import run as intent_agent_run
 from agents.weather_agent import run as weather_agent_run
 from agents.pfz_agent import run as pfz_agent_run
+from agents.hazard_agent import run as hazard_agent_run
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -300,8 +301,58 @@ def run(inputs: dict) -> dict:
                 "synthesis_source": "orchestrator_synthesis",
             }
 
-    # Case D: Future Capabilities Stubs
-    if intent in ("alert_query", "route_planning", "ecosystem_query"):
+    # Case D: Active Alert & Maritime Disaster Evaluation (IMD Scales)
+    if intent == "alert_query":
+        if not location:
+            return {
+                "success": True,
+                "intent": intent,
+                "intent_result": intent_result,
+                "agents_invoked": agents_invoked,
+                "weather_result": None,
+                "pfz_result": None,
+                "pfz_suppressed": False,
+                "pfz_suppression_reason": None,
+                "synthesis": (
+                    "📍 Which coastal sector or port would you like to evaluate for disaster/cyclone alerts? "
+                    "For example: *'Check storm surge risk near Chennai'* or *'Cyclone alert for Visakhapatnam'*."
+                ),
+                "synthesis_source": "rule-based",
+            }
+
+        hazard_res = hazard_agent_run({
+            "location": location,
+            "time_context": time_context,
+        })
+        agents_invoked.append("hazard_agent")
+        weather_res = hazard_res.get("weather_result")
+
+        # Suppress PFZ if severe disaster state
+        is_danger = (
+            hazard_res.get("level") == "Level-2"
+            or (weather_res and weather_res.get("verdict") == "DANGER")
+        )
+        pfz_suppressed = is_danger
+        suppression_reason = (
+            f"Level-2 Maritime Cyclone / Storm Hazard active near {location}. "
+            f"Active geofence enforced — fishing advisories are strictly suppressed."
+        ) if is_danger else None
+
+        return {
+            "success": bool(hazard_res.get("success", True)),
+            "intent": intent,
+            "intent_result": intent_result,
+            "agents_invoked": agents_invoked,
+            "weather_result": weather_res,
+            "pfz_result": None,
+            "pfz_suppressed": pfz_suppressed,
+            "pfz_suppression_reason": suppression_reason,
+            "synthesis": hazard_res.get("summary", ""),
+            "synthesis_source": "hazard_agent",
+        }
+
+    # Case E: Future Capabilities Stubs (Navigation & Satellite Oceanography)
+    if intent in ("route_planning", "ecosystem_query"):
         return {
             "success": True,
             "intent": intent,
