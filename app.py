@@ -158,6 +158,14 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
         color = VERDICT_COLOR.get(verdict, "blue")
         m = weather_res.get("key_metrics", {})
         storm_str = "Yes ⚡" if m.get("thunderstorm_likely") else "No"
+        is_lightning = m.get("lightning_hazard", False)
+
+        if is_lightning:
+            sections.append(
+                f"\n> ⚡ **LIGHTNING HAZARD DETECTED:**\n"
+                f"> Elevated convective storm instability (CAPE: **{m.get('max_cape_jkg', 0.0):.0f} J/kg** exceeds 1500 J/kg threshold). "
+                f"**SAFE navigational clearance is suppressed.** Open sea transit poses severe lightning strike hazard."
+            )
 
         # Headers tailored to persona
         table_title = "Marine & Atmospheric Telemetry" if persona == "researcher" else "Peak Marine Conditions"
@@ -177,6 +185,7 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 | Swell Height | {m.get('max_swell_height_m', 0.0):.2f} m | 2.00 m (High Swell) |
 | Wave Period | {m.get('max_wave_period_s', 0.0):.1f} s | — |
 | Precipitation | {m.get('max_precipitation_mm', 0.0):.1f} mm/hr | 10.0 mm/hr (Heavy Rain) |
+| Convective Energy (CAPE) | {m.get('max_cape_jkg', 0.0):.0f} J/kg | 1500 J/kg (Lightning Limit) |
 | Thunderstorm | {storm_str} | Immediate Danger |
 
 **🧠 Reasoning & Risk Factors:**  
@@ -225,11 +234,27 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
         transit_time = econ.get("transit_time_str", "—")
         geofence_status = nav_res.get("geofence_status", "Safe & Clear")
         has_detour = nav_res.get("hazard_avoidance_active", False)
+        imbl_warn = nav_res.get("imbl_warning_active", False)
+        imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
+        imbl_boundary = nav_res.get("imbl_closest_boundary", "IMBL")
+
+        if imbl_warn:
+            sections.append(
+                f"\n> 🛑 **IMBL PROXIMITY WARNING — RISK OF IMPOUNDMENT:**\n"
+                f"> Navigation track approaches within **{imbl_dist:.1f} NM** of the **{imbl_boundary}** "
+                f"International Maritime Boundary Line. Vessels face immediate risk of apprehension "
+                f"by foreign maritime authorities. **Maintain minimum 5 NM seaward safety clearance.**"
+            )
 
         detour_badge = (
             "🚨 **Detour Engaged:** Course adjusted to steer clear of active coastal hazard geofence."
             if has_detour
             else "✅ Direct track is clear of all active storm surge and hazard geofences."
+        )
+
+        imbl_row = (
+            f"| **IMBL Border Proximity** | 🛑 **{imbl_dist:.1f} NM to {imbl_boundary}** | **High Impoundment Risk** (< 5 NM limit) |\n"
+            if imbl_warn else ""
         )
 
         wp_rows = ""
@@ -250,7 +275,7 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 | **Estimated Transit Time** | **{transit_time}** | Standard 9.0 knots cruising speed |
 | **Estimated Fuel Economy** | **{fuel_saved:.1f} Liters Saved** | **~₹{cost_saved:,.0f} net savings** vs blind cruising |
 | **Waypoint Safety Check** | **{geofence_status}** | {detour_badge} |
-
+{imbl_row}
 <details>
 <summary>📍 <b>View Waypoint Route Plan ({len(nav_res.get('waypoints', []))} Waypoints)</b></summary>
 

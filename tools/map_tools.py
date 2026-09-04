@@ -23,8 +23,37 @@ import folium
 from folium import plugins
 from folium.plugins import HeatMap
 
-from tools.navigation_tools import calculate_optimal_route
+from tools.navigation_tools import calculate_optimal_route, IMBL_BOUNDARIES
 from tools.eo_tools import generate_eo_grid, get_eo_legend_html
+
+
+def _add_imbl_boundaries_to_map(fmap: folium.Map) -> None:
+    """
+    Render International Maritime Boundary Lines (IMBL) on the Folium map
+    with high-visibility dashed red borders and legal restriction warnings.
+    """
+    imbl_group = folium.FeatureGroup(name="🛑 International Maritime Boundary Line (IMBL)", show=True)
+    for name, coords in IMBL_BOUNDARIES.items():
+        folium.PolyLine(
+            locations=coords,
+            color="#dc3545",
+            weight=2.5,
+            dash_array="8 4",
+            tooltip=f"🛑 IMBL: {name} (International Maritime Boundary Line)",
+            popup=folium.Popup(
+                f"""
+                <div style="font-family:Arial; font-size:12px; color:#721c24; min-width:220px;">
+                    <b style="color:#dc3545;">🛑 INTERNATIONAL MARITIME BOUNDARY LINE</b><br/>
+                    <b>Sector:</b> {name}<br/>
+                    <b>Border Enforcement:</b> Strictly Policed<br/>
+                    <b>Warning:</b> Navigating within 5 NM risks vessel impoundment and seizure by foreign maritime agencies.<br/>
+                    <span style="color:#666;">Source: Bilateral Maritime Boundary Agreements</span>
+                </div>
+                """,
+                max_width=260,
+            ),
+        ).add_to(imbl_group)
+    imbl_group.add_to(fmap)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -204,6 +233,9 @@ def create_pfz_map(
 
     plugins.MiniMap(toggle_display=True, position="bottomright").add_to(fmap)
 
+    # Render International Maritime Boundary Lines (IMBL Geofence)
+    _add_imbl_boundaries_to_map(fmap)
+
     # 2. Persona: Marine Researcher Multi-Layer HeatMap (SST & Chlorophyll-a)
     if persona == "researcher" or show_sst_heatmap:
         eo_data = generate_eo_grid(user_lat, user_lon)
@@ -330,9 +362,32 @@ def create_pfz_map(
         geofence_status = nav_route.get("geofence_status", "")
         has_detour = nav_route.get("hazard_avoidance_active", False)
 
+        # Check IMBL Warning Status
+        imbl_warn = nav_route.get("imbl_warning_active", False)
+        imbl_dist = nav_route.get("imbl_min_distance_nm", 0.0)
+        imbl_name = nav_route.get("imbl_closest_boundary", "IMBL")
+
         # High-visibility polyline along optimal route
-        line_color = "#0056b3" if not has_detour else "#d9534f"
-        dash_style = "8 5" if has_detour else None
+        if imbl_warn:
+            line_color = "#dc3545"  # High-visibility alert red
+            dash_style = "6 4"
+            route_tooltip = f"🛑 IMBL PROXIMITY WARNING: {imbl_dist:.1f} NM from {imbl_name} border | Impoundment Risk!"
+        elif has_detour:
+            line_color = "#d9534f"
+            dash_style = "8 5"
+            route_tooltip = f"🧭 Detour Track | Heading: {heading_str} | {dist_nm} NM ({dist_km} km)"
+        else:
+            line_color = "#0056b3"
+            dash_style = None
+            route_tooltip = f"🧭 Optimal Heading: {heading_str} | Safe Transit Corridor | {dist_nm} NM ({dist_km} km)"
+
+        imbl_banner_html = f"""
+            <div style="margin-top:6px; background:#f8d7da; border-left:3px solid #dc3545; padding:5px 7px; border-radius:3px; color:#721c24; font-size:11px;">
+                <b>🛑 IMBL PROXIMITY WARNING:</b><br/>
+                Track passes within <b>{imbl_dist:.1f} NM</b> of <b>{imbl_name}</b> boundary.<br/>
+                <b>Action:</b> Maintain 5 NM clearance to prevent impoundment!
+            </div>
+        """ if imbl_warn else ""
 
         folium.PolyLine(
             locations=route_pts,
@@ -340,19 +395,20 @@ def create_pfz_map(
             weight=4,
             opacity=0.90,
             dash_array=dash_style,
-            tooltip=f"🧭 Optimal Heading: {heading_str} | Safe Transit Corridor | {dist_nm} NM ({dist_km} km)",
+            tooltip=route_tooltip,
             popup=folium.Popup(
                 f"""
-                <div style="font-family:Arial;font-size:12px;min-width:210px;">
-                    <b style="color:#0056b3;">🧭 Fuel-Optimal Navigation Corridor</b><br/>
+                <div style="font-family:Arial;font-size:12px;min-width:220px;">
+                    <b style="color:{line_color};">🧭 Fuel-Optimal Navigation Track</b><br/>
                     <b>Heading:</b> {heading_str}<br/>
                     <b>Track Distance:</b> {dist_nm} NM ({dist_km} km)<br/>
                     <b>Estimated Transit:</b> {transit_time} (@ 9 knots)<br/>
                     <b>Diesel Savings:</b> <span style="color:#28a745;"><b>{fuel_saved} L (~₹{cost_saved:,.0f})</b></span><br/>
                     <b>Safety Status:</b> {geofence_status}
+                    {imbl_banner_html}
                 </div>
                 """,
-                max_width=260,
+                max_width=270,
             ),
         ).add_to(fmap)
 
@@ -431,6 +487,9 @@ def create_weather_map(
     )
 
     circle_color = VERDICT_COLOR.get(safety_verdict, "#17a2b8")
+
+    # Render International Maritime Boundary Lines (IMBL Geofence)
+    _add_imbl_boundaries_to_map(fmap)
 
     # Persona: Researcher Multi-Layer HeatMap (SST & Chlorophyll-a)
     if persona == "researcher" or show_sst_heatmap:

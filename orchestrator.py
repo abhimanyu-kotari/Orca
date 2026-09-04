@@ -323,6 +323,13 @@ def _execute_orchestration(inputs: dict) -> dict:
                 f"🐟 **PFZ Available with Caution:** Nearest hotspot is **{best_name}**. "
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
             )
+            if nav_res and nav_res.get("imbl_warning_active"):
+                synthesis += (
+                    f"\n\n🛑 **IMBL PROXIMITY WARNING:** Navigation track passes within "
+                    f"**{nav_res['imbl_min_distance_nm']:.1f} NM** of **{nav_res['imbl_closest_boundary']}** international border. "
+                    f"High risk of impoundment — maintain minimum 5 NM clearance!"
+                )
+
             return {
                 "success": True,
                 "intent": intent,
@@ -365,6 +372,12 @@ def _execute_orchestration(inputs: dict) -> dict:
                 f"🐟 **Top Recommended Fishing Zone:** **{best_name}**.\n"
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
             )
+            if nav_res and nav_res.get("imbl_warning_active"):
+                synthesis += (
+                    f"\n\n🛑 **IMBL PROXIMITY WARNING:** Navigation track passes within "
+                    f"**{nav_res['imbl_min_distance_nm']:.1f} NM** of **{nav_res['imbl_closest_boundary']}** international border. "
+                    f"High risk of impoundment — maintain minimum 5 NM clearance!"
+                )
             return {
                 "success": True,
                 "intent": intent,
@@ -534,6 +547,13 @@ def _execute_orchestration(inputs: dict) -> dict:
             f"(~₹{econ['cost_saved_inr']:,.0f}) versus unguided search cruising.\n"
             f"- **Geofence Clearance Check:** {nav_res['geofence_status']}"
         )
+        if nav_res.get("imbl_warning_active"):
+            synthesis += (
+                f"\n\n🛑 **IMBL PROXIMITY WARNING: Risk of Impoundment!** "
+                f"Course approaches within **{nav_res['imbl_min_distance_nm']:.1f} NM** of the "
+                f"**{nav_res['imbl_closest_boundary']}** international maritime boundary. "
+                f"Crossing risks detention by foreign coast guard. Steer westward to keep safe clearance."
+            )
 
         return {
             "success": True,

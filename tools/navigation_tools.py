@@ -42,6 +42,35 @@ COMPASS_POINTS_16: list[str] = [
     "W", "WNW", "NW", "NNW",
 ]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# International Maritime Boundary Lines (IMBL) — ISRO SIH 26176 Geofences
+# ─────────────────────────────────────────────────────────────────────────────
+# Coordinates of bilateral international maritime boundary lines for Indian waters:
+#   1. India - Sri Lanka (1974 & 1976 bilateral agreements):
+#      Runs from Palk Strait across Palk Bay, Adam's Bridge, and into the Gulf of Mannar.
+#   2. India - Pakistan (Sir Creek & offshore maritime boundary):
+#      Extends from the mouth of Sir Creek southwest into the Arabian Sea.
+
+IMBL_BOUNDARIES: dict[str, list[list[float]]] = {
+    "India-Sri Lanka": [
+        [10.0833, 80.0500],
+        [9.9833, 79.9167],
+        [9.7000, 79.5333],
+        [9.3667, 79.3833],
+        [9.1000, 79.4333],
+        [8.8667, 79.1667],
+        [8.4000, 78.9167],
+        [7.9833, 78.7500],
+    ],
+    "India-Pakistan": [
+        [23.6333, 68.1000],
+        [23.5000, 67.8000],
+        [23.2500, 67.4000],
+        [22.8000, 66.8000],
+        [22.3000, 66.0000],
+    ],
+}
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Distance & Great-Circle Calculations
@@ -273,6 +302,126 @@ def check_geofence_intersection(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# IMBL Geofencing & Proximity Calculations (ISRO SIH 26176)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def distance_point_to_line_segment_nm(
+    p_lat: float, p_lon: float,
+    a_lat: float, a_lon: float,
+    b_lat: float, b_lon: float,
+) -> float:
+    """
+    Calculate minimum distance from GPS point P to geodesic line segment AB in Nautical Miles.
+    Uses equirectangular planar projection for local spherical geometry.
+    """
+    mid_lat = math.radians((p_lat + a_lat + b_lat) / 3.0)
+    cos_lat = math.cos(mid_lat)
+
+    # Convert coordinates to local NM coordinates relative to P(0, 0)
+    # 1 degree of latitude = 60.0 Nautical Miles
+    xa = (a_lon - p_lon) * cos_lat * 60.0
+    ya = (a_lat - p_lat) * 60.0
+    xb = (b_lon - p_lon) * cos_lat * 60.0
+    yb = (b_lat - p_lat) * 60.0
+
+    vx = xb - xa
+    vy = yb - ya
+    seg_len_sq = vx * vx + vy * vy
+
+    if seg_len_sq < 1e-9:
+        # Segment collapsed to a single point
+        return round(math.sqrt(xa * xa + ya * ya), 2)
+
+    # Project point P(0,0) onto segment AB: t = - (xa*vx + ya*vy) / seg_len_sq
+    t = -(xa * vx + ya * vy) / seg_len_sq
+    t_clamped = max(0.0, min(1.0, t))
+
+    closest_x = xa + t_clamped * vx
+    closest_y = ya + t_clamped * vy
+
+    return round(math.sqrt(closest_x * closest_x + closest_y * closest_y), 2)
+
+
+def check_imbl_proximity(
+    route_points: list[list[float]],
+    threshold_nm: float = 5.0,
+    boundaries: Optional[dict[str, list[list[float]]]] = None,
+) -> dict:
+    """
+    Evaluate whether any point along the navigation route breaches the
+    IMBL (International Maritime Boundary Line) safety clearance corridor (default 5 NM).
+
+    Checks all route waypoints and interpolated route segments against
+    all IMBL line segments.
+
+    Returns:
+        {
+            "imbl_warning_active": bool,
+            "closest_boundary": Optional[str],
+            "min_distance_nm": float,
+            "warning_message": Optional[str],
+        }
+    """
+    target_boundaries = boundaries or IMBL_BOUNDARIES
+    min_dist = float("inf")
+    closest_b_name = None
+
+    if not route_points:
+        return {
+            "imbl_warning_active": False,
+            "closest_boundary": None,
+            "min_distance_nm": 999.0,
+            "warning_message": None,
+        }
+
+    # Interpolate intermediate sampling points along route legs (every ~1 NM)
+    sampled_points: list[tuple[float, float]] = []
+    for i in range(len(route_points) - 1):
+        p1 = route_points[i]
+        p2 = route_points[i + 1]
+        sampled_points.append((p1[0], p1[1]))
+
+        leg_km, leg_nm = haversine_distance_nm(p1[0], p1[1], p2[0], p2[1])
+        num_steps = max(1, int(math.ceil(leg_nm)))
+        for s in range(1, num_steps):
+            frac = s / num_steps
+            interp_lat = p1[0] + frac * (p2[0] - p1[0])
+            interp_lon = p1[1] + frac * (p2[1] - p1[1])
+            sampled_points.append((interp_lat, interp_lon))
+
+    sampled_points.append((route_points[-1][0], route_points[-1][1]))
+
+    # Test all sampled points against all IMBL segments
+    for b_name, coords in target_boundaries.items():
+        for j in range(len(coords) - 1):
+            a_lat, a_lon = coords[j]
+            b_lat, b_lon = coords[j + 1]
+            for p_lat, p_lon in sampled_points:
+                d_nm = distance_point_to_line_segment_nm(
+                    p_lat, p_lon, a_lat, a_lon, b_lat, b_lon
+                )
+                if d_nm < min_dist:
+                    min_dist = d_nm
+                    closest_b_name = b_name
+
+    warning_active = min_dist < threshold_nm
+    warning_msg = None
+    if warning_active and closest_b_name:
+        warning_msg = (
+            f"🛑 IMBL PROXIMITY WARNING: Risk of Impoundment! "
+            f"Vessel track is {min_dist:.1f} NM from {closest_b_name} international boundary "
+            f"(threshold: {threshold_nm:.1f} NM). High seizure risk by foreign maritime enforcement."
+        )
+
+    return {
+        "imbl_warning_active": warning_active,
+        "closest_boundary": closest_b_name if min_dist < float("inf") else None,
+        "min_distance_nm": round(min_dist, 2) if min_dist < float("inf") else 999.0,
+        "warning_message": warning_msg,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Master Route Generator
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -285,9 +434,10 @@ def calculate_optimal_route(
     vessel_speed_knots: float = DEFAULT_VESSEL_SPEED_KNOTS,
     burn_rate_l_nm: float = DEFAULT_BURN_RATE_L_NM,
     diesel_price_inr: float = DEFAULT_DIESEL_PRICE_INR,
+    imbl_threshold_nm: float = 5.0,
 ) -> dict:
     """
-    Generate complete fuel-optimal waypoint navigation plan.
+    Generate complete fuel-optimal waypoint navigation plan with IMBL proximity screening.
     """
     s_lat, s_lon = float(start_coords[0]), float(start_coords[1])
     e_lat, e_lon = float(end_coords[0]), float(end_coords[1])
@@ -376,6 +526,24 @@ def calculate_optimal_route(
         diesel_price_inr=diesel_price_inr,
     )
 
+    # ── IMBL Proximity Screening (ISRO SIH 26176) ─────────────────────────────
+    imbl_check = check_imbl_proximity(route_points, threshold_nm=imbl_threshold_nm)
+    imbl_warning_active = imbl_check["imbl_warning_active"]
+    imbl_min_distance_nm = imbl_check["min_distance_nm"]
+    imbl_closest_boundary = imbl_check["closest_boundary"]
+    imbl_warning_message = imbl_check["warning_message"]
+
+    if imbl_warning_active:
+        route_color = "#dc3545"  # Alert Red
+        geofence_status = (
+            f"{geofence_status} | 🛑 IMBL WARNING: Within {imbl_min_distance_nm:.1f} NM "
+            f"of {imbl_closest_boundary}"
+        )
+    elif hazard_avoidance_active:
+        route_color = "#d9534f"  # Warning Amber/Red
+    else:
+        route_color = "#0056b3"  # Navigational Blue
+
     return {
         "success": True,
         "start_coords": [s_lat, s_lon],
@@ -391,4 +559,9 @@ def calculate_optimal_route(
         "waypoints": waypoints,
         "route_points": route_points,
         "fuel_economy": fuel_metrics,
+        "imbl_warning_active": imbl_warning_active,
+        "imbl_min_distance_nm": imbl_min_distance_nm,
+        "imbl_closest_boundary": imbl_closest_boundary,
+        "imbl_warning_message": imbl_warning_message,
+        "route_color": route_color,
     }

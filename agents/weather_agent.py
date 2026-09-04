@@ -182,6 +182,11 @@ def _compute_peak_metrics(atmo_window: dict, marine_window: dict) -> dict:
         codes = data.get("weather_code", [])
         return any(int(c) in THUNDERSTORM_CODES for c in codes if c is not None)
 
+    max_cape = safe_max(atmo_window, "cape", default=0.0)
+    thunderstorm = any_thunderstorm(atmo_window)
+    # ISRO 26176 Rule: CAPE > 1500 J/kg or active thunderstorm triggers lightning hazard
+    lightning_hazard = (max_cape > 1500.0) or thunderstorm
+
     return {
         "max_wind_speed_kmh":   safe_max(atmo_window,   "wind_speed_10m"),
         "max_wind_gust_kmh":    safe_max(atmo_window,   "wind_gusts_10m"),
@@ -189,7 +194,9 @@ def _compute_peak_metrics(atmo_window: dict, marine_window: dict) -> dict:
         "max_wave_height_m":    safe_max(marine_window, "wave_height"),
         "max_swell_height_m":   safe_max(marine_window, "swell_wave_height"),
         "max_wave_period_s":    safe_max(marine_window, "wave_period"),
-        "thunderstorm_likely":  any_thunderstorm(atmo_window),
+        "thunderstorm_likely":  thunderstorm,
+        "max_cape_jkg":         max_cape,
+        "lightning_hazard":     lightning_hazard,
     }
 
 
@@ -202,11 +209,12 @@ def _rule_based_verdict(metrics: dict) -> str:
     re-deriving the classification from scratch.
 
     DANGER conditions (any one is sufficient):
-        - Thunderstorm forecast
+        - Thunderstorm forecast or extreme CAPE ≥ 2500 J/kg
         - Wind speed ≥ 40 km/h  (Beaufort 8, Gale-force)
         - Wave height ≥ 2.5 m
 
     CAUTION conditions (any one, if no DANGER):
+        - Lightning hazard: CAPE > 1500 J/kg (suppresses SAFE clearance)
         - Wind speed ≥ 25 km/h  (Beaufort 6)
         - Wave height ≥ 1.5 m
         - Precipitation ≥ 20 mm/hr
@@ -215,14 +223,18 @@ def _rule_based_verdict(metrics: dict) -> str:
         "SAFE" | "CAUTION" | "DANGER"
     """
     if (
-        metrics["thunderstorm_likely"]
+        metrics.get("thunderstorm_likely", False)
+        or metrics.get("max_cape_jkg", 0.0) >= 2500.0
         or metrics["max_wind_speed_kmh"]  >= THRESHOLDS["wind_danger_kmh"]
         or metrics["max_wave_height_m"]   >= THRESHOLDS["wave_danger_m"]
     ):
         return "DANGER"
 
+    # ISRO 26176: If CAPE > 1500 J/kg or lightning hazard, suppress SAFE to CAUTION
     if (
-        metrics["max_wind_speed_kmh"]     >= THRESHOLDS["wind_caution_kmh"]
+        metrics.get("lightning_hazard", False)
+        or metrics.get("max_cape_jkg", 0.0) > 1500.0
+        or metrics["max_wind_speed_kmh"]     >= THRESHOLDS["wind_caution_kmh"]
         or metrics["max_wave_height_m"]   >= THRESHOLDS["wave_caution_m"]
         or metrics["max_precipitation_mm"] >= THRESHOLDS["rain_heavy_mm"]
     ):
@@ -275,15 +287,18 @@ Max Swell Height     : {metrics['max_swell_height_m']:.2f} m
 Max Wave Period      : {metrics['max_wave_period_s']:.1f} s
 Max Precipitation    : {metrics['max_precipitation_mm']:.1f} mm/hr
 Thunderstorm Likely  : {metrics['thunderstorm_likely']}
+Max Convective CAPE  : {metrics.get('max_cape_jkg', 0.0):.0f} J/kg
+Lightning Hazard     : {metrics.get('lightning_hazard', False)}
 
 --- Rule-Based Starting Verdict ---
 {rule_verdict}
 
 --- Your Task ---
 1. Review the metrics above and confirm or refine the verdict.
+   NOTE: If Lightning Hazard is True (CAPE > 1500 J/kg or storm active), SAFE clearance is strictly suppressed.
 2. Write a 2–3 sentence "summary" in plain language that a fisherman with
    no technical background can immediately understand and act upon.
-   Mention the most important hazard if conditions are not SAFE.
+   Mention the most important hazard (e.g., lightning risk, high waves, or gale) if conditions are not SAFE.
 3. Write "reasoning" as 3–5 bullet points explaining the key factors
    behind this verdict.
 
@@ -297,18 +312,23 @@ Respond ONLY with a valid JSON object — no markdown fences, no extra text:
 
     client = _get_gemini_client()
     if not client:
+        lightning_note = ""
+        if metrics.get("lightning_hazard"):
+            lightning_note = f"\n• ⚡ Lightning Hazard: CAPE {metrics.get('max_cape_jkg', 0.0):.0f} J/kg exceeds 1500 J/kg threshold."
         return {
             "verdict":   rule_verdict,
             "summary":   (
                 f"Conditions for {location} assessed from live forecast data. "
                 f"Peak wave height: {metrics['max_wave_height_m']:.2f} m, "
                 f"peak wind: {metrics['max_wind_speed_kmh']:.1f} km/h."
+                + (f" ⚡ Lightning hazard active (CAPE: {metrics.get('max_cape_jkg', 0.0):.0f} J/kg)." if metrics.get("lightning_hazard") else "")
             ),
             "reasoning": (
                 f"• Rule-based assessment active (AI analysis optional).\n"
                 f"• Rule-based verdict ({rule_verdict}) applied using IMD/INCOIS thresholds.\n"
                 f"• Peak wind {metrics['max_wind_speed_kmh']:.1f} km/h (danger threshold: {THRESHOLDS['wind_danger_kmh']} km/h)\n"
                 f"• Peak wave {metrics['max_wave_height_m']:.2f} m (danger threshold: {THRESHOLDS['wave_danger_m']} m)"
+                + lightning_note
             ),
         }
 
@@ -325,6 +345,18 @@ Respond ONLY with a valid JSON object — no markdown fences, no extra text:
         # Validate that required keys are present
         if not all(k in parsed for k in ("verdict", "summary", "reasoning")):
             raise ValueError("Gemini response missing required keys.")
+
+        # Enforce ISRO 26176 Safety Invariant: suppress SAFE if lightning hazard is active
+        if metrics.get("lightning_hazard") and parsed.get("verdict") == "SAFE":
+            parsed["verdict"] = "CAUTION"
+            parsed["summary"] = (
+                f"⚡ LIGHTNING HAZARD (CAPE: {metrics.get('max_cape_jkg', 0.0):.0f} J/kg): "
+                f"Convective instability suppresses SAFE clearance. " + parsed.get("summary", "")
+            )
+            parsed["reasoning"] = (
+                f"• ⚡ Lightning Hazard: Convective instability (CAPE {metrics.get('max_cape_jkg', 0.0):.0f} J/kg) exceeds safe limits (> 1500 J/kg).\n"
+                + parsed.get("reasoning", "")
+            )
 
         return parsed
 

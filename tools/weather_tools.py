@@ -125,6 +125,7 @@ def fetch_atmospheric_weather(lat: float, lon: float, days: int = DEFAULT_FORECA
             "precipitation",        # Hourly precipitation sum (mm)
             "visibility",           # Horizontal visibility (metres)
             "weather_code",         # WMO weather interpretation code
+            "cape",                 # Convective Available Potential Energy (J/kg) — lightning hazard
         ]),
     }
 

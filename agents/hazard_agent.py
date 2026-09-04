@@ -49,15 +49,20 @@ from typing import Optional
 from agents.weather_agent import run as weather_agent_run
 
 
-def classify_imd_hazard(wind_kmh: float, wave_m: float, thunderstorm: bool = False) -> tuple[str, str, str, str, str]:
+def classify_imd_hazard(
+    wind_kmh: float,
+    wave_m: float,
+    thunderstorm: bool = False,
+    cape_jkg: float = 0.0,
+) -> tuple[str, str, str, str, str]:
     """
-    Classify marine conditions against IMD maritime disaster scales.
+    Classify marine conditions against IMD maritime disaster scales and convective hazard limits.
 
     Returns:
         (level, color, category, geofence_guidance, advisory)
     """
-    # Red / Level-2: Cyclone Alert / Severe Storm State
-    if wind_kmh >= 62.0 or wave_m > 3.5 or (wind_kmh >= 50.0 and thunderstorm):
+    # Red / Level-2: Cyclone Alert / Severe Storm State / Extreme Convective Instability
+    if wind_kmh >= 62.0 or wave_m > 3.5 or (wind_kmh >= 50.0 and thunderstorm) or cape_jkg >= 2500.0:
         level = "Level-2"
         color = "Red"
         category = "Cyclone Alert / Severe Hazard"
@@ -67,21 +72,22 @@ def classify_imd_hazard(wind_kmh: float, wave_m: float, thunderstorm: bool = Fal
             "Emergency VHF Ch 16 and NAVTEX warnings broadcast."
         )
         advisory = (
-            "DANGER: Severe gale-force winds and violent wave heights exceed maritime survivability limits. "
+            "DANGER: Severe gale-force winds, violent seas, or extreme convective storm energy exceed maritime survivability limits. "
             "Total suspension of fishing operations and coastal navigation."
         )
-    # Yellow / Level-1: Gale / Swell Watch
-    elif (40.0 <= wind_kmh <= 61.0) or (2.0 <= wave_m <= 3.5):
+    # Yellow / Level-1: Gale / Swell / Lightning Watch
+    elif (40.0 <= wind_kmh <= 61.0) or (2.0 <= wave_m <= 3.5) or thunderstorm or (cape_jkg > 1500.0):
         level = "Level-1"
         color = "Yellow"
-        category = "Gale / Swell Watch"
+        category = "Gale / Swell / Lightning Watch" if (thunderstorm or cape_jkg > 1500.0) else "Gale / Swell Watch"
+        lightning_note = " ⚡ Convective lightning hazard active (CAPE > 1500 J/kg)." if (cape_jkg > 1500.0 or thunderstorm) else ""
         geofence_guidance = (
-            "⚠️ **CAUTIONARY GEOFENCE (Zone 4 Perimeter):** High-wave inundation watch. "
+            f"⚠️ **CAUTIONARY GEOFENCE (Zone 4 Perimeter):** High-wave inundation and convective watch.{lightning_note} "
             "Small artisanal craft advised not to navigate into open deep-water corridors. "
             "Maintain continuous radio watch on VHF Ch 16."
         )
         advisory = (
-            "CAUTION: Elevated swell and squally winds present hazardous conditions for small craft. "
+            f"CAUTION: Elevated swell, squally winds, or convective lightning instability present hazardous conditions for small craft.{lightning_note} "
             "Remain within sheltered waters and keep away from breaker zones."
         )
     # Green / Level-0: Normal / Benign
@@ -94,7 +100,7 @@ def classify_imd_hazard(wind_kmh: float, wave_m: float, thunderstorm: bool = Fal
             "Normal port clearance protocols in effect."
         )
         advisory = (
-            "SAFE: Benign sea state and wind conditions. Safe for all routine artisanal "
+            "SAFE: Benign sea state, wind, and convective conditions. Safe for all routine artisanal "
             "and commercial marine operations."
         )
 
@@ -150,10 +156,12 @@ def run(inputs: dict) -> dict:
     wave_height = metrics.get("max_wave_height_m", 0.0)
     swell_height = metrics.get("max_swell_height_m", 0.0)
     thunderstorm = metrics.get("thunderstorm_likely", False)
+    cape_jkg = metrics.get("max_cape_jkg", 0.0)
+    lightning_hazard = metrics.get("lightning_hazard", False) or (cape_jkg > 1500.0) or thunderstorm
 
     # 2. Classify according to IMD Disaster Scales
     level, color, category, geofence_guidance, advisory = classify_imd_hazard(
-        wind_speed, wave_height, thunderstorm
+        wind_speed, wave_height, thunderstorm, cape_jkg
     )
     imd_scale = f"{color} / {level} ({category})"
 
@@ -162,6 +170,7 @@ def run(inputs: dict) -> dict:
 
     # 3. Format structured bulletin
     storm_text = "Yes ⚡" if thunderstorm else "No"
+    lightning_badge = "⚡ ACTIVE (High Risk)" if lightning_hazard else "Low"
     summary_md = f"""
 ### {color_emoji} IMD Maritime Disaster Classification: **{color} / {level}**
 **Category:** **{category}**  
@@ -172,7 +181,8 @@ def run(inputs: dict) -> dict:
 **📊 Marine & Meteorological Disaster Telemetry**
 - **Sustained Wind:** {wind_speed:.1f} km/h *(Gusts: {wind_gust:.1f} km/h)*
 - **Significant Wave Height:** {wave_height:.2f} m *(Swell: {swell_height:.2f} m)*
-- **Convective Storm Activity:** {storm_text}
+- **Convective Instability (CAPE):** {cape_jkg:.0f} J/kg *(Lightning Hazard: {lightning_badge})*
+- **Thunderstorm Activity:** {storm_text}
 
 ---
 
