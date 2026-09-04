@@ -48,6 +48,8 @@ from agents.intent_agent import run as intent_agent_run
 from agents.weather_agent import run as weather_agent_run
 from agents.pfz_agent import run as pfz_agent_run
 from agents.hazard_agent import run as hazard_agent_run
+from tools.navigation_tools import calculate_optimal_route
+from tools.map_tools import _generate_coastal_geofence_coords
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -74,6 +76,28 @@ def _format_coming_soon_text(intent: str) -> str:
         "This capability is planned for a future release. "
         "Ask me about weather, sea conditions, or where to fish!"
     )
+
+
+def _extract_target_coords(pfz_res: dict) -> tuple[Optional[float], Optional[float], str]:
+    """Safely extract destination lat, lon, and name from a pfz_agent response."""
+    best = pfz_res.get("best_zone") or {}
+    name = best.get("name") or "Target PFZ Hotspot"
+    lat = best.get("lat")
+    lon = best.get("lon")
+    if lat is None or lon is None:
+        for z in pfz_res.get("zones", []):
+            if (best.get("zone_id") and z.get("zone_id") == best.get("zone_id")) or (best.get("name") and z.get("name") == best.get("name")):
+                lat = z.get("lat")
+                lon = z.get("lon")
+                name = z.get("name") or name
+                break
+    # Fallback to first zone in list if best_zone lacked coords
+    if (lat is None or lon is None) and pfz_res.get("zones"):
+        first_z = pfz_res["zones"][0]
+        lat = first_z.get("lat")
+        lon = first_z.get("lon")
+        name = first_z.get("name") or name
+    return lat, lon, name
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -116,6 +140,7 @@ def run(inputs: dict) -> dict:
             "agents_invoked": [],
             "weather_result": None,
             "pfz_result": None,
+            "navigation_result": None,
             "pfz_suppressed": False,
             "pfz_suppression_reason": None,
             "synthesis": "Please enter a question or coastal location to get started.",
@@ -149,6 +174,7 @@ def run(inputs: dict) -> dict:
             "agents_invoked": agents_invoked,
             "weather_result": None,
             "pfz_result": None,
+            "navigation_result": None,
             "pfz_suppressed": False,
             "pfz_suppression_reason": None,
             "synthesis": greeting,
@@ -165,6 +191,7 @@ def run(inputs: dict) -> dict:
                 "agents_invoked": agents_invoked,
                 "weather_result": None,
                 "pfz_result": None,
+                "navigation_result": None,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
                 "synthesis": (
@@ -188,6 +215,7 @@ def run(inputs: dict) -> dict:
             "agents_invoked": agents_invoked,
             "weather_result": weather_res,
             "pfz_result": None,
+            "navigation_result": None,
             "pfz_suppressed": False,
             "pfz_suppression_reason": None,
             "synthesis": synthesis,
@@ -204,6 +232,7 @@ def run(inputs: dict) -> dict:
                 "agents_invoked": agents_invoked,
                 "weather_result": None,
                 "pfz_result": None,
+                "navigation_result": None,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
                 "synthesis": (
@@ -251,6 +280,7 @@ def run(inputs: dict) -> dict:
                 "agents_invoked": agents_invoked,
                 "weather_result": weather_res,
                 "pfz_result": None,  # Strictly withheld for safety
+                "navigation_result": None,
                 "pfz_suppressed": pfz_suppressed,
                 "pfz_suppression_reason": suppression_reason,
                 "synthesis": synthesis,
@@ -259,7 +289,26 @@ def run(inputs: dict) -> dict:
 
         elif verdict == "CAUTION":
             pfz_suppressed = False
-            best_name = (pfz_res.get("best_zone") or {}).get("name", "identified zone") if pfz_res.get("success") else "identified zone"
+            best_zone = (pfz_res.get("best_zone") or {}) if pfz_res.get("success") else {}
+            best_name = best_zone.get("name", "identified zone")
+
+            # Calculate fuel-optimal route with hazard avoidance geofence
+            nav_res = None
+            if pfz_res.get("success"):
+                u_lat = pfz_res.get("lat")
+                u_lon = pfz_res.get("lon")
+                t_lat, t_lon, t_name = _extract_target_coords(pfz_res)
+                if u_lat is not None and u_lon is not None and t_lat is not None and t_lon is not None:
+                    geos = [_generate_coastal_geofence_coords(u_lat, u_lon)]
+                    nav_res = calculate_optimal_route(
+                        start_coords=[u_lat, u_lon],
+                        end_coords=[t_lat, t_lon],
+                        hazard_geofences=geos,
+                        start_label=pfz_res.get("location", location),
+                        end_label=t_name,
+                    )
+                    agents_invoked.append("navigation_tools")
+
             synthesis = (
                 f"⚠️ **CAUTION Advisory for {location}:** Sea conditions require heightened care.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
@@ -273,6 +322,7 @@ def run(inputs: dict) -> dict:
                 "agents_invoked": agents_invoked,
                 "weather_result": weather_res,
                 "pfz_result": pfz_res if pfz_res.get("success") else None,
+                "navigation_result": nav_res,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
                 "synthesis": synthesis,
@@ -281,7 +331,25 @@ def run(inputs: dict) -> dict:
 
         else:  # SAFE
             pfz_suppressed = False
-            best_name = (pfz_res.get("best_zone") or {}).get("name", "identified zone") if pfz_res.get("success") else "identified zone"
+            best_zone = (pfz_res.get("best_zone") or {}) if pfz_res.get("success") else {}
+            best_name = best_zone.get("name", "identified zone")
+
+            # Calculate direct fuel-optimal route
+            nav_res = None
+            if pfz_res.get("success"):
+                u_lat = pfz_res.get("lat")
+                u_lon = pfz_res.get("lon")
+                t_lat, t_lon, t_name = _extract_target_coords(pfz_res)
+                if u_lat is not None and u_lon is not None and t_lat is not None and t_lon is not None:
+                    nav_res = calculate_optimal_route(
+                        start_coords=[u_lat, u_lon],
+                        end_coords=[t_lat, t_lon],
+                        hazard_geofences=None,
+                        start_label=pfz_res.get("location", location),
+                        end_label=t_name,
+                    )
+                    agents_invoked.append("navigation_tools")
+
             synthesis = (
                 f"✅ **Favorable Conditions for {location}:** Weather and sea conditions are SAFE for operations.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
@@ -295,6 +363,7 @@ def run(inputs: dict) -> dict:
                 "agents_invoked": agents_invoked,
                 "weather_result": weather_res,
                 "pfz_result": pfz_res if pfz_res.get("success") else None,
+                "navigation_result": nav_res,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
                 "synthesis": synthesis,
@@ -311,6 +380,7 @@ def run(inputs: dict) -> dict:
                 "agents_invoked": agents_invoked,
                 "weather_result": None,
                 "pfz_result": None,
+                "navigation_result": None,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
                 "synthesis": (
@@ -345,14 +415,127 @@ def run(inputs: dict) -> dict:
             "agents_invoked": agents_invoked,
             "weather_result": weather_res,
             "pfz_result": None,
+            "navigation_result": None,
             "pfz_suppressed": pfz_suppressed,
             "pfz_suppression_reason": suppression_reason,
             "synthesis": hazard_res.get("summary", ""),
             "synthesis_source": "hazard_agent",
         }
 
-    # Case E: Future Capabilities Stubs (Navigation & Satellite Oceanography)
-    if intent in ("route_planning", "ecosystem_query"):
+    # Case E: Fuel-Optimal Navigation & Route Planning (Feature 2)
+    if intent == "route_planning":
+        if not location:
+            return {
+                "success": True,
+                "intent": intent,
+                "intent_result": intent_result,
+                "agents_invoked": agents_invoked,
+                "weather_result": None,
+                "pfz_result": None,
+                "navigation_result": None,
+                "pfz_suppressed": False,
+                "pfz_suppression_reason": None,
+                "synthesis": (
+                    "📍 Which departure port or coastal area are you planning to navigate from? "
+                    "For example: *'Plan route to fishing zone from Kochi'* or *'How to navigate from Rameswaram?'*."
+                ),
+                "synthesis_source": "rule-based",
+            }
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_weather = executor.submit(
+                weather_agent_run,
+                {"location": location, "time_context": time_context}
+            )
+            future_pfz = executor.submit(
+                pfz_agent_run,
+                {"location": location}
+            )
+            weather_res = future_weather.result()
+            pfz_res = future_pfz.result()
+
+        agents_invoked.extend(["weather_agent", "pfz_agent", "navigation_tools"])
+        verdict = weather_res.get("verdict", "SAFE") if weather_res.get("success") else "SAFE"
+
+        if verdict == "DANGER":
+            suppression_reason = (
+                f"DANGER weather conditions active near {location}. "
+                f"Navigation corridors and fishing routes are suspended for vessel survivability."
+            )
+            synthesis = (
+                f"🚨 **Navigation Suspended for {location}:** Severe weather or high sea state detected.\n\n"
+                f"{weather_res.get('summary', '')}\n\n"
+                f"⛔ **TRANSIT NOT ADVISED:** Fuel-optimal waypoint routing is suspended under DANGER status."
+            )
+            return {
+                "success": True,
+                "intent": intent,
+                "intent_result": intent_result,
+                "agents_invoked": agents_invoked,
+                "weather_result": weather_res,
+                "pfz_result": None,
+                "navigation_result": None,
+                "pfz_suppressed": True,
+                "pfz_suppression_reason": suppression_reason,
+                "synthesis": synthesis,
+                "synthesis_source": "orchestrator_safety_override",
+            }
+
+        u_lat = pfz_res.get("lat") if pfz_res.get("success") else None
+        u_lon = pfz_res.get("lon") if pfz_res.get("success") else None
+        t_lat, t_lon, t_name = _extract_target_coords(pfz_res) if pfz_res.get("success") else (None, None, "Target PFZ")
+
+        if u_lat is None or u_lon is None or t_lat is None or t_lon is None:
+            return {
+                "success": False,
+                "intent": intent,
+                "intent_result": intent_result,
+                "agents_invoked": agents_invoked,
+                "weather_result": weather_res,
+                "pfz_result": pfz_res,
+                "navigation_result": None,
+                "pfz_suppressed": False,
+                "pfz_suppression_reason": None,
+                "synthesis": f"Could not locate destination fishing coordinates near {location}.",
+                "synthesis_source": "rule-based",
+            }
+
+        geos = [_generate_coastal_geofence_coords(u_lat, u_lon)] if verdict == "CAUTION" else None
+        nav_res = calculate_optimal_route(
+            start_coords=[u_lat, u_lon],
+            end_coords=[t_lat, t_lon],
+            hazard_geofences=geos,
+            start_label=pfz_res.get("location", location),
+            end_label=t_name,
+        )
+
+        econ = nav_res["fuel_economy"]
+        synthesis = (
+            f"🧭 **Fuel-Optimal Waypoint Navigation Plan:** {location} ➔ **{t_name}**\n\n"
+            f"- **Direct Track Distance:** {nav_res['total_distance_nm']:.1f} NM ({nav_res['total_distance_km']:.1f} km)\n"
+            f"- **Optimal Compass Heading:** **{nav_res['direct_heading_str']}**\n"
+            f"- **Estimated Cruising Duration:** ~{econ['transit_time_str']} (@ 9.0 knots)\n"
+            f"- **Marine Fuel Economy:** Saves **{econ['fuel_saved_liters']:.1f} Liters** of diesel "
+            f"(~₹{econ['cost_saved_inr']:,.0f}) versus unguided search cruising.\n"
+            f"- **Geofence Clearance Check:** {nav_res['geofence_status']}"
+        )
+
+        return {
+            "success": True,
+            "intent": intent,
+            "intent_result": intent_result,
+            "agents_invoked": agents_invoked,
+            "weather_result": weather_res,
+            "pfz_result": pfz_res,
+            "navigation_result": nav_res,
+            "pfz_suppressed": False,
+            "pfz_suppression_reason": None,
+            "synthesis": synthesis,
+            "synthesis_source": "navigation_synthesis",
+        }
+
+    # Case F: Future Capabilities Stubs (Satellite Oceanography)
+    if intent == "ecosystem_query":
         return {
             "success": True,
             "intent": intent,
@@ -360,13 +543,14 @@ def run(inputs: dict) -> dict:
             "agents_invoked": agents_invoked,
             "weather_result": None,
             "pfz_result": None,
+            "navigation_result": None,
             "pfz_suppressed": False,
             "pfz_suppression_reason": None,
             "synthesis": _format_coming_soon_text(intent),
             "synthesis_source": "rule-based",
         }
 
-    # Case E: Unknown / Unhandled queries
+    # Case G: Unknown / Unhandled queries
     return {
         "success": True,
         "intent": intent,
@@ -374,12 +558,13 @@ def run(inputs: dict) -> dict:
         "agents_invoked": agents_invoked,
         "weather_result": None,
         "pfz_result": None,
+        "navigation_result": None,
         "pfz_suppressed": False,
         "pfz_suppression_reason": None,
         "synthesis": (
             "🤔 I am not completely sure what you are asking. "
-            "You can ask me about sea conditions, weather safety, or fishing zones "
-            "(e.g., 'Is it safe to fish near Kochi?' or 'Show PFZ zones near Rameswaram')."
+            "You can ask me about sea conditions, weather safety, fishing zones, or navigation routes "
+            "(e.g., 'Is it safe to fish near Kochi?', 'Show PFZ zones near Rameswaram', or 'Plan route to fishing zone from Kochi')."
         ),
         "synthesis_source": "rule-based",
     }

@@ -23,6 +23,8 @@ import folium
 from folium import plugins
 from folium.plugins import HeatMap
 
+from tools.navigation_tools import calculate_optimal_route
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Styling constants
@@ -184,10 +186,12 @@ def create_pfz_map(
     safety_verdict: str | None = None,
     persona: str = "fisherman",
     show_sst_heatmap: bool = False,
+    nav_route: dict | None = None,
 ) -> folium.Map:
     """
     Generate an interactive Folium map for the PFZ Agent response,
-    adapted dynamically for the selected Stakeholder Persona.
+    adapted dynamically for the selected Stakeholder Persona and featuring
+    fuel-optimal navigation routes.
     """
     # 1. Base Map
     fmap = folium.Map(
@@ -273,9 +277,85 @@ def create_pfz_map(
         icon=folium.Icon(color=port_color, icon=port_icon, prefix="fa"),
     ).add_to(fmap)
 
-    # 6. PFZ Zone Markers & Navigation Lines
-    # Identify top zone for prominent navigation route
-    best_zone_id = pfz_zones[0].get("zone_id") if pfz_zones else None
+    # 6. Navigation Route & Waypoints Calculation (if not precomputed)
+    best_zone = pfz_zones[0] if pfz_zones else None
+    if nav_route is None and best_zone is not None:
+        geofences = (
+            [_generate_coastal_geofence_coords(user_lat, user_lon)]
+            if (persona == "coastal_authority" or safety_verdict in ("CAUTION", "DANGER"))
+            else None
+        )
+        nav_route = calculate_optimal_route(
+            start_coords=[user_lat, user_lon],
+            end_coords=[best_zone["lat"], best_zone["lon"]],
+            hazard_geofences=geofences,
+            start_label=user_location_name,
+            end_label=best_zone.get("name", "Top PFZ Hotspot"),
+        )
+
+    # 7. Render Navigation Track to Top Recommended Zone
+    if nav_route and nav_route.get("success"):
+        route_pts = nav_route.get("route_points", [])
+        heading_str = nav_route.get("direct_heading_str", "")
+        dist_nm = nav_route.get("total_distance_nm", 0.0)
+        dist_km = nav_route.get("total_distance_km", 0.0)
+        fuel_econ = nav_route.get("fuel_economy", {})
+        fuel_saved = fuel_econ.get("fuel_saved_liters", 0.0)
+        cost_saved = fuel_econ.get("cost_saved_inr", 0)
+        transit_time = fuel_econ.get("transit_time_str", "")
+        geofence_status = nav_route.get("geofence_status", "")
+        has_detour = nav_route.get("hazard_avoidance_active", False)
+
+        # High-visibility polyline along optimal route
+        line_color = "#0056b3" if not has_detour else "#d9534f"
+        dash_style = "8 5" if has_detour else None
+
+        folium.PolyLine(
+            locations=route_pts,
+            color=line_color,
+            weight=4,
+            opacity=0.90,
+            dash_array=dash_style,
+            tooltip=f"🧭 Optimal Heading: {heading_str} | Safe Transit Corridor | {dist_nm} NM ({dist_km} km)",
+            popup=folium.Popup(
+                f"""
+                <div style="font-family:Arial;font-size:12px;min-width:210px;">
+                    <b style="color:#0056b3;">🧭 Fuel-Optimal Navigation Corridor</b><br/>
+                    <b>Heading:</b> {heading_str}<br/>
+                    <b>Track Distance:</b> {dist_nm} NM ({dist_km} km)<br/>
+                    <b>Estimated Transit:</b> {transit_time} (@ 9 knots)<br/>
+                    <b>Diesel Savings:</b> <span style="color:#28a745;"><b>{fuel_saved} L (~₹{cost_saved:,.0f})</b></span><br/>
+                    <b>Safety Status:</b> {geofence_status}
+                </div>
+                """,
+                max_width=260,
+            ),
+        ).add_to(fmap)
+
+        # If hazard detour was synthesized, render intermediate waypoint marker
+        if has_detour:
+            for wp in nav_route.get("waypoints", []):
+                if wp.get("wp_id") == 2:
+                    folium.Marker(
+                        location=[wp["lat"], wp["lon"]],
+                        popup=folium.Popup(
+                            f"""
+                            <div style="font-family:Arial;font-size:12px;min-width:200px;">
+                                <b style="color:#d35400;">⚠️ Seaward Hazard Clearance Waypoint</b><br/>
+                                <b>Coordinates:</b> {wp['lat']:.4f}°N, {wp['lon']:.4f}°E<br/>
+                                <b>Leg Distance:</b> {wp.get('leg_distance_nm', 0):.1f} NM<br/>
+                                <b>Steer Bearing:</b> {wp.get('leg_bearing', 'N/A')}<br/>
+                                <span style="color:#555;">Detour skirts active storm surge/cyclone geofence.</span>
+                            </div>
+                            """,
+                            max_width=240,
+                        ),
+                        tooltip="⚠️ Waypoint 2: Hazard Detour Clearance Point",
+                        icon=folium.Icon(color="orange", icon="compass", prefix="fa"),
+                    ).add_to(fmap)
+
+    # 8. PFZ Hotspot Markers & Secondary Lines
+    best_zone_id = best_zone.get("zone_id") if best_zone else None
 
     for i, zone in enumerate(pfz_zones, start=1):
         quality = zone.get("quality", "MEDIUM")
@@ -285,23 +365,13 @@ def create_pfz_map(
         dist_km = zone.get("distance_to_user_km", "?")
         is_top = (zone.get("zone_id") == best_zone_id)
 
-        # Navigation line:
-        # Fisherman gets a bold, highlighted navigation route to top zone
-        if is_top and persona == "fisherman":
-            folium.PolyLine(
-                locations=[[user_lat, user_lon], [zone_lat, zone_lon]],
-                color="#007bff",
-                weight=3.5,
-                opacity=0.85,
-                dash_array="8 6",
-                tooltip=f"🧭 Recommended Trawl Path: {dist_km} km to {zone['name']}",
-            ).add_to(fmap)
-        else:
+        # Secondary zones get faint connector lines
+        if not is_top:
             folium.PolyLine(
                 locations=[[user_lat, user_lon], [zone_lat, zone_lon]],
                 color=marker_color,
                 weight=1.5,
-                opacity=0.40,
+                opacity=0.35,
                 dash_array="5 5",
                 tooltip=f"{dist_km} km to {zone['name']}",
             ).add_to(fmap)
@@ -315,6 +385,7 @@ def create_pfz_map(
         ).add_to(fmap)
 
     return fmap
+
 
 
 def create_weather_map(

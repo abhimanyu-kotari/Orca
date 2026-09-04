@@ -116,6 +116,8 @@ def _pfz():
         "best_zone": {
             "zone_id":             "PFZ-KL-001",
             "name":                "Kochi Offshore Upwelling Zone",
+            "lat":                 9.72,
+            "lon":                 75.82,
             "distance_to_user_km": 54.3,
             "quality":             "HIGH",
         },
@@ -276,8 +278,8 @@ class TestOrchestratorUnit(unittest.TestCase):
         """Every orchestrator response must contain the full required key set."""
         REQUIRED_KEYS = {
             "success", "intent", "intent_result", "agents_invoked",
-            "weather_result", "pfz_result", "pfz_suppressed",
-            "pfz_suppression_reason", "synthesis", "synthesis_source",
+            "weather_result", "pfz_result", "navigation_result",
+            "pfz_suppressed", "pfz_suppression_reason", "synthesis", "synthesis_source",
         }
         mock_i.return_value   = _intent("pfz_location")
         mock_w.return_value   = _weather("SAFE")
@@ -328,6 +330,58 @@ class TestOrchestratorUnit(unittest.TestCase):
         self.assertTrue(result["success"])
         self.assertIn("intent_result", result)
         self.assertIn("Which coastal sector", result["synthesis"])
+
+    # ------------------------------------------------------------------ #
+    # 6. route_planning & fuel-optimal navigation (Feature 2)
+    # ------------------------------------------------------------------ #
+
+    @patch("orchestrator.intent_agent_run")
+    @patch("orchestrator.weather_agent_run")
+    @patch("orchestrator.pfz_agent_run")
+    def test_pfz_query_includes_navigation_result(self, mock_pfz, mock_w, mock_i):
+        """Fishing queries automatically include fuel-optimal navigation route."""
+        mock_i.return_value = _intent("pfz_location", location="Kochi")
+        mock_w.return_value = _weather("SAFE")
+        mock_pfz.return_value = _pfz()
+
+        result = orchestrator_run({"query": "where to fish near Kochi"})
+
+        self.assertTrue(result["success"])
+        self.assertIsNotNone(result.get("navigation_result"))
+        nav = result["navigation_result"]
+        self.assertTrue(nav["success"])
+        self.assertGreater(nav["total_distance_nm"], 0.0)
+        self.assertIn("direct_heading_str", nav)
+        self.assertIn("fuel_economy", nav)
+        self.assertGreater(nav["fuel_economy"]["fuel_saved_liters"], 0.0)
+
+    @patch("orchestrator.intent_agent_run")
+    @patch("orchestrator.weather_agent_run")
+    @patch("orchestrator.pfz_agent_run")
+    def test_route_planning_invokes_navigation_tools(self, mock_pfz, mock_w, mock_i):
+        """route_planning actively synthesizes waypoint plan and fuel economy."""
+        mock_i.return_value = _intent("route_planning", location="Kochi")
+        mock_w.return_value = _weather("SAFE")
+        mock_pfz.return_value = _pfz()
+
+        result = orchestrator_run({"query": "how to navigate to fishing zone from Kochi"})
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["intent"], "route_planning")
+        self.assertIn("navigation_tools", result["agents_invoked"])
+        self.assertIsNotNone(result["navigation_result"])
+        self.assertIn("Fuel-Optimal Waypoint Navigation", result["synthesis"])
+
+    @patch("orchestrator.intent_agent_run")
+    def test_route_planning_missing_location_graceful(self, mock_i):
+        """route_planning with missing location prompts for departure port."""
+        mock_i.return_value = _intent("route_planning", location=None)
+
+        result = orchestrator_run({"query": "plan navigation route"})
+
+        self.assertTrue(result["success"])
+        self.assertIn("Which departure port", result["synthesis"])
+
 
 
 

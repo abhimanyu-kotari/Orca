@@ -207,7 +207,55 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
 """
         sections.append(pfz_card)
 
-    # 6. Metadata Badge
+    # 6. Fuel-Optimal Navigation & Waypoint Summary (if available & safe)
+    nav_res = result.get("navigation_result")
+    if nav_res and not pfz_suppressed and nav_res.get("success"):
+        total_nm = nav_res.get("total_distance_nm", 0.0)
+        total_km = nav_res.get("total_distance_km", 0.0)
+        heading = nav_res.get("direct_heading_str", "—")
+        econ = nav_res.get("fuel_economy", {})
+        fuel_saved = econ.get("fuel_saved_liters", 0.0)
+        cost_saved = econ.get("cost_saved_inr", 0)
+        transit_time = econ.get("transit_time_str", "—")
+        geofence_status = nav_res.get("geofence_status", "Safe & Clear")
+        has_detour = nav_res.get("hazard_avoidance_active", False)
+
+        detour_badge = (
+            "🚨 **Detour Engaged:** Course adjusted to steer clear of active coastal hazard geofence."
+            if has_detour
+            else "✅ Direct track is clear of all active storm surge and hazard geofences."
+        )
+
+        wp_rows = ""
+        for wp in nav_res.get("waypoints", []):
+            leg_dist = f"{wp.get('leg_distance_nm', 0.0):.1f} NM" if wp.get("leg_distance_nm") else "Start"
+            bearing = wp.get("leg_bearing") or "Departure"
+            wp_rows += f"| {wp['name']} | `{wp['lat']:.4f}°N, {wp['lon']:.4f}°E` | {leg_dist} | {bearing} | {wp.get('notes', '')} |\n"
+
+        nav_card = f"""
+---
+### ⛽ Fuel-Optimal Navigation Summary
+**🎯 Destination Hotspot:** {nav_res.get('end_label', 'Target PFZ')} | **Mooring:** {nav_res.get('start_label', 'Port')}
+
+| Metric | Navigation Telemetry | Benchmark / Savings |
+|---|---|---|
+| **Direct Track Distance** | **{total_nm:.1f} NM** ({total_km:.1f} km) | Great-circle nautical track |
+| **Optimal Compass Heading** | **{heading}** | Forward azimuth |
+| **Estimated Transit Time** | **{transit_time}** | Standard 9.0 knots cruising speed |
+| **Estimated Fuel Economy** | **{fuel_saved:.1f} Liters Saved** | **~₹{cost_saved:,.0f} net savings** vs blind cruising |
+| **Waypoint Safety Check** | **{geofence_status}** | {detour_badge} |
+
+<details>
+<summary>📍 <b>View Waypoint Route Plan ({len(nav_res.get('waypoints', []))} Waypoints)</b></summary>
+
+| Waypoint | Coordinates | Leg Distance | Steer Bearing | Navigational Advisory |
+|---|---|---|---|---|
+{wp_rows}
+</details>
+"""
+        sections.append(nav_card)
+
+    # 7. Metadata Badge
     sections.append(_metadata_badge(result, persona))
 
     return "\n".join(sections)
@@ -223,10 +271,11 @@ def generate_map_for_result(
     """
     weather_res = orch_result.get("weather_result")
     pfz_res = orch_result.get("pfz_result")
+    nav_res = orch_result.get("navigation_result")
     pfz_suppressed = orch_result.get("pfz_suppressed", False)
     verdict = weather_res.get("verdict") if weather_res else None
 
-    # Case 1: PFZ Map active
+    # Case 1: PFZ Map active (with fuel-optimal navigation track)
     if pfz_res and not pfz_suppressed and pfz_res.get("success"):
         lat = pfz_res.get("lat")
         lon = pfz_res.get("lon")
@@ -241,7 +290,9 @@ def generate_map_for_result(
                 safety_verdict=verdict,
                 persona=persona,
                 show_sst_heatmap=show_sst_heatmap,
+                nav_route=nav_res,
             )
+
 
     # Case 2: Pure Weather or DANGER suppression hazard map
     if weather_res and weather_res.get("success"):
