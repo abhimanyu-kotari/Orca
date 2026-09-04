@@ -462,10 +462,56 @@ class TestOrchestratorUnit(unittest.TestCase):
         self.assertEqual(_classify_intent_from_text("catch fish near Chennai"), "pfz_location")
         self.assertEqual(_classify_intent_from_text("fishing spots near Mangalore"), "pfz_location")
         self.assertEqual(_classify_intent_from_text("good place to fish"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("Where can I fish near Kochi today?"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("fish near Kochi"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("fishing zones near Mumbai"), "pfz_location")
 
         # Test safety check precedence
         self.assertEqual(_classify_intent_from_text("is it safe to fish near Kochi"), "safety_check")
         self.assertEqual(_classify_intent_from_text("can I go fishing today"), "safety_check")
+
+    def test_strict_pfz_routing_overrides_accidental_chat(self):
+        """Even if LLM or classifier returned casual_chat or chat, strictly classify fishing questions as pfz_location."""
+        from agents.intent_agent import run as intent_agent_run
+        with patch("agents.intent_agent._get_gemini_client") as mock_client:
+            mock_inst = MagicMock()
+            mock_resp1 = MagicMock()
+            mock_resp1.text = '{"intent": "casual_chat", "language": "English", "language_code": "en", "entities": {"location": "Kochi", "time_context": "today"}, "gemini_response": "Hi!"}'
+            mock_resp2 = MagicMock()
+            mock_resp2.text = '{"intent": "chat", "language": "English", "language_code": "en", "entities": {"location": "Mumbai", "time_context": "today"}, "gemini_response": "Hello!"}'
+            mock_inst.models.generate_content.side_effect = [mock_resp1, mock_resp2]
+            mock_client.return_value = mock_inst
+
+            res = intent_agent_run({"query": "Where can I fish near Kochi today?"})
+            self.assertEqual(res["intent"], "pfz_location")
+            self.assertEqual(res["entities"]["location"], "Kochi")
+            self.assertIsNone(res["gemini_response"])
+
+            res2 = intent_agent_run({"query": "fishing zones near Mumbai"})
+            self.assertEqual(res2["intent"], "pfz_location")
+            self.assertEqual(res2["entities"]["location"], "Mumbai")
+            self.assertIsNone(res2["gemini_response"])
+
+    def test_orchestrator_persona_propagation(self):
+        """Orchestrator must accept persona and include normalized persona in all return dictionaries."""
+        with patch("orchestrator.intent_agent_run") as mock_i:
+            mock_i.return_value = _intent("casual_chat")
+
+            # Default
+            res_default = orchestrator_run({"query": "hello"})
+            self.assertEqual(res_default["persona"], "fisherman")
+
+            # Coastal Authority
+            res_auth = orchestrator_run({"query": "hello", "persona": "coastal_authority"})
+            self.assertEqual(res_auth["persona"], "coastal_authority")
+
+            # Full label
+            res_label = orchestrator_run({"query": "hello", "persona": "🚨 Coastal Authority / Disaster Management"})
+            self.assertEqual(res_label["persona"], "coastal_authority")
+
+            # Researcher
+            res_sci = orchestrator_run({"query": "hello", "persona": "🔬 Marine Researcher / Oceanographer"})
+            self.assertEqual(res_sci["persona"], "researcher")
 
 
 

@@ -284,6 +284,8 @@ Intent options:
 {intent_descriptions}
 
 Rules:
+- STRICT INTENT RULE: Queries containing "where can I fish", "fish near", "fishing zones", "where to fish", "find fish", or "catch fish" (e.g. "Where can I fish near Kochi today?") MUST ALWAYS be classified as "pfz_location". They must NEVER be classified as "casual_chat" or "chat".
+- "casual_chat" is ONLY for greetings (hello, hi, good morning), thanks, or small talk completely unrelated to the sea, weather, fish, or marine navigation.
 - "safety_check" and "weather_check" are similar; prefer "safety_check" when
   the user explicitly asks if it is "safe" or whether they "can go" somewhere (e.g. "is it safe to fish", "can I go out to sea"). If safety or danger is questioned, prefer "safety_check" even if fishing or weather is mentioned.
 - "pfz_location": Potential Fishing Zones (PFZ), fishing spots, finding fish, catching fish, where to fish, best fishing grounds, or locating fish shoals (e.g. "find fish", "catch fish", "fishing spot", "where to fish", "good place to fish", "best fishing grounds").
@@ -362,13 +364,15 @@ def _classify_intent_from_text(text: str) -> str:
 
     # 5. Potential Fishing Zone (PFZ) / Natural language fishing queries
     pfz_phrases = [
-        "pfz", "fishing zone", "fishing zones", "fishing ground", "fishing grounds",
-        "fishing spot", "fishing spots", "find fish", "catch fish", "where to fish",
-        "where can i fish", "where do i fish", "where should i fish", "good place to fish",
+        "where can i fish", "where can we fish", "where to fish", "where do i fish", "where should i fish",
+        "fish near", "fishing near", "fishing zone", "fishing zones", "fishing ground", "fishing grounds",
+        "fishing spot", "fishing spots", "pfz", "find fish", "catch fish", "good place to fish",
         "best place to fish", "fish shoal", "fish shoals", "fish aggregation",
         "catch tuna", "find tuna", "catch sardine", "look for fish", "looking for fish"
     ]
     if any(p in q for p in pfz_phrases):
+        return "pfz_location"
+    if re.search(r'\bfish\s+(?:near|neare|ner|around|off|in|at)\b', q):
         return "pfz_location"
     if re.search(r'\b(?:find|catch|locate|hunt)\s+fish\b', q):
         return "pfz_location"
@@ -514,14 +518,48 @@ def run(inputs: dict) -> dict:
 
     # ── Step 2: Validate and normalise the parsed response ────────────────────
 
-    # Ensure intent is one of our known types; if unknown, reinforce with rule-based classification
-    intent = parsed.get("intent", "unknown")
-    if intent not in INTENT_TYPES or intent == "unknown":
+    INTENT_ALIASES = {
+        "fishing_zone": "pfz_location",
+        "fishing_zones": "pfz_location",
+        "pfz": "pfz_location",
+        "chat": "casual_chat",
+        "greeting": "casual_chat",
+        "weather": "weather_check",
+        "safety": "safety_check",
+        "alert": "alert_query",
+        "hazard": "alert_query",
+        "ecosystem": "ecosystem_query",
+        "route": "route_planning",
+        "navigation": "route_planning",
+    }
+
+    raw_intent = parsed.get("intent", "unknown")
+    intent = INTENT_ALIASES.get(raw_intent, raw_intent)
+    if intent not in INTENT_TYPES:
+        intent = "unknown"
+
+    # ── Strict Enforcement for Fishing & Marine Queries ──────────────────────
+    # Queries containing "where can I fish", "fish near", or "fishing zones" must strictly
+    # route to pfz_location (unless safety/danger is explicitly questioned).
+    q_lower = query.lower()
+    is_safety_or_hazard = any(w in q_lower for w in ["safe", "danger", "cyclone", "surge", "hazard", "warning", "can i go", "should i go"])
+
+    strict_pfz_triggers = [
+        "where can i fish", "where can we fish", "where to fish", "where do i fish", "where should i fish",
+        "fish near", "fishing near", "fishing zone", "fishing zones", "fishing ground", "fishing grounds",
+        "fishing spot", "fishing spots", "find fish", "catch fish", "good place to fish",
+    ]
+    if not is_safety_or_hazard and (
+        any(t in q_lower for t in strict_pfz_triggers)
+        or re.search(r'\bfish\s+(?:near|neare|ner|around|off|in|at)\b', q_lower)
+    ):
+        intent = "pfz_location"
+
+    # If Gemini returned unknown or casual_chat for a query containing marine data, reinforce with rule-based classifier
+    if intent in ("unknown", "casual_chat"):
         rule_intent = _classify_intent_from_text(query)
-        if rule_intent in INTENT_TYPES and rule_intent != "unknown":
+        if rule_intent != "unknown" and rule_intent != "casual_chat":
             intent = rule_intent
-        else:
-            intent = "unknown"
 
     # Ensure entities sub-dict is well-formed
     raw_entities   = parsed.get("entities", {})

@@ -52,6 +52,9 @@ if "messages" not in st.session_state:
 if "current_map" not in st.session_state:
     st.session_state.current_map = None
 
+if "current_persona" not in st.session_state:
+    st.session_state.current_persona = "🎣 Artisanal Fisherman"
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Display constants & stylings
@@ -69,6 +72,7 @@ INTENT_LABEL: dict[str, str] = {
     "weather_check":   "🌤️ Weather Check",
     "safety_check":    "⚓ Safety Check",
     "pfz_location":    "🐟 Fishing Zone",
+    "fishing_zone":    "🐟 Fishing Zone",
     "route_planning":  "🧭 Route Planning",
     "alert_query":     "🚨 Alert Query",
     "ecosystem_query": "🌊 Ecosystem",
@@ -83,8 +87,9 @@ QUALITY_EMOJI = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}
 # Response formatters (Persona-Aware)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _metadata_badge(result: dict, persona: str) -> str:
+def _metadata_badge(result: dict, persona: str = None) -> str:
     """Build the metadata footer indicating language, intent, agents, and stakeholder role."""
+    active_persona = result.get("persona") or persona or "fisherman"
     intent_res = result.get("intent_result", {})
     lang_code = intent_res.get("language_code", "en")
     lang_name = intent_res.get("language", "English")
@@ -97,7 +102,7 @@ def _metadata_badge(result: dict, persona: str) -> str:
         "coastal_authority": "🚨 Coastal Authority",
         "researcher": "🔬 Marine Researcher",
     }
-    role_display = role_titles.get(persona, persona)
+    role_display = role_titles.get(active_persona, active_persona)
 
     return (
         f"\n\n---\n"
@@ -110,6 +115,7 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
     """
     Format orchestrator output into markdown tailored to the active Stakeholder Persona.
     """
+    active_persona = result.get("persona") or persona or "fisherman"
     synthesis = result.get("synthesis", "")
     weather_res = result.get("weather_result")
     pfz_res = result.get("pfz_result")
@@ -130,14 +136,14 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
         )
 
     # 3. Persona Specific Banner / Callouts
-    if persona == "coastal_authority":
+    if active_persona == "coastal_authority":
         sections.append(
             """
 > 🛡️ **DISASTER MANAGEMENT NOTICE:**  
 > High-risk coastal geofence is active. All small-craft maritime traffic in this sector is under Level-2/3 surveillance.
 """
         )
-    elif persona == "researcher":
+    elif active_persona == "researcher":
         sections.append(
             """
 > 🛰️ **EARTH OBSERVATION TELEMETRY NOTE:**  
@@ -295,7 +301,7 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
         sections.append(eo_card)
 
     # 8. Metadata Badge
-    sections.append(_metadata_badge(result, persona))
+    sections.append(_metadata_badge(result, active_persona))
 
     return "\n".join(sections)
 
@@ -381,20 +387,40 @@ with st.sidebar:
     st.header("👤 Stakeholder Profile")
     st.caption("Select your role defined in ISRO Problem Statement 26176.")
 
+    persona_options = [
+        "🎣 Artisanal Fisherman",
+        "🚨 Coastal Authority / Disaster Management",
+        "🔬 Marine Researcher / Oceanographer",
+    ]
+
+    def _on_persona_change():
+        st.session_state.messages = []
+        st.session_state.current_map = None
+
+    current_stored = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
+    default_idx = 0
+    for idx, opt in enumerate(persona_options):
+        if opt == current_stored or (current_stored == "fisherman" and "Fisherman" in opt) or (current_stored == "coastal_authority" and "Authority" in opt) or (current_stored == "researcher" and "Researcher" in opt):
+            default_idx = idx
+            break
+
     persona_label = st.radio(
         "Active Role Perspective:",
-        [
-            "🎣 Artisanal Fisherman",
-            "🚨 Coastal Authority / Disaster Management",
-            "🔬 Marine Researcher / Oceanographer",
-        ],
-        index=0,
+        persona_options,
+        index=default_idx,
         key="stakeholder_persona_radio",
+        on_change=_on_persona_change,
     )
 
-    if "Artisanal Fisherman" in persona_label:
+    # If the user changes the radio button in the sidebar to a different persona, automatically clear messages
+    if st.session_state.get("current_persona") != persona_label:
+        st.session_state.current_persona = persona_label
+        st.session_state.messages = []
+        st.session_state.current_map = None
+
+    if "Artisanal Fisherman" in persona_label or persona_label == "fisherman":
         persona = "fisherman"
-    elif "Coastal Authority" in persona_label:
+    elif "Coastal Authority" in persona_label or persona_label == "coastal_authority":
         persona = "coastal_authority"
     else:
         persona = "researcher"
@@ -441,6 +467,7 @@ with st.sidebar:
                     "query": f"What is the weather and sea safety near {manual_location} {manual_time}?",
                     "location": manual_location.strip(),
                     "time_context": manual_time,
+                    "persona": persona,
                 })
             response_md = format_orchestrator_response(orch_result, persona=persona)
             fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
@@ -471,6 +498,7 @@ with st.sidebar:
                 orch_result = orchestrator_run({
                     "query": f"Where can I fish near {pfz_loc} today?",
                     "location": pfz_loc.strip(),
+                    "persona": persona,
                 })
             response_md = format_orchestrator_response(orch_result, persona=persona)
             fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
@@ -624,7 +652,7 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
     # B. Route through Orchestrator
     with st.chat_message("assistant"):
         with st.spinner("ORCA agents collaborating & synthesizing..."):
-            orch_result = orchestrator_run({"query": user_query})
+            orch_result = orchestrator_run({"query": user_query, "persona": persona})
             response_md = format_orchestrator_response(orch_result, persona=persona)
             fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
 

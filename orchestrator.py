@@ -106,7 +106,7 @@ def _extract_target_coords(pfz_res: dict) -> tuple[Optional[float], Optional[flo
 # Master Orchestrator entrypoint
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run(inputs: dict) -> dict:
+def _execute_orchestration(inputs: dict) -> dict:
     """
     Execute the Master Orchestration pipeline.
 
@@ -229,7 +229,7 @@ def run(inputs: dict) -> dict:
         }
 
     # Case C: Potential Fishing Zone (PFZ) Location with Safety Cross-Referencing
-    if intent == "pfz_location":
+    if intent in ("pfz_location", "fishing_zone"):
         if not location:
             return {
                 "success": True,
@@ -671,3 +671,28 @@ def run(inputs: dict) -> dict:
         ),
         "synthesis_source": "rule-based",
     }
+
+
+def run(inputs: dict) -> dict:
+    """
+    Public entry point for Master Orchestrator.
+    Handles stakeholder persona normalization and ensures persona is returned.
+    """
+    if not isinstance(inputs, dict):
+        inputs = {}
+
+    raw_persona = inputs.get("persona")
+    persona = "fisherman"
+    if raw_persona:
+        rp = str(raw_persona).lower()
+        if "authority" in rp or "disaster" in rp:
+            persona = "coastal_authority"
+        elif "research" in rp or "oceanographer" in rp:
+            persona = "researcher"
+        else:
+            persona = "fisherman"
+
+    result = _execute_orchestration(inputs)
+    result["persona"] = persona
+    return result
+
