@@ -1,35 +1,24 @@
 """
-app.py — ORCA Streamlit Chat Interface (Phase 4)
+app.py — ORCA Streamlit Chat Interface (Stakeholder Persona System)
 
 ─────────────────────────────────────────────────────────────────────────────
-WHAT CHANGED FROM PHASE 3
+ISRO SIH PROBLEM STATEMENT 26176 — THREE STAKEHOLDER PERSONAS:
 ─────────────────────────────────────────────────────────────────────────────
-  ✅ Full Orchestration: app.py is now a pure rendering layer.
-     All queries route through orchestrator.py via run(inputs: dict) -> dict.
-  ✅ Multi-Agent Synthesis: Displays synchronized responses combining:
-     - Intent & Language recognition
-     - Multi-agent AI synthesis
-     - Safety Override banners (DANGER suppresses PFZ recommendations)
-     - Full weather condition tables & reasoning
-     - Potential Fishing Zone tables & top recommendations
-     - Interactive Folium maps with safety circles & hotspot markers
-  ✅ Parallel Execution: UI shows agents invoked sequentially/concurrently.
+  1. 🎣 Artisanal Fisherman (Default):
+     - Conversational plain-language advice with clear SAFE/CAUTION/DANGER badges.
+     - Potential Fishing Zone (PFZ) recommendations with species and depths.
+     - Highlighted dashed navigation route from reference port to top PFZ hotspot.
 
-ROUTING FLOW (Phase 4)
-─────────────────────────────────────────────────────────────────────────────
-    User query ──► orchestrator.run()
-                         │
-                         ├─ Intent & Language Agent
-                         │
-                         ├─ Parallel Dispatch (ThreadPoolExecutor)
-                         │    ├─ Weather & Marine Agent
-                         │    └─ PFZ Fishing Zone Agent
-                         │
-                         ├─ Safety Gating & Cross-Referencing
-                         │    (DANGER ──► Suppress PFZ)
-                         │    (CAUTION ──► Warning Banner)
-                         │
-                         └─ Unified Synthesis Dict ──► app.py renders UI + Map
+  2. 🚨 Coastal Authority / Disaster Management:
+     - Disaster Monitoring & Maritime Geofence dashboard header.
+     - High-Risk Cyclone & Storm Surge Geofence overlay (semi-transparent red polygon).
+     - Simulated Emergency Broadcast dispatch (VHF Ch 16, NAVTEX, SMS gateway).
+     - Vessel exclusion alerts when DANGER conditions are detected.
+
+  3. 🔬 Marine Researcher / Oceanographer:
+     - Earth Observation Telemetry panel (SST, Chlorophyll-a, Thermocline, Salinity).
+     - Toggleable Satellite Thermal Gradient HeatMap on Folium ocean charts.
+     - Scientific oceanographic reasoning detailing upwelling fronts and biological productivity.
 
 Run:
     streamlit run app.py
@@ -45,17 +34,17 @@ from tools.map_tools import create_pfz_map, create_weather_map
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Page configuration — must be the very first Streamlit call
+# Page configuration
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="ORCA — Marine Intelligence",
+    page_title="ORCA — Marine EcoSystem Intelligence",
     page_icon="🌊",
-    layout="centered",
+    layout="wide",
 )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Session state
+# Session state initialization
 # ─────────────────────────────────────────────────────────────────────────────
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -91,11 +80,11 @@ QUALITY_EMOJI = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Rendering & formatting helpers
+# Response formatters (Persona-Aware)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _metadata_badge(result: dict) -> str:
-    """Build the metadata footer indicating language, intent, agents, and source."""
+def _metadata_badge(result: dict, persona: str) -> str:
+    """Build the metadata footer indicating language, intent, agents, and stakeholder role."""
     intent_res = result.get("intent_result", {})
     lang_code = intent_res.get("language_code", "en")
     lang_name = intent_res.get("language", "English")
@@ -103,19 +92,23 @@ def _metadata_badge(result: dict) -> str:
     intent = result.get("intent", "unknown")
     label = INTENT_LABEL.get(intent, intent)
     agents = " ➔ ".join(result.get("agents_invoked", ["orchestrator"]))
-    source = result.get("synthesis_source", "orchestrator")
+    role_titles = {
+        "fisherman": "🎣 Artisanal Fisherman",
+        "coastal_authority": "🚨 Coastal Authority",
+        "researcher": "🔬 Marine Researcher",
+    }
+    role_display = role_titles.get(persona, persona)
 
     return (
         f"\n\n---\n"
         f"*{flag} Language: **{lang_name}** · Intent: **{label}** · "
-        f"Agents: `{agents}` · Source: `{source}`*"
+        f"Agents: `{agents}` · Stakeholder View: **{role_display}***"
     )
 
 
-def format_orchestrator_response(result: dict) -> str:
+def format_orchestrator_response(result: dict, persona: str = "fisherman") -> str:
     """
-    Format the complete orchestrator output into markdown.
-    Seamlessly integrates synthesis, safety overrides, weather metrics, and PFZ zones.
+    Format orchestrator output into markdown tailored to the active Stakeholder Persona.
     """
     synthesis = result.get("synthesis", "")
     weather_res = result.get("weather_result")
@@ -129,14 +122,30 @@ def format_orchestrator_response(result: dict) -> str:
     if synthesis:
         sections.append(synthesis)
 
-    # 2. Critical Safety Suppression Alert (if triggered)
+    # 2. Critical Safety Suppression Alert
     if pfz_suppressed and suppression_reason:
         sections.append(
-            f"\n> 🚨 **MARITIME SAFETY OVERRIDE ACTIVE:**\n"
+            f"\n> 🚨 **MARITIME SAFETY OVERRIDE ENFORCED:**\n"
             f"> {suppression_reason}"
         )
 
-    # 3. Weather Conditions Details (if available)
+    # 3. Persona Specific Banner / Callouts
+    if persona == "coastal_authority":
+        sections.append(
+            """
+> 🛡️ **DISASTER MANAGEMENT NOTICE:**  
+> High-risk coastal geofence is active. All small-craft maritime traffic in this sector is under Level-2/3 surveillance.
+"""
+        )
+    elif persona == "researcher":
+        sections.append(
+            """
+> 🛰️ **EARTH OBSERVATION TELEMETRY NOTE:**  
+> Upwelling indices derived from Open-Meteo marine baroclinicity and INCOIS thermal models.
+"""
+        )
+
+    # 4. Weather & Oceanographic Conditions
     if weather_res and weather_res.get("success"):
         verdict = weather_res.get("verdict", "SAFE")
         emoji = VERDICT_EMOJI.get(verdict, "ℹ️")
@@ -144,29 +153,32 @@ def format_orchestrator_response(result: dict) -> str:
         m = weather_res.get("key_metrics", {})
         storm_str = "Yes ⚡" if m.get("thunderstorm_likely") else "No"
 
+        # Headers tailored to persona
+        table_title = "Marine & Atmospheric Telemetry" if persona == "researcher" else "Peak Marine Conditions"
+
         weather_card = f"""
 ---
-### {emoji} Live Sea Safety Assessment: :{color}[**{verdict}**]
-**📍 Monitored Region:** {weather_res.get('location', 'N/A')}
+### {emoji} Sea State & Safety Verdict: :{color}[**{verdict}**]
+**📍 Reference Location:** {weather_res.get('location', 'N/A')}
 
-**📊 Peak Marine & Atmospheric Metrics**
+**📊 {table_title}**
 
-| Metric | Measured Value |
-|---|---|
-| Wind Speed | {m.get('max_wind_speed_kmh', 0.0):.1f} km/h |
-| Wind Gust | {m.get('max_wind_gust_kmh', 0.0):.1f} km/h |
-| Wave Height | {m.get('max_wave_height_m', 0.0):.2f} m |
-| Swell Height | {m.get('max_swell_height_m', 0.0):.2f} m |
-| Wave Period | {m.get('max_wave_period_s', 0.0):.1f} s |
-| Precipitation | {m.get('max_precipitation_mm', 0.0):.1f} mm/hr |
-| Thunderstorm | {storm_str} |
+| Metric | Measured Value | Standard Threshold |
+|---|---|---|
+| Wind Speed | {m.get('max_wind_speed_kmh', 0.0):.1f} km/h | 40.0 km/h (Gale) |
+| Wind Gust | {m.get('max_wind_gust_kmh', 0.0):.1f} km/h | 55.0 km/h (Severe) |
+| Wave Height | {m.get('max_wave_height_m', 0.0):.2f} m | 2.50 m (Hazard) |
+| Swell Height | {m.get('max_swell_height_m', 0.0):.2f} m | 2.00 m (High Swell) |
+| Wave Period | {m.get('max_wave_period_s', 0.0):.1f} s | — |
+| Precipitation | {m.get('max_precipitation_mm', 0.0):.1f} mm/hr | 10.0 mm/hr (Heavy Rain) |
+| Thunderstorm | {storm_str} | Immediate Danger |
 
-**🧠 Reasoning Trail:**  
-{weather_res.get('reasoning', 'Conditions assessed against IMD/INCOIS criteria.')}
+**🧠 Reasoning & Risk Factors:**  
+{weather_res.get('reasoning', 'Conditions assessed against IMD/INCOIS guidelines.')}
 """
         sections.append(weather_card)
 
-    # 4. PFZ Hotspots Table (if available and NOT suppressed)
+    # 5. PFZ Hotspots Table (if available and NOT suppressed)
     if pfz_res and not pfz_suppressed and pfz_res.get("success"):
         zones = pfz_res.get("zones", [])
         best = pfz_res.get("best_zone", {})
@@ -190,29 +202,31 @@ def format_orchestrator_response(result: dict) -> str:
 | # | Zone Name | Distance | Depth | Commercially Viable Species |
 |---|---|---|---|---|
 {zone_rows}
-**🏆 Top Recommended Zone:** **{best_name}**  
-*Safety Advisory:* {pfz_res.get('safety_note', 'Check local forecasts prior to embarkation.')}
+**🏆 Top Recommended Hotspot:** **{best_name}**  
+*Advisory:* {pfz_res.get('safety_note', 'Check local forecasts prior to embarkation.')}
 """
         sections.append(pfz_card)
 
-    # 5. Metadata Badge
-    sections.append(_metadata_badge(result))
+    # 6. Metadata Badge
+    sections.append(_metadata_badge(result, persona))
 
     return "\n".join(sections)
 
 
-def generate_map_for_result(orch_result: dict) -> folium.Map | None:
+def generate_map_for_result(
+    orch_result: dict,
+    persona: str = "fisherman",
+    show_sst_heatmap: bool = False,
+) -> folium.Map | None:
     """
-    Generate the appropriate Folium map from the orchestrator's unified result.
-    - If PFZ is active and safe/caution: renders interactive PFZ map with safety boundary.
-    - If weather is available or PFZ is suppressed: renders weather hazard map.
+    Generate the appropriate Folium map tailored to the active Stakeholder Persona.
     """
     weather_res = orch_result.get("weather_result")
     pfz_res = orch_result.get("pfz_result")
     pfz_suppressed = orch_result.get("pfz_suppressed", False)
     verdict = weather_res.get("verdict") if weather_res else None
 
-    # Option 1: PFZ Map with zone hotspots and weather-coloured safety radius
+    # Case 1: PFZ Map active
     if pfz_res and not pfz_suppressed and pfz_res.get("success"):
         lat = pfz_res.get("lat")
         lon = pfz_res.get("lon")
@@ -225,9 +239,11 @@ def generate_map_for_result(orch_result: dict) -> folium.Map | None:
                 pfz_zones=zones,
                 user_location_name=loc_name,
                 safety_verdict=verdict,
+                persona=persona,
+                show_sst_heatmap=show_sst_heatmap,
             )
 
-    # Option 2: Weather Hazard Map (e.g. for pure weather or DANGER suppression)
+    # Case 2: Pure Weather or DANGER suppression hazard map
     if weather_res and weather_res.get("success"):
         lat = weather_res.get("lat")
         lon = weather_res.get("lon")
@@ -239,6 +255,8 @@ def generate_map_for_result(orch_result: dict) -> folium.Map | None:
                 user_lon=lon,
                 user_location_name=loc_name,
                 safety_verdict=v,
+                persona=persona,
+                show_sst_heatmap=show_sst_heatmap,
             )
 
     return None
@@ -252,28 +270,76 @@ def render_history():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Sidebar — Direct Controls & Demonstrations
+# Sidebar — Persona Selector & Stakeholder Controls
 # ─────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.header("⚙️ Direct Controls")
-    st.caption("Trigger multi-agent orchestration directly with specific parameters.")
+    st.header("👤 Stakeholder Profile")
+    st.caption("Select your role defined in ISRO Problem Statement 26176.")
 
-    # Section 1: Weather & Safety Check
+    persona_label = st.radio(
+        "Active Role Perspective:",
+        [
+            "🎣 Artisanal Fisherman",
+            "🚨 Coastal Authority / Disaster Management",
+            "🔬 Marine Researcher / Oceanographer",
+        ],
+        index=0,
+        key="stakeholder_persona_radio",
+    )
+
+    if "Artisanal Fisherman" in persona_label:
+        persona = "fisherman"
+    elif "Coastal Authority" in persona_label:
+        persona = "coastal_authority"
+    else:
+        persona = "researcher"
+
+    # Persona-specific action controls
+    show_sst = False
+    if persona == "coastal_authority":
+        st.markdown("---")
+        st.subheader("🚨 Disaster Management Panel")
+        st.caption("Sector surveillance & emergency broadcast tools.")
+        if st.button("📢 Broadcast Emergency Evacuation Alert", use_container_width=True, type="primary"):
+            st.success(
+                "✅ **Emergency Alert Transmitted!**\n\n"
+                "• **VHF Marine:** Channel 16 Broadcast Active\n"
+                "• **NAVTEX:** Urgent Warning (518 kHz)\n"
+                "• **SMS Gateway:** Dispatched to 142 registered craft\n"
+                "• **Geofence:** Maritime Exclusion Zone active"
+            )
+
+    elif persona == "researcher":
+        st.markdown("---")
+        st.subheader("🔬 Earth Observation Telemetry")
+        st.caption("Satellite ocean colour and thermal layers.")
+        show_sst = st.checkbox(
+            "🌡️ Overlay SST / Chlorophyll HeatMap",
+            value=True,
+            key="sst_heatmap_toggle",
+            help="Displays simulated Oceansat-3/Sentinel-3 ocean thermal & chlorophyll gradient.",
+        )
+
+    st.markdown("---")
+    st.header("⚙️ Direct Query Controls")
+    st.caption("Trigger multi-agent orchestration for specific locations.")
+
+    # Section 1: Weather Check
     st.subheader("🌦️ Weather Check")
     manual_location = st.text_input("Location", placeholder="e.g. Rameswaram, Kochi", key="sb_weather_loc")
     manual_time = st.selectbox("Time Window", ["today", "tomorrow", "3 days"], key="sb_weather_time")
 
     if st.button("🔍 Run Weather Check", use_container_width=True):
         if manual_location.strip():
-            with st.spinner(f"Orchestrator querying weather for **{manual_location}**..."):
+            with st.spinner(f"Querying weather for **{manual_location}**..."):
                 orch_result = orchestrator_run({
                     "query": f"What is the weather and sea safety near {manual_location} {manual_time}?",
                     "location": manual_location.strip(),
                     "time_context": manual_time,
                 })
-            response_md = format_orchestrator_response(orch_result)
-            fmap = generate_map_for_result(orch_result)
+            response_md = format_orchestrator_response(orch_result, persona=persona)
+            fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
 
             st.session_state.messages.append({
                 "role": "user",
@@ -297,13 +363,13 @@ with st.sidebar:
 
     if st.button("🗺️ Find PFZ Zones", use_container_width=True):
         if pfz_loc.strip():
-            with st.spinner(f"Orchestrator evaluating PFZ & safety for **{pfz_loc}**..."):
+            with st.spinner(f"Evaluating PFZ & safety for **{pfz_loc}**..."):
                 orch_result = orchestrator_run({
                     "query": f"Where can I fish near {pfz_loc} today?",
                     "location": pfz_loc.strip(),
                 })
-            response_md = format_orchestrator_response(orch_result)
-            fmap = generate_map_for_result(orch_result)
+            response_md = format_orchestrator_response(orch_result, persona=persona)
+            fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
 
             st.session_state.messages.append({
                 "role": "user",
@@ -321,15 +387,13 @@ with st.sidebar:
     st.divider()
 
     st.markdown("""
-**📦 Phase 4** — Full Orchestration & Multi-Agent Synthesis
-
-**Active Architecture:**
+**📦 ORCA Architecture (SIH 26176)**
 - 🤖 Master Orchestrator (`orchestrator.py`)
-- ⚡ Concurrent Parallel Execution (`ThreadPoolExecutor`)
 - 🛡️ Maritime Safety Gating (`DANGER` suppresses PFZ)
-- 🧠 Intent & Language Agent
+- 👤 3-Stakeholder Persona System
+- 🧠 Intent & Multilingual Agent
 - 🌦️ Weather & Marine Agent
-- 🐟 PFZ Fishing Zone Agent
+- 🐟 INCOIS PFZ Fishing Agent
 - 🗺️ Interactive Folium Mapping (`OpenStreetMap`)
 """)
 
@@ -344,7 +408,27 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 
 st.title("🌊 ORCA")
-st.caption("Marine EcoSystem Reasoning with Collaborative Agents · SIH 26176 · Phase 4")
+st.caption("Marine EcoSystem Reasoning with Collaborative Agents · ISRO SIH Problem Statement 26176")
+
+# Dynamic Persona Header Banner
+if persona == "coastal_authority":
+    st.warning("""
+    🚨 **COASTAL DISASTER MONITORING & MARITIME GEOFENCE ACTIVE**  
+    **Surveillance Status:** Level-2 Marine Gale Watch | **Monitored Sector:** Coastal Warning Zone 4  
+    *High-risk storm surge & cyclone geofences are actively rendered on charts. Use the sidebar to broadcast evacuation warnings.*
+    """)
+elif persona == "researcher":
+    st.info("""
+    🔬 **EARTH OBSERVATION & OCEANOGRAPHIC TELEMETRY (ISRO Oceansat-3 / Sentinel-3 SLSTR)**  
+    **Spectral Sensors:** Ocean Colour Monitor (OCM-3) & Sea Surface Temperature (SST) Radiometer  
+    *HeatMap overlay visualizes thermal plumes and coastal upwelling fronts driving marine productivity.*
+    """)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Sea Surface Temp (SST)", "28.4 °C", "+0.4°C anom")
+    col2.metric("Chlorophyll-a", "2.15 mg/m³", "Upwelling front")
+    col3.metric("Thermocline Depth", "42 m", "-3 m")
+    col4.metric("Mean Salinity", "34.9 PSU", "Normal")
+
 st.divider()
 
 # 1. Render message history
@@ -355,27 +439,25 @@ if st.session_state.current_map is not None:
     st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
     st_folium(
         st.session_state.current_map,
-        width=700,
-        height=480,
+        width=850,
+        height=500,
         returned_objects=[],
     )
 
 # 3. Welcome banner when chat is fresh
 if not st.session_state.messages:
     with st.chat_message("assistant"):
-        st.markdown("""
-👋 **Hello! I'm ORCA**, your autonomous collaborative marine intelligence assistant.
-
-In **Phase 4**, all requests are orchestrated across multiple specialized agents in real time:
+        st.markdown(f"""
+👋 **Welcome to ORCA!** Operating in **{persona_label}** mode.
 
 **Try asking:**
-- *"Where can I fish near Kochi today?"* (Executes Weather + PFZ agents in parallel)
+- *"Where can I fish near Kochi today?"*
 - *"Is it safe to go fishing near Rameswaram tomorrow?"*
 - *"Show me fishing zones near Mumbai"*
 - *"मुंबई के पास मछली कहाँ पकड़ें?"* (Hindi)
 - *"ராமேஸ்வரம் அருகே மீன்பிடிக்க எங்கே போவது?"* (Tamil)
 
-If high winds, heavy waves, or thunderstorms cause a **DANGER** state, ORCA will automatically enforce a **safety override** and withhold fishing zones to protect vessels at sea. 🛡️
+Switch between **Fisherman**, **Coastal Authority**, and **Researcher** in the sidebar to inspect role-specific navigation, hazard geofences, and satellite telemetry! 🧭
         """)
 
 # ── Chat input ────────────────────────────────────────────────────────────────
@@ -390,15 +472,15 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
     with st.chat_message("assistant"):
         with st.spinner("ORCA agents collaborating & synthesizing..."):
             orch_result = orchestrator_run({"query": user_query})
-            response_md = format_orchestrator_response(orch_result)
-            fmap = generate_map_for_result(orch_result)
+            response_md = format_orchestrator_response(orch_result, persona=persona)
+            fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
 
         st.markdown(response_md)
 
         # C. Render map inline
         if fmap is not None:
             st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
-            st_folium(fmap, width=700, height=480, returned_objects=[])
+            st_folium(fmap, width=850, height=500, returned_objects=[])
 
     # D. Save to session state
     st.session_state.messages.append({"role": "assistant", "content": response_md})

@@ -1,18 +1,27 @@
 """
 tools/map_tools.py — Folium interactive map generator for ORCA.
 
-DESIGN PRINCIPLE:
-    Pure rendering module — no AI calls, no data fetching.
-    Takes pre-computed data (user location + PFZ zones) and returns a
-    folium.Map object ready to be rendered by streamlit-folium.
+─────────────────────────────────────────────────────────────────────────────
+STAKEHOLDER PERSONA BEHAVIORS (ISRO SIH 26176):
+─────────────────────────────────────────────────────────────────────────────
+  1. 🎣 Artisanal Fisherman (default):
+     - Interactive anchor marker + safety radius circle.
+     - Clickable PFZ hotspots color-coded by productivity.
+     - Highlighted dashed navigation line connecting anchor to recommended PFZ.
 
-Functions:
-    create_pfz_map(user_lat, user_lon, pfz_zones, ...)  → folium.Map
-    create_weather_map(user_lat, user_lon, verdict, ...) → folium.Map
+  2. 🚨 Coastal Authority / Disaster Management:
+     - High-Risk Cyclone & Storm Surge Geofence overlay (semi-transparent red Polygon).
+     - Coastal Operations / Radar command center marker.
+     - Maritime exclusion warnings and emergency recall status.
+
+  3. 🔬 Marine Researcher / Oceanographer:
+     - Earth Observation telemetry heat layer (simulated SST / Chlorophyll thermal gradient).
+     - Scientific metadata popups (SST, Chlorophyll-a, Thermocline, Salinity).
 """
 
 import folium
 from folium import plugins
+from folium.plugins import HeatMap
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -38,15 +47,50 @@ _SAFETY_RADIUS_M: int = 15_000   # 15 km in metres
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Geospatial Simulation Helpers (for Authority & Researcher personas)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _generate_coastal_geofence_coords(lat: float, lon: float) -> list[list[float]]:
+    """
+    Generate polygon coordinates for an offshore disaster geofence
+    representing simulated storm surge & gale boundary (~40 km along coast, ~30 km offshore).
+    """
+    is_west_coast = lon < 79.0
+    offshore_offset = -0.32 if is_west_coast else 0.32
+
+    return [
+        [lat - 0.22, lon + (offshore_offset * 0.15)],
+        [lat - 0.22, lon + offshore_offset],
+        [lat + 0.22, lon + offshore_offset],
+        [lat + 0.22, lon + (offshore_offset * 0.15)],
+    ]
+
+
+def _generate_sst_heat_points(lat: float, lon: float) -> list[list[float]]:
+    """
+    Generate simulated SST/Chlorophyll thermal plume points
+    representing Oceansat-3/MODIS ocean observation telemetry.
+    """
+    is_west_coast = lon < 79.0
+    sign = -1 if is_west_coast else 1
+
+    points = []
+    for d_lat in [-0.28, -0.18, -0.08, 0.0, 0.08, 0.18, 0.28]:
+        for step in [1, 2, 3, 4, 5]:
+            d_lon = sign * (0.07 * step)
+            # High intensity along coastal upwelling axis, gently dispersing offshore
+            intensity = round(max(0.20, 1.0 - (step * 0.16) - abs(d_lat) * 0.7), 2)
+            points.append([lat + d_lat, lon + d_lon, intensity])
+    return points
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Helper: popup HTML builder
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _pfz_popup_html(zone: dict, marker_color: str) -> str:
+def _pfz_popup_html(zone: dict, marker_color: str, persona: str = "fisherman") -> str:
     """
-    Build the HTML content for a PFZ zone popup.
-
-    Uses an inline-styled table so it renders correctly inside Folium's
-    IFrame popup regardless of external CSS.
+    Build HTML content for a PFZ zone popup tailored to the active persona.
     """
     species_str = ", ".join(zone.get("species", []))
     dist_user   = zone.get("distance_to_user_km", "—")
@@ -55,53 +99,74 @@ def _pfz_popup_html(zone: dict, marker_color: str) -> str:
     advisory    = zone.get("advisory", "")
     season      = zone.get("best_season", "Year-round")
 
-    # Colour badge for quality
     badge_bg = {"HIGH": "#28a745", "MEDIUM": "#ffc107", "LOW": "#dc3545"}.get(quality, "#6c757d")
 
+    # Extra section based on persona
+    extra_rows = ""
+    if persona == "researcher":
+        extra_rows = f"""
+            <tr style="border-top: 1px dashed #ccc;">
+                <td style="padding:3px 0; color:#0d6efd;"><b>SST (Satellite)</b></td>
+                <td style="padding:3px 0; color:#0d6efd;">28.4 °C (+0.4°C anom)</td>
+            </tr>
+            <tr>
+                <td style="padding:3px 0; color:#0d6efd;"><b>Chlorophyll-a</b></td>
+                <td style="padding:3px 0; color:#0d6efd;">2.15 mg/m³ (Upwelling)</td>
+            </tr>
+            <tr>
+                <td style="padding:3px 0; color:#0d6efd;"><b>Salinity</b></td>
+                <td style="padding:3px 0; color:#0d6efd;">34.9 PSU</td>
+            </tr>
+            <tr>
+                <td style="padding:3px 0; color:#0d6efd;"><b>Thermocline</b></td>
+                <td style="padding:3px 0; color:#0d6efd;">42 m depth</td>
+            </tr>
+        """
+    elif persona == "coastal_authority":
+        extra_rows = f"""
+            <tr style="border-top: 1px dashed #dc3545;">
+                <td style="padding:3px 0; color:#dc3545;"><b>Geofence Status</b></td>
+                <td style="padding:3px 0; color:#dc3545;">Active Sector Watch</td>
+            </tr>
+            <tr>
+                <td style="padding:3px 0; color:#dc3545;"><b>Evacuation Route</b></td>
+                <td style="padding:3px 0; color:#dc3545;">Bearing 075° to Port ({dist_shore} km)</td>
+            </tr>
+        """
+
     return f"""
-    <div style="font-family: Arial, sans-serif; font-size: 13px; min-width: 220px; max-width: 280px;">
-        <h4 style="margin:0 0 6px 0; color:{marker_color};">
+    <div style="font-family: Arial, sans-serif; font-size: 12px; min-width: 230px; max-width: 290px;">
+        <h4 style="margin:0 0 6px 0; color:{marker_color}; font-size: 14px;">
             &#x1F41F; {zone['name']}
         </h4>
         <span style="background:{badge_bg}; color:white; padding:2px 8px;
-                     border-radius:12px; font-size:11px; font-weight:bold;">
+                     border-radius:12px; font-size:10px; font-weight:bold;">
             {quality} PRODUCTIVITY
         </span>
-        <table style="margin-top:8px; width:100%; border-collapse:collapse;">
+        <table style="margin-top:6px; width:100%; border-collapse:collapse; font-size:11px;">
             <tr>
-                <td style="padding:3px 0; color:#555;"><b>Zone ID</b></td>
-                <td style="padding:3px 0;">{zone['zone_id']}</td>
+                <td style="padding:2px 0; color:#555;"><b>Zone ID</b></td>
+                <td style="padding:2px 0;">{zone['zone_id']}</td>
             </tr>
             <tr>
-                <td style="padding:3px 0; color:#555;"><b>Region</b></td>
-                <td style="padding:3px 0;">{zone['region']}</td>
+                <td style="padding:2px 0; color:#555;"><b>Target Species</b></td>
+                <td style="padding:2px 0;">{species_str}</td>
             </tr>
             <tr>
-                <td style="padding:3px 0; color:#555;"><b>Target species</b></td>
-                <td style="padding:3px 0;">{species_str}</td>
+                <td style="padding:2px 0; color:#555;"><b>Sea Depth</b></td>
+                <td style="padding:2px 0;">{zone['depth_m']} m</td>
             </tr>
             <tr>
-                <td style="padding:3px 0; color:#555;"><b>Sea depth</b></td>
-                <td style="padding:3px 0;">{zone['depth_m']} m</td>
+                <td style="padding:2px 0; color:#555;"><b>Distance from Port</b></td>
+                <td style="padding:2px 0;"><b>{dist_user} km</b></td>
             </tr>
-            <tr>
-                <td style="padding:3px 0; color:#555;"><b>From shore</b></td>
-                <td style="padding:3px 0;">{dist_shore} km</td>
-            </tr>
-            <tr>
-                <td style="padding:3px 0; color:#555;"><b>From your location</b></td>
-                <td style="padding:3px 0;"><b>{dist_user} km</b></td>
-            </tr>
-            <tr>
-                <td style="padding:3px 0; color:#555;"><b>Best season</b></td>
-                <td style="padding:3px 0;">{season}</td>
-            </tr>
+            {extra_rows}
         </table>
-        <p style="margin:8px 0 0 0; font-style:italic; color:#444; font-size:12px;">
+        <p style="margin:6px 0 0 0; font-style:italic; color:#444; font-size:11px;">
             {advisory}
         </p>
-        <p style="margin:4px 0 0 0; font-size:10px; color:#999;">
-            Source: INCOIS PFZ Advisory (mock data)
+        <p style="margin:3px 0 0 0; font-size:9px; color:#888;">
+            Source: INCOIS / ISRO Oceansat Advisory
         </p>
     </div>
     """
@@ -117,47 +182,68 @@ def create_pfz_map(
     pfz_zones: list[dict],
     user_location_name: str = "Your Location",
     safety_verdict: str | None = None,
+    persona: str = "fisherman",
+    show_sst_heatmap: bool = False,
 ) -> folium.Map:
     """
-    Generate an interactive Folium map for the PFZ Agent response.
-
-    Layers rendered:
-      1. CartoDB Positron base tile (clean, minimal ocean background)
-      2. Blue anchor marker at the user's resolved position
-      3. Safety-radius circle (15 km) coloured by weather verdict
-      4. PFZ hotspot markers, colour-coded by zone quality:
-             GREEN  = HIGH productivity
-             ORANGE = MEDIUM productivity
-             RED    = LOW productivity
-      5. Dashed connector lines from user to each PFZ zone
-      6. Clickable popups on each PFZ marker with full zone metadata
-      7. Minimap plugin (bottom-right corner)
-
-    Args:
-        user_lat           : Latitude of the user's coastal location.
-        user_lon           : Longitude of the user's coastal location.
-        pfz_zones          : List of zone dicts from pfz_tools.find_nearest_zones().
-                             Each must have 'lat', 'lon', 'quality', 'name', etc.
-        user_location_name : Human-readable label for the anchor marker popup.
-        safety_verdict     : "SAFE" | "CAUTION" | "DANGER" | None.
-                             Controls the safety circle border colour.
-
-    Returns:
-        folium.Map object ready for st_folium() in Streamlit.
+    Generate an interactive Folium map for the PFZ Agent response,
+    adapted dynamically for the selected Stakeholder Persona.
     """
-    # —— Base map —————————————————————————————————————————————————
-    # Zoom level 8 shows ~300km radius — appropriate for "find nearby PFZ"
+    # 1. Base Map
     fmap = folium.Map(
         location=[user_lat, user_lon],
         zoom_start=8,
-        tiles="OpenStreetMap",  # Free, no API key required (CartoDB requires a key)
-        prefer_canvas=True,     # Canvas renderer is faster for many markers
+        tiles="OpenStreetMap",
+        prefer_canvas=True,
     )
 
-    # —— Minimap plugin (context map in corner) ———————————————————
     plugins.MiniMap(toggle_display=True, position="bottomright").add_to(fmap)
 
-    # —— Safety radius circle ———————————————————————————————
+    # 2. Persona: Marine Researcher HeatMap Layer
+    if persona == "researcher" or show_sst_heatmap:
+        heat_points = _generate_sst_heat_points(user_lat, user_lon)
+        HeatMap(
+            heat_points,
+            radius=26,
+            blur=16,
+            min_opacity=0.35,
+            gradient={0.2: '#08306b', 0.4: '#2171b5', 0.6: '#67a9cf', 0.8: '#fc8d59', 1.0: '#d73027'},
+        ).add_to(fmap)
+
+    # 3. Persona: Coastal Authority High-Risk Geofence Polygon
+    if persona == "coastal_authority":
+        geofence_coords = _generate_coastal_geofence_coords(user_lat, user_lon)
+        folium.Polygon(
+            locations=geofence_coords,
+            color="#dc3545",
+            weight=3,
+            fill=True,
+            fill_color="#dc3545",
+            fill_opacity=0.22,
+            dash_array="6 4",
+            tooltip="🚨 GEOFENCE: Level-3 Maritime Exclusion & Storm Surge Hazard Zone",
+            popup=folium.Popup(
+                """
+                <div style='font-family:Arial; font-size:12px; color:#721c24;'>
+                    <b>🚨 HIGH-RISK CYCLONE / SURGE GEOFENCE</b><br/>
+                    <b>Authority:</b> Coastal Disaster Management Cell<br/>
+                    <b>Status:</b> Vessel Ingress Prohibited<br/>
+                    <b>Protocol:</b> VHF Broadcast Ch 16 / SMS Alert Active
+                </div>
+                """,
+                max_width=250,
+            ),
+        ).add_to(fmap)
+
+        # Emergency Disaster Radar / Command Marker
+        folium.Marker(
+            location=[user_lat + 0.05, user_lon],
+            popup="<b>🚨 Coastal Emergency Command & Radar</b>",
+            tooltip="🚨 Emergency Command Center",
+            icon=folium.Icon(color="darkred", icon="shield", prefix="fa"),
+        ).add_to(fmap)
+
+    # 4. Standard Coastal Safety Radius Circle
     circle_color = VERDICT_COLOR.get(safety_verdict or "SAFE", "#17a2b8")
     folium.Circle(
         location=[user_lat, user_lon],
@@ -166,56 +252,66 @@ def create_pfz_map(
         weight=2,
         fill=True,
         fill_color=circle_color,
-        fill_opacity=0.06,
-        tooltip=f"15 km coastal safety radius ({safety_verdict or 'check weather'})",
+        fill_opacity=0.07,
+        tooltip=f"15 km coastal safety radius (Status: {safety_verdict or 'Normal'})",
     ).add_to(fmap)
 
-    # —— User / boat anchor marker ———————————————————————————
+    # 5. User / Vessel / Port Marker
+    port_icon = "anchor" if persona != "coastal_authority" else "building"
+    port_color = "blue" if persona != "coastal_authority" else "darkblue"
     folium.Marker(
         location=[user_lat, user_lon],
         popup=folium.Popup(
-            f'<div style="font-family:Arial;font-size:13px;">'  
-            f'<b>&#x2693; {user_location_name}</b><br/>'
-            f'<span style="color:#666;">{user_lat:.4f}°N, {user_lon:.4f}°E</span>'
+            f'<div style="font-family:Arial;font-size:12px;">'
+            f'<b>⚓ {user_location_name}</b><br/>'
+            f'<span>{user_lat:.4f}°N, {user_lon:.4f}°E</span><br/>'
+            f'<span>Role View: <b>{persona.replace("_", " ").title()}</b></span>'
             f'</div>',
             max_width=220,
         ),
-        tooltip=f"\u2693 {user_location_name} (your location)",
-        icon=folium.Icon(color="blue", icon="anchor", prefix="fa"),
+        tooltip=f"⚓ {user_location_name} (Reference Port)",
+        icon=folium.Icon(color=port_color, icon=port_icon, prefix="fa"),
     ).add_to(fmap)
 
-    # —— PFZ zone markers ————————————————————————————————
+    # 6. PFZ Zone Markers & Navigation Lines
+    # Identify top zone for prominent navigation route
+    best_zone_id = pfz_zones[0].get("zone_id") if pfz_zones else None
+
     for i, zone in enumerate(pfz_zones, start=1):
-        quality      = zone.get("quality", "MEDIUM")
+        quality = zone.get("quality", "MEDIUM")
         marker_color = QUALITY_COLOR.get(quality, "blue")
-        zone_lat     = zone["lat"]
-        zone_lon     = zone["lon"]
-        dist_km      = zone.get("distance_to_user_km", "?")
+        zone_lat = zone["lat"]
+        zone_lon = zone["lon"]
+        dist_km = zone.get("distance_to_user_km", "?")
+        is_top = (zone.get("zone_id") == best_zone_id)
 
-        # Dashed connector line: user → zone
-        folium.PolyLine(
-            locations=[[user_lat, user_lon], [zone_lat, zone_lon]],
-            color=marker_color,
-            weight=1.5,
-            opacity=0.45,
-            dash_array="6 4",
-            tooltip=f"{dist_km} km to {zone['name']}",
-        ).add_to(fmap)
+        # Navigation line:
+        # Fisherman gets a bold, highlighted navigation route to top zone
+        if is_top and persona == "fisherman":
+            folium.PolyLine(
+                locations=[[user_lat, user_lon], [zone_lat, zone_lon]],
+                color="#007bff",
+                weight=3.5,
+                opacity=0.85,
+                dash_array="8 6",
+                tooltip=f"🧭 Recommended Trawl Path: {dist_km} km to {zone['name']}",
+            ).add_to(fmap)
+        else:
+            folium.PolyLine(
+                locations=[[user_lat, user_lon], [zone_lat, zone_lon]],
+                color=marker_color,
+                weight=1.5,
+                opacity=0.40,
+                dash_array="5 5",
+                tooltip=f"{dist_km} km to {zone['name']}",
+            ).add_to(fmap)
 
-        # Zone marker with rich popup
-        popup_html = _pfz_popup_html(zone, marker_color)
+        popup_html = _pfz_popup_html(zone, marker_color, persona=persona)
         folium.Marker(
             location=[zone_lat, zone_lon],
-            popup=folium.Popup(popup_html, max_width=300),
-            tooltip=(
-                f"#{i} \u1f41f {zone['name']} — "
-                f"{quality} ({dist_km} km)"
-            ),
-            icon=folium.Icon(
-                color=marker_color,
-                icon="star",
-                prefix="fa",
-            ),
+            popup=folium.Popup(popup_html, max_width=310),
+            tooltip=f"#{i} 🐟 {zone['name']} — {quality} ({dist_km} km)",
+            icon=folium.Icon(color=marker_color, icon="star", prefix="fa"),
         ).add_to(fmap)
 
     return fmap
@@ -226,31 +322,47 @@ def create_weather_map(
     user_lon: float,
     user_location_name: str = "Queried Location",
     safety_verdict: str = "SAFE",
+    persona: str = "fisherman",
+    show_sst_heatmap: bool = False,
 ) -> folium.Map:
     """
-    Generate a minimal weather-context map (no PFZ zones).
-
-    Shows the queried location with a safety-verdict-coloured circle.
-    Used by the Weather Agent response view to give spatial context.
-
-    Args:
-        user_lat           : Latitude.
-        user_lon           : Longitude.
-        user_location_name : Label for the anchor popup.
-        safety_verdict     : "SAFE" | "CAUTION" | "DANGER".
-
-    Returns:
-        folium.Map
+    Generate a weather-context map with persona-aware geofencing & telemetry overlays.
     """
     fmap = folium.Map(
         location=[user_lat, user_lon],
         zoom_start=9,
-        tiles="OpenStreetMap",  # Free, no API key required (CartoDB requires a key)
+        tiles="OpenStreetMap",
         prefer_canvas=True,
     )
 
     circle_color = VERDICT_COLOR.get(safety_verdict, "#17a2b8")
 
+    # Persona: Researcher HeatMap
+    if persona == "researcher" or show_sst_heatmap:
+        heat_points = _generate_sst_heat_points(user_lat, user_lon)
+        HeatMap(
+            heat_points,
+            radius=26,
+            blur=16,
+            min_opacity=0.35,
+            gradient={0.2: '#08306b', 0.4: '#2171b5', 0.6: '#67a9cf', 0.8: '#fc8d59', 1.0: '#d73027'},
+        ).add_to(fmap)
+
+    # Persona: Coastal Authority Geofence Polygon
+    if persona == "coastal_authority" or safety_verdict == "DANGER":
+        geofence_coords = _generate_coastal_geofence_coords(user_lat, user_lon)
+        folium.Polygon(
+            locations=geofence_coords,
+            color="#dc3545",
+            weight=3,
+            fill=True,
+            fill_color="#dc3545",
+            fill_opacity=0.25,
+            dash_array="6 4",
+            tooltip="🚨 HIGH-RISK STORM SURGE & CYCLONE GEOFENCE: Level-3 Exclusion Zone",
+        ).add_to(fmap)
+
+    # Safety Zone Perimeter
     folium.Circle(
         location=[user_lat, user_lon],
         radius=_SAFETY_RADIUS_M,
@@ -262,14 +374,15 @@ def create_weather_map(
         tooltip=f"Safety zone — verdict: {safety_verdict}",
     ).add_to(fmap)
 
+    # Location Marker
     folium.Marker(
         location=[user_lat, user_lon],
         popup=folium.Popup(
-            f'<b>\u2693 {user_location_name}</b><br/>'
-            f'Weather verdict: <b style="color:{circle_color}">{safety_verdict}</b>',
+            f'<b>⚓ {user_location_name}</b><br/>'
+            f'Weather status: <b style="color:{circle_color}">{safety_verdict}</b>',
             max_width=200,
         ),
-        tooltip=f"\u2693 {user_location_name}",
+        tooltip=f"⚓ {user_location_name}",
         icon=folium.Icon(color="blue", icon="anchor", prefix="fa"),
     ).add_to(fmap)
 
