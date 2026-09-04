@@ -471,6 +471,225 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
     return "\n".join(sections)
 
 
+def _metadata_badge_fisherman(result: dict) -> str:
+    """
+    Compact badge for Fisherman view — language + intent only.
+    Agent pipeline is hidden (moved to technical expander).
+    """
+    intent_res = result.get("intent_result", {})
+    lang_code = intent_res.get("language_code", "en")
+    lang_name = intent_res.get("language", "English")
+    flag = LANG_FLAG.get(lang_code, "🌐")
+    intent = result.get("intent", "unknown")
+    label = INTENT_LABEL.get(intent, intent)
+    return f"\n\n---\n*{flag} **{lang_name}** · {label} · 🎣 Artisanal Fisherman View*"
+
+
+def _agents_badge(result: dict) -> str:
+    """Agent pipeline string for the technical evidence expander."""
+    agents = " ➔ ".join(result.get("agents_invoked", ["orchestrator"]))
+    return f"`{agents}`"
+
+
+def render_fisherman_response(
+    result: dict,
+    fmap,
+    container=None,
+) -> None:
+    """
+    Render a progressive, safety-first Streamlit UI for the Fisherman persona.
+
+    Layout (top-to-bottom priority):
+      1. 🟢/⚠️/🚨 Large verdict banner (st.success / st.warning / st.error)
+      2. Synthesis text (plain-language ORCA advice)
+      3. PFZ Hotspots table  ← actionable destination info
+      4. Fuel-Optimal Navigation summary ← right below zones
+      5. 🗺️ Folium map (prominent)
+      6. Collapsed expander: technical meteorological evidence + agent pipeline
+    """
+    ctx = container if container is not None else st
+
+    weather_res = result.get("weather_result")
+    pfz_res = result.get("pfz_result")
+    nav_res = result.get("navigation_result")
+    nav_suspended = result.get("navigation_suspended", False)
+    is_danger = weather_res and weather_res.get("verdict") == "DANGER"
+    is_suspended = nav_suspended or is_danger
+    synthesis = result.get("synthesis", "")
+
+    # ── 1. Prominent Verdict Banner ──────────────────────────────────────────
+    verdict = None
+    if weather_res and weather_res.get("success"):
+        verdict = weather_res.get("verdict", "SAFE")
+
+    if verdict == "SAFE" and not is_suspended:
+        ctx.success("## 🟢 SAFE FOR DEPARTURE\nConditions are within safe limits for small craft operations.")
+    elif verdict == "CAUTION" or (verdict == "SAFE" and is_suspended):
+        ctx.warning("## ⚠️ EXERCISE CAUTION\nElevated sea state detected. Proceed with heightened vigilance and life-jacket compliance.")
+    elif verdict == "DANGER" or is_suspended:
+        ctx.error("## 🚨 TRANSIT NOT ADVISED\nHazardous marine conditions active. Stay ashore until the all-clear is issued.")
+    elif not weather_res and pfz_res and pfz_res.get("success"):
+        # PFZ-only query with no explicit weather check
+        ctx.success("## 🟢 FISHING ZONES IDENTIFIED\nPotential Fishing Zones computed from INCOIS satellite data.")
+
+    # Navigation suspension banner
+    if is_suspended and weather_res:
+        m = weather_res.get("key_metrics", {})
+        is_lightning = m.get("lightning_hazard", False)
+        if is_lightning:
+            ctx.error(
+                f"⚡ **LIGHTNING HAZARD:** CAPE {m.get('max_cape_jkg', 0):.0f} J/kg — "
+                "severe convective instability. Open sea transit carries acute lightning strike risk."
+            )
+        ctx.warning(
+            "> ⚠️ **Navigation Suspended:** Sea state / Lightning hazard active. "
+            "Showing direct displacement metrics for planning purposes only once weather clears."
+        )
+
+    # ── 2. Plain-Language Synthesis ─────────────────────────────────────────
+    if synthesis:
+        ctx.markdown(synthesis)
+
+    # ── 3. PFZ Hotspots ─────────────────────────────────────────────────────
+    if pfz_res and pfz_res.get("success"):
+        zones = pfz_res.get("zones", [])
+        best = pfz_res.get("best_zone", {})
+        planning_tag = " ⚠️ *(Pre-Voyage Planning — Navigation Suspended)*" if is_suspended else ""
+        ctx.markdown(f"---\n### 🐟 Potential Fishing Zones (INCOIS Data){planning_tag}")
+        ctx.caption(f"📍 Reference Port: **{pfz_res.get('location', 'N/A')}**")
+
+        zone_rows = ""
+        for i, z in enumerate(zones, start=1):
+            quality_dot = QUALITY_EMOJI.get(z.get("quality") or z.get("status", "MEDIUM"), "⚪")
+            sp_raw = z.get("species", "")
+            species_str = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
+            depth_val = z.get("depth_m") if z.get("depth_m") is not None else z.get("depth", "—")
+            zone_rows += (
+                f"| {i} | {quality_dot} {z.get('name', 'N/A')} | "
+                f"{z.get('distance_to_user_km', '—')} km | "
+                f"{depth_val} m | "
+                f"{species_str} |\n"
+            )
+
+        ctx.markdown(
+            f"| # | Zone Name | Distance | Depth | Commercially Viable Species |\n"
+            f"|---|---|---|---|---|\n"
+            f"{zone_rows}"
+        )
+
+        best_name = best.get("name", "—") if best else "—"
+        ctx.markdown(
+            f"🏆 **Top Recommended Hotspot:** **{best_name}**  \n"
+            f"*Advisory:* {pfz_res.get('safety_note', 'Check local forecasts prior to embarkation.')}"
+        )
+
+    # ── 4. Fuel-Optimal Navigation ───────────────────────────────────────────
+    if nav_res and nav_res.get("success"):
+        imbl_warn = nav_res.get("imbl_warning_active", False)
+        imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
+        imbl_boundary = nav_res.get("imbl_closest_boundary", "IMBL")
+
+        if imbl_warn:
+            ctx.error(
+                f"🛑 **IMBL PROXIMITY WARNING — RISK OF IMPOUNDMENT:**  \n"
+                f"Navigation track approaches within **{imbl_dist:.1f} NM** of the **{imbl_boundary}** "
+                "International Maritime Boundary Line. **Maintain 5 NM seaward clearance.**"
+            )
+
+        total_nm = nav_res.get("total_distance_nm", 0.0)
+        total_km = nav_res.get("total_distance_km", 0.0)
+        heading = nav_res.get("direct_heading_str", "—")
+        econ = nav_res.get("fuel_economy", {})
+        fuel_saved = econ.get("fuel_saved_liters", 0.0)
+        cost_saved = econ.get("cost_saved_inr", 0)
+        transit_time = econ.get("transit_time_str", "—")
+        geofence_status = nav_res.get("geofence_status", "Safe & Clear")
+        has_detour = nav_res.get("hazard_avoidance_active", False)
+
+        if is_suspended:
+            ctx.markdown(
+                "---\n### ⛽ Fuel-Optimal Navigation ⚠️ *[Benchmark — Transit Suspended]*"
+            )
+            ctx.warning(
+                "Active marine hazard prohibits immediate sailing. "
+                "Fuel economics shown for pre-voyage planning once weather clears."
+            )
+        else:
+            ctx.markdown("---\n### ⛽ Fuel-Optimal Navigation")
+
+        col_a, col_b, col_c, col_d = ctx.columns(4)
+        col_a.metric("📏 Track Distance", f"{total_nm:.1f} NM", f"{total_km:.1f} km")
+        col_b.metric("🧭 Heading", heading)
+        col_c.metric("⏱️ Transit Time", transit_time)
+        col_d.metric(
+            "⛽ Fuel Saved",
+            f"{fuel_saved:.1f} L",
+            f"₹{cost_saved:,.0f} saved",
+            delta_color="normal" if not is_suspended else "off",
+        )
+
+        ctx.caption(
+            f"🎯 **{nav_res.get('start_label', 'Port')}** → **{nav_res.get('end_label', 'Target PFZ')}**  "
+            + (
+                f"🚨 **Detour engaged** — course avoids active hazard geofence."
+                if has_detour else
+                f"✅ **{geofence_status}**"
+            )
+        )
+
+        # Waypoints in compact expander
+        waypoints = nav_res.get("waypoints", [])
+        if waypoints:
+            with ctx.expander(f"📍 View Waypoint Route Plan ({len(waypoints)} waypoints)"):
+                wp_rows = ""
+                for wp in waypoints:
+                    leg_dist = f"{wp.get('leg_distance_nm', 0.0):.1f} NM" if wp.get("leg_distance_nm") else "Start"
+                    bearing = wp.get("leg_bearing") or "Departure"
+                    wp_rows += f"| {wp['name']} | `{wp['lat']:.4f}°N, {wp['lon']:.4f}°E` | {leg_dist} | {bearing} | {wp.get('notes', '')} |\n"
+                ctx.markdown(
+                    "| Waypoint | Coordinates | Leg Distance | Steer Bearing | Advisory |\n"
+                    "|---|---|---|---|---|\n"
+                    + wp_rows
+                )
+
+    # ── 5. Folium Map ────────────────────────────────────────────────────────
+    if fmap is not None:
+        ctx.markdown("---\n**🗺️ Interactive Maritime Map** *(click markers for zone details)*")
+        st_folium(fmap, width=None, height=480, returned_objects=[], use_container_width=True)
+
+    # ── 6. Technical Evidence Expander (progressive disclosure) ──────────────
+    if weather_res and weather_res.get("success"):
+        m = weather_res.get("key_metrics", {})
+        storm_str = "Yes ⚡" if m.get("thunderstorm_likely") else "No"
+        reasoning = weather_res.get("reasoning", "Conditions assessed against IMD/INCOIS guidelines.")
+        location = weather_res.get("location", "N/A")
+        verdict_v = weather_res.get("verdict", "SAFE")
+        emoji_v = VERDICT_EMOJI.get(verdict_v, "ℹ️")
+        color_v = VERDICT_COLOR.get(verdict_v, "blue")
+
+        with ctx.expander("🔬 Why ORCA recommends this (Technical Evidence)"):
+            st.markdown(
+                f"**📍 Observation Point:** {location}  \n"
+                f"**Verdict:** :{color_v}[**{emoji_v} {verdict_v}**]\n\n"
+                "**📊 Peak Marine Conditions (48-hour forecast window)**\n\n"
+                f"| Metric | Measured Value | Threshold |\n"
+                f"|---|---|---|\n"
+                f"| Wind Speed | {m.get('max_wind_speed_kmh', 0.0):.1f} km/h | 40.0 km/h (Gale) |\n"
+                f"| Wind Gust | {m.get('max_wind_gust_kmh', 0.0):.1f} km/h | 55.0 km/h (Severe) |\n"
+                f"| Wave Height | {m.get('max_wave_height_m', 0.0):.2f} m | 2.50 m (Hazard) |\n"
+                f"| Swell Height | {m.get('max_swell_height_m', 0.0):.2f} m | 2.00 m (High Swell) |\n"
+                f"| Wave Period | {m.get('max_wave_period_s', 0.0):.1f} s | — |\n"
+                f"| Precipitation | {m.get('max_precipitation_mm', 0.0):.1f} mm/hr | 10.0 mm/hr (Heavy Rain) |\n"
+                f"| Convective Energy (CAPE) | {m.get('max_cape_jkg', 0.0):.0f} J/kg | 1500 J/kg (Lightning Limit) |\n"
+                f"| Thunderstorm | {storm_str} | Immediate Danger |\n\n"
+                f"**🧠 Reasoning & Risk Factors:**  \n{reasoning}\n\n"
+                f"**🤖 Agent Pipeline:** {_agents_badge(result)}"
+            )
+
+    # ── 7. Compact metadata footer ───────────────────────────────────────────
+    ctx.markdown(_metadata_badge_fisherman(result))
+
+
 def generate_map_for_result(
     orch_result: dict,
     persona: str = "fisherman",
@@ -538,10 +757,19 @@ def generate_map_for_result(
 
 
 def render_history():
-    """Replay conversation history in chronological order."""
+    """
+    Replay conversation history in chronological order.
+    Fisherman assistant messages are re-rendered via the full widget renderer
+    (banners, expanders, metrics). All other messages use plain markdown.
+    """
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+            orch_result = msg.get("orch_result")
+            fmap_stored = msg.get("fmap")  # NOTE: Folium maps are not serialisable; map is only shown live
+            if orch_result and msg.get("is_fisherman_render"):
+                render_fisherman_response(orch_result, fmap=None)  # map rendered live only
+            else:
+                st.markdown(msg["content"])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -606,17 +834,21 @@ with st.sidebar:
                     "time_context": manual_time,
                     "persona": _sidebar_persona,
                 })
-            response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
             fmap = generate_map_for_result(orch_result, persona=_sidebar_persona, show_sst_heatmap=show_sst)
-
             st.session_state.messages.append({
                 "role": "user",
                 "content": f"📍 Weather check for **{manual_location}** ({manual_time})",
             })
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": response_md,
-            })
+            if _sidebar_persona == "fisherman":
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": orch_result.get("synthesis", "ORCA weather analysis complete."),
+                    "orch_result": orch_result,
+                    "is_fisherman_render": True,
+                })
+            else:
+                response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
+                st.session_state.messages.append({"role": "assistant", "content": response_md})
             st.session_state.current_map = fmap
             st.rerun()
         else:
@@ -637,21 +869,26 @@ with st.sidebar:
                     "location": pfz_loc.strip(),
                     "persona": _sidebar_persona,
                 })
-            response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
             fmap = generate_map_for_result(orch_result, persona=_sidebar_persona, show_sst_heatmap=show_sst)
-
             st.session_state.messages.append({
                 "role": "user",
                 "content": f"🐟 Fishing zone request near **{pfz_loc}**",
             })
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": response_md,
-            })
+            if _sidebar_persona == "fisherman":
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": orch_result.get("synthesis", "ORCA PFZ analysis complete."),
+                    "orch_result": orch_result,
+                    "is_fisherman_render": True,
+                })
+            else:
+                response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
+                st.session_state.messages.append({"role": "assistant", "content": response_md})
             st.session_state.current_map = fmap
             st.rerun()
         else:
             st.warning("Please enter a coastal location.")
+
 
     st.divider()
 
@@ -856,16 +1093,28 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
     with st.chat_message("assistant"):
         with st.spinner("ORCA agents collaborating & synthesizing..."):
             orch_result = orchestrator_run({"query": user_query, "persona": persona})
-            response_md = format_orchestrator_response(orch_result, persona=persona)
             fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
 
-        st.markdown(response_md)
+        if persona == "fisherman":
+            # ── Fisherman: progressive disclosure with native Streamlit widgets ──
+            render_fisherman_response(orch_result, fmap=fmap)
+            # Store orch_result for history replay (synthesis string as fallback text)
+            synthesis_text = orch_result.get("synthesis", "ORCA analysis complete.")
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": synthesis_text,      # plain-text fallback
+                "orch_result": orch_result,      # rich result for widget replay
+                "is_fisherman_render": True,
+            })
+        else:
+            # ── Authority / Researcher: full markdown formatter ──
+            response_md = format_orchestrator_response(orch_result, persona=persona)
+            st.markdown(response_md)
+            # C. Render map inline for non-fisherman personas
+            if fmap is not None:
+                st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
+                st_folium(fmap, width=850, height=500, returned_objects=[])
+            st.session_state.messages.append({"role": "assistant", "content": response_md})
 
-        # C. Render map inline
-        if fmap is not None:
-            st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
-            st_folium(fmap, width=850, height=500, returned_objects=[])
-
-    # D. Save to session state
-    st.session_state.messages.append({"role": "assistant", "content": response_md})
+    # D. Save latest map to session state (for the persistent map panel above history)
     st.session_state.current_map = fmap
