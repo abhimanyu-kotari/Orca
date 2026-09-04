@@ -92,12 +92,16 @@ def _build_advisory_prompt(location: str, zones: list[dict]) -> str:
     """
     zone_summary = ""
     for i, z in enumerate(zones, start=1):
-        species = ", ".join(z.get("species", []))
+        sp_raw = z.get("species", "")
+        species = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
+        q_val = z.get("quality") or z.get("status", "MEDIUM")
+        d_val = z.get("depth_m") if z.get("depth_m") is not None else z.get("depth", "—")
+        z_id = z.get("zone_id") or z.get("id", f"PFZ-{i}")
         zone_summary += (
-            f"  Zone {i}: {z['name']} ({z['zone_id']})\n"
-            f"    Quality       : {z['quality']}\n"
+            f"  Zone {i}: {z['name']} ({z_id})\n"
+            f"    Quality       : {q_val}\n"
             f"    Distance      : {z['distance_to_user_km']} km from {location}\n"
-            f"    Depth         : {z['depth_m']} m\n"
+            f"    Depth         : {d_val} m\n"
             f"    Target species: {species}\n"
             f"    Advisory note : {z.get('advisory', '')}\n"
             f"    Best season   : {z.get('best_season', 'Year-round')}\n\n"
@@ -141,15 +145,17 @@ def _rule_based_advisory(location: str, zones: list[dict]) -> dict:
         }
 
     # Prefer HIGH quality, otherwise take nearest
-    high_zones = [z for z in zones if z["quality"] == "HIGH"]
+    high_zones = [z for z in zones if (z.get("quality") or z.get("status")) == "HIGH"]
     best = high_zones[0] if high_zones else zones[0]
-    species = ", ".join(best.get("species", []))
+    sp_raw = best.get("species", "")
+    species = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
+    depth_val = best.get("depth_m") if best.get("depth_m") is not None else best.get("depth", "—")
 
     return {
         "summary": (
             f"The nearest productive PFZ near {location} is "
             f"{best['name']} ({best['distance_to_user_km']} km away). "
-            f"Depth: {best['depth_m']} m. Target species: {species}."
+            f"Depth: {depth_val} m. Target species: {species}."
         ),
         "top_zone":    best["name"],
         "safety_note": best.get("advisory", "Check local weather before departure."),

@@ -208,12 +208,14 @@ def format_orchestrator_response(result: dict, persona: str = "fisherman") -> st
         best = pfz_res.get("best_zone", {})
         zone_rows = ""
         for i, z in enumerate(zones, start=1):
-            quality_dot = QUALITY_EMOJI.get(z.get("quality", "MEDIUM"), "⚪")
-            species_str = ", ".join(z.get("species", []))
+            quality_dot = QUALITY_EMOJI.get(z.get("quality") or z.get("status", "MEDIUM"), "⚪")
+            sp_raw = z.get("species", "")
+            species_str = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
+            depth_val = z.get("depth_m") if z.get("depth_m") is not None else z.get("depth", "—")
             zone_rows += (
                 f"| {i} | {quality_dot} {z.get('name', 'N/A')} | "
                 f"{z.get('distance_to_user_km', '—')} km | "
-                f"{z.get('depth_m', '—')} m | "
+                f"{depth_val} m | "
                 f"{species_str} |\n"
             )
 

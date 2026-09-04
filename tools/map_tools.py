@@ -124,10 +124,13 @@ def _pfz_popup_html(zone: dict, marker_color: str, persona: str = "fisherman") -
     """
     Build HTML content for a PFZ zone popup tailored to the active persona.
     """
-    species_str = ", ".join(zone.get("species", []))
+    sp_raw = zone.get("species", "")
+    species_str = ", ".join(sp_raw) if isinstance(sp_raw, list) else str(sp_raw)
     dist_user   = zone.get("distance_to_user_km", "—")
     dist_shore  = zone.get("distance_from_shore_km", "—")
-    quality     = zone.get("quality", "MEDIUM")
+    quality     = zone.get("quality") or zone.get("status", "MEDIUM")
+    depth_val   = zone.get("depth_m") if zone.get("depth_m") is not None else zone.get("depth", "—")
+    zone_id     = zone.get("zone_id") or zone.get("id", "PFZ")
     advisory    = zone.get("advisory", "")
     season      = zone.get("best_season", "Year-round")
 
@@ -178,7 +181,7 @@ def _pfz_popup_html(zone: dict, marker_color: str, persona: str = "fisherman") -
         <table style="margin-top:6px; width:100%; border-collapse:collapse; font-size:11px;">
             <tr>
                 <td style="padding:2px 0; color:#555;"><b>Zone ID</b></td>
-                <td style="padding:2px 0;">{zone['zone_id']}</td>
+                <td style="padding:2px 0;">{zone_id}</td>
             </tr>
             <tr>
                 <td style="padding:2px 0; color:#555;"><b>Target Species</b></td>
@@ -186,7 +189,7 @@ def _pfz_popup_html(zone: dict, marker_color: str, persona: str = "fisherman") -
             </tr>
             <tr>
                 <td style="padding:2px 0; color:#555;"><b>Sea Depth</b></td>
-                <td style="padding:2px 0;">{zone['depth_m']} m</td>
+                <td style="padding:2px 0;">{depth_val} m</td>
             </tr>
             <tr>
                 <td style="padding:2px 0; color:#555;"><b>Distance from Port</b></td>
@@ -438,15 +441,17 @@ def create_pfz_map(
                     ).add_to(fmap)
 
     # 8. PFZ Hotspot Markers & Secondary Lines
-    best_zone_id = best_zone.get("zone_id") if best_zone else None
+    best_zone_id = (best_zone.get("zone_id") or best_zone.get("id")) if best_zone else None
+    best_zone_name = best_zone.get("name") if best_zone else None
 
     for i, zone in enumerate(pfz_zones, start=1):
-        quality = zone.get("quality", "MEDIUM")
+        quality = zone.get("quality") or zone.get("status", "MEDIUM")
         marker_color = QUALITY_COLOR.get(quality, "blue")
         zone_lat = zone["lat"]
         zone_lon = zone["lon"]
         dist_km = zone.get("distance_to_user_km", "?")
-        is_top = (zone.get("zone_id") == best_zone_id)
+        zid = zone.get("zone_id") or zone.get("id")
+        is_top = (zid == best_zone_id) or (zone.get("name") == best_zone_name)
 
         # Secondary zones get faint connector lines
         if not is_top:
