@@ -1683,17 +1683,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     show_sst = False
-    if "Coastal Authority" in st.session_state.current_persona or "Authority" in st.session_state.current_persona:
-        st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>Coastal Operations</p>", unsafe_allow_html=True)
-        if st.button("📢 Broadcast Evacuation Alert", use_container_width=True, type="primary"):
-            st.toast("🚨 Emergency Evacuation Alert broadcasted via VHF Ch 16 and NAVTEX.", icon="📢")
-            st.session_state.messages.append({
-                "role": "system",
-                "content": "System: Evacuation broadcast transmitted to all vessels in Sector.",
-            })
-            st.rerun()
-        st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
-    elif "Researcher" in st.session_state.current_persona:
+    if "Researcher" in st.session_state.current_persona:
         st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>EO Telemetry Layers</p>", unsafe_allow_html=True)
         show_sst = st.checkbox(
             "🌡️ Overlay SST / Chl HeatMap",
@@ -1932,7 +1922,7 @@ if persona == "coastal_authority":
     st.warning("""
     🚨 **COASTAL DISASTER MONITORING & MARITIME GEOFENCE ACTIVE**  
     **Surveillance Status:** Level-2 Marine Gale Watch | **Monitored Sector:** Coastal Warning Zone 4  
-    *High-risk storm surge & cyclone geofences are actively rendered on charts. Use the sidebar to broadcast evacuation warnings.*
+    *High-risk storm surge & cyclone geofences are actively rendered on charts. Real-time surveillance & vessel safety protocols active.*
     """)
 elif persona == "researcher":
     st.info("""
@@ -2193,8 +2183,6 @@ else:
 - *"Is vessel evacuation recommended off Paradip today?"*
 - *"Show active high-wave hazard geofence near Mumbai"*
 - *"तूफान और भारी लहरों का अलर्ट चेक करें"* (Hindi)
-
-Use the sidebar to broadcast emergency evacuation notices via VHF Ch 16, NAVTEX, and coastal SMS! 📢
 """
             elif persona == "researcher":
                 welcome_text = f"""
