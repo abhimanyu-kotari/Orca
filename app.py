@@ -106,21 +106,57 @@ h2 { font-size: 1.3rem !important; }
 h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
 
+/* ── Streamlit Top Header Polish ───────────────────────────── */
+header[data-testid="stHeader"] {
+    background-color: #F8FAFC !important;
+    z-index: 1001 !important;
+}
+
 /* ── Sticky Persona Selector (Horizontal Radio) ───────────── */
 div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
-div[data-testid="stVerticalBlock"] > div:has(div[data-testid="stRadio"]),
-div.st-key-sticky_persona_container,
 div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]),
-div[data-testid="stRadio"],
-.stRadio {
+div.st-key-sticky_persona_container {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 2rem !important;
-    z-index: 999 !important;
+    top: 3.75rem !important;
+    z-index: 1000 !important;
     background-color: #F8FAFC !important;
-    padding-bottom: 10px !important;
+    padding-top: 10px !important;
+    padding-bottom: 12px !important;
     border-bottom: 1px solid #E2E8F0 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+
+/* Inner containers inside sticky block must stretch full width and center */
+div.st-key-sticky_persona_container div[data-testid="stElementContainer"],
+div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* Prevent inner radio widget from double-sticking or having double borders */
+div.st-key-sticky_persona_container div[data-testid="stRadio"],
+div.st-key-sticky_persona_container .stRadio {
+    position: static !important;
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
 /* Ensure Leaflet controls and map canvas stay below the sticky widgets */
@@ -131,61 +167,98 @@ div[data-testid="stRadio"],
     z-index: 200 !important;
 }
 
-/* Clean, simple horizontal persona selector buttons */
+/* Hide label */
 .stRadio > label,
 div[data-testid="stRadio"] > label {
     display: none !important;
 }
 
-/* Force the outer Streamlit radio container to stretch across the screen and center its contents */
+/* Force outer radio to center contents across the screen */
 div.stRadio,
 div[data-testid="stRadio"] {
     display: flex !important;
     justify-content: center !important;
+    align-items: center !important;
     width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
 }
 
-/* Force the inner radiogroup to center the buttons */
+/* Force the inner radiogroup row to center and stretch children equally */
 div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
     justify-content: center !important;
+    align-items: stretch !important; /* CRITICAL: All 3 buttons stretch to identical height */
     width: 100% !important;
-    max-width: 900px !important; /* Keeps the buttons from looking weirdly stretched on ultra-wide monitors */
+    max-width: 1020px !important;
     margin: 0 auto !important;
-    gap: 12px !important;
-    align-items: center !important;
+    gap: 14px !important;
 }
 
-/* Ensure the buttons themselves are equal sizes */
-div[role="radiogroup"] > label {
-    flex: 1 !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    background: #FFFFFF !important;
-    border: 1.5px solid #CBD5E1 !important;
-    border-radius: 8px !important;
-    padding: 10px 14px !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    margin: 0 !important;
-    text-align: center !important;
-}
+/* Strictly uniform layout for all 3 buttons: equal width, height, padding, styling */
+div[role="radiogroup"] > label,
 div[data-testid="stRadio"] [data-baseweb="radio"] {
     flex: 1 1 0 !important;
+    width: 0 !important; /* CRITICAL: exactly equal 1/3 width distribution */
+    min-width: 0 !important;
+    min-height: 56px !important; /* Uniform height */
+    height: 100% !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
     background: #FFFFFF !important;
     border: 1.5px solid #CBD5E1 !important;
     border-radius: 8px !important;
-    padding: 10px 14px !important;
+    padding: 8px 12px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
     text-align: center !important;
 }
+
+/* Radio circle alignment */
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
+    flex-shrink: 0 !important;
+    margin-right: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Radio label text formatting & centering */
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:last-child {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    color: #1E293B !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    word-break: normal !important;
+}
+
+/* Hover & Active States */
 div[data-testid="stRadio"] [data-baseweb="radio"]:hover,
 div[data-testid="stRadio"] label:hover {
     border-color: #0EA5A8 !important;
@@ -198,13 +271,12 @@ div[data-testid="stRadio"] label[aria-checked="true"] {
     background: #F0FDFA !important;
     border-color: #0EA5A8 !important;
     border-width: 2px !important;
-    box-shadow: 0 2px 6px rgba(14, 165, 168, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(14, 165, 168, 0.18) !important;
 }
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-    font-size: 0.95rem !important;
-    font-weight: 600 !important;
+div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) p,
+div[data-testid="stRadio"] label:has(input:checked) p {
     color: #0B2638 !important;
-    margin: 0 !important;
+    font-weight: 700 !important;
 }
 
 /* ── Buttons ──────────────────────────────────── */
@@ -1865,71 +1937,9 @@ for idx, opt in enumerate(persona_options):
             or ("Researcher" in current_stored and "Researcher" in opt)):
         default_idx = idx
         break
-
 # Wrap the st.radio persona selector in its own dedicated st.container()
 sticky_persona_container = st.container(key="sticky_persona_container")
 with sticky_persona_container:
-    st.markdown("""
-    <style>
-    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
-    div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-    div.st-key-sticky_persona_container {
-        position: -webkit-sticky !important;
-        position: sticky !important;
-        top: 2rem !important;
-        z-index: 999 !important;
-        background-color: #F8FAFC !important;
-        padding-bottom: 10px !important;
-        border-bottom: 1px solid #E2E8F0 !important;
-        width: 100% !important;
-    }
-    div.st-key-sticky_persona_container div[data-testid="stRadio"] {
-        border-bottom: none !important;
-    }
-
-    /* Force the outer Streamlit radio container to stretch across the screen and center its contents */
-    div.stRadio {
-        display: flex !important;
-        justify-content: center !important;
-        width: 100% !important;
-    }
-
-    /* Force the inner radiogroup to center the buttons */
-    div[role="radiogroup"] {
-        display: flex !important;
-        justify-content: center !important;
-        width: 100% !important;
-        max-width: 900px !important; /* Keeps the buttons from looking weirdly stretched on ultra-wide monitors */
-        margin: 0 auto !important;
-    }
-
-    /* Ensure the buttons themselves are equal sizes */
-    div[role="radiogroup"] > label {
-        flex: 1 !important;
-        display: flex !important;
-        justify-content: center !important;
-    }
-
-    /* Hide label fallback */
-    .stRadio > label,
-    div[data-testid="stRadio"] > label {
-        display: none !important;
-    }
-
-    /* Fallback directly on .stRadio if container wrapper is not matched */
-    div[data-testid="stRadio"]:not(div.st-key-sticky_persona_container div[data-testid="stRadio"]),
-    .stRadio:not(div.st-key-sticky_persona_container .stRadio) {
-        position: -webkit-sticky !important;
-        position: sticky !important;
-        top: 2rem !important;
-        z-index: 999 !important;
-        background-color: #F8FAFC !important;
-        padding-bottom: 10px !important;
-        border-bottom: 1px solid #E2E8F0 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
     persona_label = st.radio(
         "Select Role:",
         persona_options,
