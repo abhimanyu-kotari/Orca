@@ -171,19 +171,26 @@ h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !
 /* ── Streamlit Top Header Polish ───────────────────────────── */
 header[data-testid="stHeader"] {
     background-color: #F8FAFC !important;
-    z-index: 1001 !important;
+    height: 3.75rem !important;
+    min-height: 3.75rem !important;
+    max-height: 3.75rem !important;
+    z-index: 990 !important; /* Lower than sticky container so it never overlaps buttons */
+}
+header[data-testid="stHeader"] div[data-testid="stToolbar"],
+header[data-testid="stHeader"] button[data-testid="stExpandSidebar"] {
+    z-index: 1005 !important;
 }
 
 /* ── Sticky Persona Selector (Horizontal Radio) ───────────── */
-div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
+/* ONLY the outermost element container is sticky */
 div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-div.st-key-sticky_persona_container {
+div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
     position: -webkit-sticky !important;
     position: sticky !important;
     top: 3.75rem !important;
-    z-index: 1000 !important;
+    z-index: 1000 !important; /* Higher than stHeader to guarantee full visibility */
     background-color: #F8FAFC !important;
-    padding-top: 10px !important;
+    padding-top: 16px !important; /* Generous breathing room above top border */
     padding-bottom: 12px !important;
     border-bottom: 1px solid #E2E8F0 !important;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
@@ -196,22 +203,15 @@ div.st-key-sticky_persona_container {
     box-sizing: border-box !important;
 }
 
-/* Inner containers inside sticky block must stretch full width and center */
+/* ALL inner containers are strictly STATIC - prevents nested sticky sliding & clipping */
+div.st-key-sticky_persona_container,
 div.st-key-sticky_persona_container div[data-testid="stElementContainer"],
-div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]) {
-    width: 100% !important;
-    max-width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
-/* Prevent inner radio widget from double-sticking or having double borders */
 div.st-key-sticky_persona_container div[data-testid="stRadio"],
 div.st-key-sticky_persona_container .stRadio {
     position: static !important;
     border: none !important;
     padding: 0 !important;
+    margin: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
     width: 100% !important;
@@ -464,12 +464,16 @@ div[data-testid="stCustomComponentV1"] iframe {
     }
 
     /* Sticky Persona Selector on Mobile */
-    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
+    header[data-testid="stHeader"] {
+        height: 2.875rem !important;
+        min-height: 2.875rem !important;
+        max-height: 2.875rem !important;
+    }
     div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-    div.st-key-sticky_persona_container {
+    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
         top: 2.875rem !important; /* Mobile Streamlit header height */
-        padding-top: 4px !important;
-        padding-bottom: 5px !important;
+        padding-top: 10px !important;
+        padding-bottom: 8px !important;
     }
 
     /* Tighter gap & compact buttons */
@@ -622,6 +626,13 @@ div[data-testid="stCustomComponentV1"] iframe {
     .orca-hero-subtitle {
         font-size: 0.60rem !important;
         line-height: 1.15 !important;
+    }
+
+    div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
+    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
+        top: 2.875rem !important;
+        padding-top: 8px !important;
+        padding-bottom: 6px !important;
     }
 
     div[role="radiogroup"],
