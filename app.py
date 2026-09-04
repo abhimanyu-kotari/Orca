@@ -107,15 +107,20 @@ h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
 
 /* ── Sticky Persona Selector (Horizontal Radio) ───────────── */
-div.st-key-sticky_persona_radio,
-div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_radio),
-div[data-testid="stRadio"] {
+div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
+div[data-testid="stVerticalBlock"] > div:has(div[data-testid="stRadio"]),
+div.st-key-sticky_persona_container,
+div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
+div[data-testid="stElementContainer"]:has(div[data-testid="stRadio"]),
+div[data-testid="stRadio"],
+.stRadio {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 3rem !important;
+    top: 2rem !important;
     z-index: 999 !important;
-    padding-bottom: 10px !important;
     background-color: #F8FAFC !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #E2E8F0 !important;
 }
 
 /* Ensure Leaflet controls and map canvas stay below the sticky widgets */
@@ -1898,21 +1903,39 @@ for idx, opt in enumerate(persona_options):
         default_idx = idx
         break
 
-# Sticky styling injected as requested
-st.markdown("""
-<style>
-div[data-testid="stRadio"], div.st-key-sticky_persona_radio {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: 3rem !important;
-    z-index: 999 !important;
-    padding-bottom: 10px !important;
-    background-color: #F8FAFC !important;
-}
-</style>
-""", unsafe_allow_html=True)
+# Wrap the st.radio persona selector in its own dedicated st.container()
+sticky_persona_container = st.container(key="sticky_persona_container")
+with sticky_persona_container:
+    st.markdown("""
+    <style>
+    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
+    div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
+    div.st-key-sticky_persona_container {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 2rem !important;
+        z-index: 999 !important;
+        background-color: #F8FAFC !important;
+        padding-bottom: 10px !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+    div.st-key-sticky_persona_container div[data-testid="stRadio"] {
+        border-bottom: none !important;
+    }
+    /* Fallback directly on .stRadio if container wrapper is not matched */
+    div[data-testid="stRadio"]:not(div.st-key-sticky_persona_container div[data-testid="stRadio"]),
+    .stRadio:not(div.st-key-sticky_persona_container .stRadio) {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 2rem !important;
+        z-index: 999 !important;
+        background-color: #F8FAFC !important;
+        padding-bottom: 10px !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-with st.container(key="sticky_persona_radio"):
     persona_label = st.radio(
         "Select Role:",
         persona_options,
