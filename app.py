@@ -690,6 +690,201 @@ def render_fisherman_response(
     ctx.markdown(_metadata_badge_fisherman(result))
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Coastal Authority / Disaster Management — Native Widget Renderer
+# ─────────────────────────────────────────────────────────────────────────────
+
+# IMD Maritime Disaster Classification thresholds (Beaufort / wave height)
+_AUTHORITY_LEVEL_META = {
+    "SAFE":    ("Level-0 / Benign",    "🟢", "success"),
+    "CAUTION": ("Level-1 / Moderate",  "🟡", "warning"),
+    "DANGER":  ("Level-2 / Severe",    "🔴", "error"),
+}
+
+
+def render_authority_response(
+    result: dict,
+    fmap,
+    container=None,
+) -> None:
+    """
+    Render a Marine Operations Center dashboard for the Coastal Authority persona.
+
+    Layout:
+      1. 🚨 Disaster Classification Alert Banner (success / warning / error)
+      2. 🗺️ Folium map — spatial centrepiece (dominant visual)
+      3. 📊 Marine & Meteorological Telemetry (metric columns)
+      4. 🛡️ Active Geofence & Exclusion Zone Notices (st.info / st.warning / st.error)
+      5. 🧠 Operational Synthesis (plain-language summary)
+      6. Collapsed technical expander (full metrics table + agent pipeline)
+    """
+    ctx = container if container is not None else st
+
+    weather_res = result.get("weather_result")
+    nav_res     = result.get("navigation_result")
+    pfz_res     = result.get("pfz_result")
+    synthesis   = result.get("synthesis", "")
+    is_danger   = weather_res and weather_res.get("verdict") == "DANGER"
+
+    # ── 1. Disaster Classification Alert Banner ───────────────────────────────
+    verdict = (weather_res.get("verdict", "SAFE") if weather_res and weather_res.get("success") else None)
+    level_label, level_dot, banner_type = _AUTHORITY_LEVEL_META.get(
+        verdict or "SAFE", ("Level-0 / Benign", "🟢", "success")
+    )
+    location_str = (
+        weather_res.get("location", "N/A") if weather_res else
+        pfz_res.get("location", "N/A") if pfz_res else "N/A"
+    )
+
+    banner_body = (
+        f"**IMD Maritime Classification: {level_dot} {level_label}**  \n"
+        f"**Monitored Sector:** {location_str}  \n"
+        f"**Sea State Verdict:** {verdict or 'UNKNOWN'} — "
+        + (
+            "All-clear: standard maritime traffic advisory in effect."
+            if (verdict == "SAFE" and not is_danger) else
+            "Elevated conditions: heightened coastal surveillance recommended."
+            if verdict == "CAUTION" else
+            "SEVERE STATE: Activate Level-2/3 response. Issue vessel exclusion and evacuation protocols."
+        )
+    )
+    getattr(ctx, banner_type)(banner_body)
+
+    # Lightning supplement
+    if weather_res and weather_res.get("success"):
+        m = weather_res.get("key_metrics", {})
+        if m.get("lightning_hazard"):
+            ctx.error(
+                f"⚡ **CONVECTIVE STORM ALERT — LIGHTNING HAZARD:**  \n"
+                f"CAPE: **{m.get('max_cape_jkg', 0):.0f} J/kg** (threshold: 1500 J/kg). "
+                "Prohibit all small-craft launches. Activate port storm-clearance protocol."
+            )
+
+    # ── 2. Folium Map — Spatial Centrepiece ───────────────────────────────────
+    if fmap is not None:
+        ctx.markdown("---\n#### 🗺️ Coastal Surveillance & Hazard Geofence Chart")
+        ctx.caption("Red polygon = active storm-surge exclusion zone · Blue track = monitored vessel corridor")
+        st_folium(fmap, width=None, height=520, returned_objects=[], use_container_width=True)
+    else:
+        ctx.info("📡 No spatial data available for this query. Run a Weather Check or PFZ query to load the geofence chart.")
+
+    ctx.markdown("---")
+
+    # ── 3. Marine & Meteorological Telemetry (metric columns) ─────────────────
+    if weather_res and weather_res.get("success"):
+        m = weather_res.get("key_metrics", {})
+        ctx.markdown("#### 📊 Marine & Meteorological Disaster Telemetry")
+        c1, c2, c3, c4 = ctx.columns(4)
+        c1.metric("💨 Peak Wind Speed",  f"{m.get('max_wind_speed_kmh', 0.0):.1f} km/h",
+                  "⚠ Gale" if m.get("max_wind_speed_kmh", 0) > 40 else "Normal",
+                  delta_color="inverse")
+        c2.metric("🌊 Max Wave Height",  f"{m.get('max_wave_height_m', 0.0):.2f} m",
+                  "⚠ Hazard" if m.get("max_wave_height_m", 0) > 2.5 else "Normal",
+                  delta_color="inverse")
+        c3.metric("🌀 Wind Gust Peak",   f"{m.get('max_wind_gust_kmh', 0.0):.1f} km/h",
+                  "⚠ Severe" if m.get("max_wind_gust_kmh", 0) > 55 else "Normal",
+                  delta_color="inverse")
+        c4.metric("⚡ CAPE Energy",       f"{m.get('max_cape_jkg', 0.0):.0f} J/kg",
+                  "⚠ Lightning Risk" if m.get("max_cape_jkg", 0) > 1500 else "Stable",
+                  delta_color="inverse")
+
+        c5, c6, c7, c8 = ctx.columns(4)
+        c5.metric("🌊 Swell Height",     f"{m.get('max_swell_height_m', 0.0):.2f} m",
+                  "⚠ High Swell" if m.get("max_swell_height_m", 0) > 2.0 else "Manageable",
+                  delta_color="inverse")
+        c6.metric("🌧️ Precipitation",    f"{m.get('max_precipitation_mm', 0.0):.1f} mm/hr",
+                  "⚠ Heavy Rain" if m.get("max_precipitation_mm", 0) > 10 else "Light",
+                  delta_color="inverse")
+        c7.metric("🕰️ Wave Period",       f"{m.get('max_wave_period_s', 0.0):.1f} s")
+        c8.metric("⛈️ Thunderstorm",
+                  "Active ⚡" if m.get("thunderstorm_likely") else "None",
+                  delta_color="off")
+
+    # ── 4. Active Geofence & Exclusion Zone Notices ───────────────────────────
+    ctx.markdown("#### 🛡️ Active Geofence & Surveillance Status")
+
+    geofence_notices = []
+
+    # IMBL proximity
+    if nav_res and nav_res.get("imbl_warning_active"):
+        imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
+        imbl_bdry = nav_res.get("imbl_closest_boundary", "IMBL")
+        ctx.error(
+            f"🛑 **IMBL PROXIMITY BREACH — INTERNATIONAL MARITIME BOUNDARY LINE:**  \n"
+            f"Vessel track within **{imbl_dist:.1f} NM** of **{imbl_bdry}**. "
+            "Immediate vessel recall recommended. Risk of foreign maritime apprehension."
+        )
+        geofence_notices.append("IMBL")
+
+    # Disaster verdict-based geofence
+    if verdict == "DANGER":
+        ctx.error(
+            "🚨 **MARITIME EXCLUSION ZONE ACTIVE:**  \n"
+            "Severe sea state breach triggers automatic Level-2 geofence protocol. "
+            "All small-craft vessels in coastal zone advised to return to port immediately. "
+            "Coordinate with IMD/Coast Guard for zone boundary coordinates."
+        )
+        geofence_notices.append("Storm-surge")
+    elif verdict == "CAUTION":
+        ctx.warning(
+            "⚠️ **LEVEL-1 COASTAL WATCH ZONE:**  \n"
+            "Elevated sea conditions — small craft advisory issued. Vessel traffic in affected "
+            "sector under Level-1 surveillance. Monitor IMD bulletins for escalation."
+        )
+        geofence_notices.append("Level-1 Watch")
+
+    if not geofence_notices and verdict == "SAFE":
+        ctx.success(
+            "✅ **All Clear — No Active Exclusion Zones:**  \n"
+            "No maritime geofence triggers active. Standard vessel traffic advisory in effect. "
+            "Routine monitoring protocol maintained."
+        )
+
+    # PFZ vessel activity notice
+    if pfz_res and pfz_res.get("success"):
+        zones = pfz_res.get("zones", [])
+        best = pfz_res.get("best_zone", {})
+        best_name = best.get("name", "—") if best else "—"
+        ctx.info(
+            f"📍 **Vessel Activity Expected:**  \n"
+            f"**{len(zones)} active PFZ clusters** computed near {pfz_res.get('location', 'N/A')}. "
+            f"Highest-density zone: **{best_name}**. "
+            "Vessels expected in this sector — include in surveillance sweep."
+        )
+
+    # ── 5. Operational Synthesis ───────────────────────────────────────────────
+    if synthesis:
+        ctx.markdown("---\n#### 🧠 ORCA Operational Assessment")
+        ctx.markdown(synthesis)
+
+    # ── 6. Technical Evidence Expander ────────────────────────────────────────
+    with ctx.expander("📋 Full Disaster Telemetry & Agent Pipeline"):
+        if weather_res and weather_res.get("success"):
+            m = weather_res.get("key_metrics", {})
+            storm_str = "Yes ⚡" if m.get("thunderstorm_likely") else "No"
+            reasoning = weather_res.get("reasoning", "Assessed against IMD/INCOIS thresholds.")
+            st.markdown(
+                "**📊 Complete Peak Conditions Table**\n\n"
+                "| Metric | Value | IMD Threshold |\n"
+                "|---|---|---|\n"
+                f"| Wind Speed | {m.get('max_wind_speed_kmh', 0.0):.1f} km/h | 40.0 km/h (Gale) |\n"
+                f"| Wind Gust | {m.get('max_wind_gust_kmh', 0.0):.1f} km/h | 55.0 km/h (Severe) |\n"
+                f"| Wave Height | {m.get('max_wave_height_m', 0.0):.2f} m | 2.50 m (Hazard) |\n"
+                f"| Swell Height | {m.get('max_swell_height_m', 0.0):.2f} m | 2.00 m (High Swell) |\n"
+                f"| Wave Period | {m.get('max_wave_period_s', 0.0):.1f} s | — |\n"
+                f"| Precipitation | {m.get('max_precipitation_mm', 0.0):.1f} mm/hr | 10.0 mm/hr |\n"
+                f"| CAPE | {m.get('max_cape_jkg', 0.0):.0f} J/kg | 1500 J/kg (Lightning Limit) |\n"
+                f"| Thunderstorm | {storm_str} | Immediate Danger |\n\n"
+                f"**🧠 IMD Reasoning:** {reasoning}\n\n"
+                f"**🤖 Agent Pipeline:** {_agents_badge(result)}"
+            )
+        else:
+            st.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
+
+    # ── 7. Full metadata badge ────────────────────────────────────────────────
+    ctx.markdown(_metadata_badge(result, "coastal_authority"))
+
+
 def generate_map_for_result(
     orch_result: dict,
     persona: str = "fisherman",
@@ -759,15 +954,16 @@ def generate_map_for_result(
 def render_history():
     """
     Replay conversation history in chronological order.
-    Fisherman assistant messages are re-rendered via the full widget renderer
-    (banners, expanders, metrics). All other messages use plain markdown.
+    Fisherman and Authority assistant messages are re-rendered via their
+    respective widget renderers. All other messages use plain markdown.
     """
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             orch_result = msg.get("orch_result")
-            fmap_stored = msg.get("fmap")  # NOTE: Folium maps are not serialisable; map is only shown live
             if orch_result and msg.get("is_fisherman_render"):
-                render_fisherman_response(orch_result, fmap=None)  # map rendered live only
+                render_fisherman_response(orch_result, fmap=None)  # map shown live only
+            elif orch_result and msg.get("is_authority_render"):
+                render_authority_response(orch_result, fmap=None)  # map shown live only
             else:
                 st.markdown(msg["content"])
 
@@ -846,6 +1042,13 @@ with st.sidebar:
                     "orch_result": orch_result,
                     "is_fisherman_render": True,
                 })
+            elif _sidebar_persona == "coastal_authority":
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": orch_result.get("synthesis", "ORCA operational assessment complete."),
+                    "orch_result": orch_result,
+                    "is_authority_render": True,
+                })
             else:
                 response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
                 st.session_state.messages.append({"role": "assistant", "content": response_md})
@@ -881,6 +1084,13 @@ with st.sidebar:
                     "orch_result": orch_result,
                     "is_fisherman_render": True,
                 })
+            elif _sidebar_persona == "coastal_authority":
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": orch_result.get("synthesis", "ORCA operational assessment complete."),
+                    "orch_result": orch_result,
+                    "is_authority_render": True,
+                })
             else:
                 response_md = format_orchestrator_response(orch_result, persona=_sidebar_persona)
                 st.session_state.messages.append({"role": "assistant", "content": response_md})
@@ -888,6 +1098,7 @@ with st.sidebar:
             st.rerun()
         else:
             st.warning("Please enter a coastal location.")
+
 
 
     st.divider()
@@ -1106,11 +1317,21 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
                 "orch_result": orch_result,      # rich result for widget replay
                 "is_fisherman_render": True,
             })
+        elif persona == "coastal_authority":
+            # ── Coastal Authority: Marine Operations Center dashboard ──
+            render_authority_response(orch_result, fmap=fmap)
+            synthesis_text = orch_result.get("synthesis", "ORCA operational assessment complete.")
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": synthesis_text,
+                "orch_result": orch_result,
+                "is_authority_render": True,
+            })
         else:
-            # ── Authority / Researcher: full markdown formatter ──
+            # ── Marine Researcher: full markdown formatter ──
             response_md = format_orchestrator_response(orch_result, persona=persona)
             st.markdown(response_md)
-            # C. Render map inline for non-fisherman personas
+            # C. Render map inline for researcher persona
             if fmap is not None:
                 st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
                 st_folium(fmap, width=850, height=500, returned_objects=[])
