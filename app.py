@@ -106,23 +106,19 @@ h2 { font-size: 1.3rem !important; }
 h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
 
-/* ── Layer 2: Sticky Operating Context Header ─────────── */
-div.st-key-sticky_operating_context,
-div[data-testid="stElementContainer"]:has(> div.st-key-sticky_operating_context) {
+/* ── Sticky Persona Selector (Horizontal Radio) ───────────── */
+div.st-key-sticky_persona_radio,
+div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_radio),
+div[data-testid="stRadio"] {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 0 !important;
-    z-index: 99999 !important;
-    background: rgba(248, 250, 252, 0.96) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border-bottom: 1.5px solid #CBD5E1 !important;
-    box-shadow: 0 4px 16px rgba(11, 38, 56, 0.08) !important;
-    padding: 8px 4px 12px 4px !important;
-    margin-bottom: 14px !important;
+    top: 3rem !important;
+    z-index: 999 !important;
+    padding-bottom: 10px !important;
+    background-color: #F8FAFC !important;
 }
 
-/* Ensure Leaflet controls and map canvas stay below the sticky header */
+/* Ensure Leaflet controls and map canvas stay below the sticky widgets */
 .leaflet-top, .leaflet-bottom {
     z-index: 400 !important;
 }
@@ -130,133 +126,48 @@ div[data-testid="stElementContainer"]:has(> div.st-key-sticky_operating_context)
     z-index: 200 !important;
 }
 
-/* ── Operating Context Cards (Stakeholder Selector Tabs) ── */
-div.st-key-sticky_operating_context div[data-testid="stRadio"],
-div[data-testid="stRadio"] {
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-div.st-key-sticky_operating_context div[data-testid="stRadio"] > div[role="radiogroup"],
+/* Clean, simple horizontal persona selector buttons */
 div[data-testid="stRadio"] > div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
     gap: 12px !important;
     width: 100% !important;
-    align-items: stretch !important;
+    align-items: center !important;
 }
-div.st-key-sticky_operating_context div[data-testid="stRadio"] [data-baseweb="radio"],
-div.st-key-sticky_operating_context div[data-testid="stRadio"] label,
 div[data-testid="stRadio"] [data-baseweb="radio"],
 div[data-testid="stRadio"] label {
     flex: 1 1 0 !important;
     display: flex !important;
-    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     background: #FFFFFF !important;
     border: 1.5px solid #CBD5E1 !important;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     padding: 10px 14px !important;
-    min-height: 62px !important;
     cursor: pointer !important;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 1px 3px rgba(11, 38, 56, 0.04) !important;
-    margin: 0 !important;
-    position: relative !important;
-    text-align: center !important;
-}
-
-/* Hide default round radio circle */
-div[data-testid="stRadio"] input[type="radio"],
-div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stMarkdownContainer"]),
-div[data-testid="stRadio"] label > div:first-child:not([data-testid="stMarkdownContainer"]) {
-    display: none !important;
-}
-
-/* Typography on unselected card */
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] {
-    width: 100% !important;
-    text-align: center !important;
-}
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+    transition: all 0.15s ease !important;
     margin: 0 !important;
     text-align: center !important;
 }
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p:first-child {
-    font-size: 0.88rem !important;
-    font-weight: 800 !important;
-    color: #0B2638 !important;
-    letter-spacing: 0.01em !important;
-    text-transform: uppercase !important;
-    margin-bottom: 2px !important;
-    line-height: 1.2 !important;
-}
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p:last-child:not(:first-child) {
-    font-size: 0.68rem !important;
-    font-weight: 500 !important;
-    color: #64748B !important;
-    letter-spacing: 0.02em !important;
-    line-height: 1.2 !important;
-}
-
-/* Hover state on unselected card */
-div[data-testid="stRadio"] [data-baseweb="radio"]:not(:has(input:checked)):hover,
-div[data-testid="stRadio"] label:not(:has(input:checked)):hover {
+div[data-testid="stRadio"] [data-baseweb="radio"]:hover,
+div[data-testid="stRadio"] label:hover {
     border-color: #0EA5A8 !important;
-    background: #F8FAFC !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(14, 165, 168, 0.12) !important;
+    background: #F0FDFA !important;
 }
-div[data-testid="stRadio"] [data-baseweb="radio"]:not(:has(input:checked)):hover p:first-child,
-div[data-testid="stRadio"] label:not(:has(input:checked)):hover p:first-child {
-    color: #0EA5A8 !important;
-}
-
-/* Selected / Active Role Card */
 div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
 div[data-testid="stRadio"] label:has(input:checked),
 div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"],
 div[data-testid="stRadio"] label[aria-checked="true"] {
     background: #F0FDFA !important;
-    border: 2px solid #0EA5A8 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 14px rgba(14, 165, 168, 0.20) !important;
-    transform: translateY(-1px) !important;
+    border-color: #0EA5A8 !important;
+    border-width: 2px !important;
+    box-shadow: 0 2px 6px rgba(14, 165, 168, 0.15) !important;
 }
-div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) [data-testid="stMarkdownContainer"] p:first-child,
-div[data-testid="stRadio"] label:has(input:checked) [data-testid="stMarkdownContainer"] p:first-child,
-div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] [data-testid="stMarkdownContainer"] p:first-child,
-div[data-testid="stRadio"] label[aria-checked="true"] [data-testid="stMarkdownContainer"] p:first-child {
-    color: #0B2638 !important;
-    font-weight: 800 !important;
-}
-div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) [data-testid="stMarkdownContainer"] p:last-child,
-div[data-testid="stRadio"] label:has(input:checked) [data-testid="stMarkdownContainer"] p:last-child,
-div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] [data-testid="stMarkdownContainer"] p:last-child,
-div[data-testid="stRadio"] label[aria-checked="true"] [data-testid="stMarkdownContainer"] p:last-child {
-    color: #0D9488 !important;
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+    font-size: 0.95rem !important;
     font-weight: 600 !important;
-}
-
-/* Active dot indicator: ● ACTIVE */
-div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked)::before,
-div[data-testid="stRadio"] label:has(input:checked)::before,
-div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"]::before,
-div[data-testid="stRadio"] label[aria-checked="true"]::before {
-    content: "● ACTIVE";
-    position: absolute;
-    top: -9px;
-    right: 12px;
-    font-size: 0.60rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    color: #0F766E;
-    background: #CCFBF1;
-    border: 1px solid #5EEAD4;
-    padding: 1px 7px;
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(14, 165, 168, 0.2);
+    color: #0B2638 !important;
+    margin: 0 !important;
 }
 
 /* ── Buttons ──────────────────────────────────── */
@@ -494,7 +405,7 @@ if "messages" not in st.session_state:
 if "current_map" not in st.session_state:
     st.session_state.current_map = None
 if "current_persona" not in st.session_state:
-    st.session_state.current_persona = "🎣 Artisanal Fisherman\n\nFishing • Safety • Navigation"
+    st.session_state.current_persona = "🎣 Artisanal Fisherman"
 if "orca_lang" not in st.session_state:
     st.session_state.orca_lang = "en"
 if "last_orch_result" not in st.session_state:
@@ -556,7 +467,7 @@ def _metadata_badge(result: dict, persona: str = None) -> str:
     agents = " ➔ ".join(result.get("agents_invoked", ["orchestrator"]))
     role_titles = {
         "fisherman": "🎣 Artisanal Fisherman",
-        "coastal_authority": "🛟 Coastal Authority / Disaster Management",
+        "coastal_authority": "🚨 Coastal Authority / Disaster Management",
         "researcher": "🔬 Marine Researcher / Oceanographer",
     }
     role_display = role_titles.get(active_persona, active_persona)
@@ -1765,32 +1676,11 @@ with st.sidebar:
         st.image(LOGO_PATH, use_container_width=True)
     st.markdown("<p style='font-size:1.1rem;font-weight:800;color:#F8FAFC;margin:4px 0 0 0;'>ORCA OS</p><p style='font-size:0.75rem;color:#64B6D0;margin:0 0 12px 0;'>Marine Decision Intelligence</p>", unsafe_allow_html=True)
 
-    # ── Primary Navigation ───────────────────────────────────────────────────
-    st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>Platform Navigation</p>", unsafe_allow_html=True)
-    active_nav = st.session_state.get("active_nav_view", "dashboard")
-    col_nav1, col_nav2 = st.columns(2)
-    with col_nav1:
-        if st.button("📊 Dashboard", use_container_width=True, type="primary" if active_nav == "dashboard" else "secondary"):
-            st.session_state.active_nav_view = "dashboard"
-            st.rerun()
-        if st.button("💬 Ask ORCA", use_container_width=True, type="primary" if active_nav == "ask_orca" else "secondary"):
-            st.session_state.active_nav_view = "ask_orca"
-            st.rerun()
-        if st.button("📑 Reports", use_container_width=True, type="primary" if active_nav == "reports" else "secondary"):
-            st.session_state.active_nav_view = "reports"
-            st.rerun()
-    with col_nav2:
-        if st.button("🗺️ Marine Map", use_container_width=True, type="primary" if active_nav == "map" else "secondary"):
-            st.session_state.active_nav_view = "map"
-            st.rerun()
-        if st.button("🚨 Alerts", use_container_width=True, type="primary" if active_nav == "alerts" else "secondary"):
-            st.session_state.active_nav_view = "alerts"
-            st.rerun()
-        if st.button("🗑️ Clear Chat", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.current_map = None
-            st.session_state.active_nav_view = "dashboard"
-            st.rerun()
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.current_map = None
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
 
     st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
 
@@ -1805,7 +1695,7 @@ with st.sidebar:
         _sidebar_badge_scope = "Fishing • Safety • Navigation"
         _sidebar_persona = "fisherman"
     elif "Authority" in _sidebar_persona_label:
-        _sidebar_badge_icon = "🛟"
+        _sidebar_badge_icon = "🚨"
         _sidebar_badge_name = "Coastal Authority"
         _sidebar_badge_scope = "Hazards • Surveillance • Response"
         _sidebar_persona = "coastal_authority"
@@ -1977,13 +1867,13 @@ else:
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Layer 2: Sticky Operating Context Header (Stakeholder Selector)
+# Sticky Persona Selector (Horizontal Radio)
 # ─────────────────────────────────────────────────────────────────────────────
 
 persona_options = [
-    "🎣 Artisanal Fisherman\n\nFishing • Safety • Navigation",
-    "🛟 Coastal Authority / Disaster Management\n\nHazards • Surveillance • Response",
-    "🔬 Marine Researcher / Oceanographer\n\nOcean Science • Analysis • Trends",
+    "🎣 Artisanal Fisherman",
+    "🚨 Coastal Authority / Disaster Management",
+    "🔬 Marine Researcher / Oceanographer",
 ]
 
 def _on_persona_change():
@@ -2008,28 +1898,23 @@ for idx, opt in enumerate(persona_options):
         default_idx = idx
         break
 
-with st.container(key="sticky_operating_context"):
-    st.markdown("""
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:2px 4px 0 4px;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:0.75rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#0B2638;">
-          OPERATING CONTEXT
-        </span>
-        <span style="font-size:0.72rem; color:#64748B; font-weight:500;">
-          — Adapted for your mission
-        </span>
-      </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#0EA5A8; box-shadow:0 0 6px #0EA5A8;"></span>
-        <span style="font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#0EA5A8;">
-          ORCA ADAPTIVE MODE
-        </span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+# Sticky styling injected as requested
+st.markdown("""
+<style>
+div[data-testid="stRadio"], div.st-key-sticky_persona_radio {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 3rem !important;
+    z-index: 999 !important;
+    padding-bottom: 10px !important;
+    background-color: #F8FAFC !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
+with st.container(key="sticky_persona_radio"):
     persona_label = st.radio(
-        "**Select Role:**",
+        "Select Role:",
         persona_options,
         index=default_idx,
         key="stakeholder_persona_radio",
@@ -2307,9 +2192,10 @@ else:
     # 3. Welcome banner when chat is fresh (tailored to active Persona)
     if not st.session_state.messages:
         with st.chat_message("assistant"):
+            clean_mode = persona_label.split("\n")[0].strip()
             if persona == "coastal_authority":
                 welcome_text = f"""
-👋 **Welcome to ORCA Operations!** Operating in **{persona_label}** mode.
+👋 **Welcome to ORCA Operations!** Operating in **{clean_mode}** mode.
 
 **Try asking:**
 - *"Check storm surge risk near Chennai"*
@@ -2322,7 +2208,7 @@ Use the sidebar to broadcast emergency evacuation notices via VHF Ch 16, NAVTEX,
 """
             elif persona == "researcher":
                 welcome_text = f"""
-👋 **Welcome to ORCA Research!** Operating in **{persona_label}** mode.
+👋 **Welcome to ORCA Research!** Operating in **{clean_mode}** mode.
 
 **Try asking:**
 - *"Analyze SST anomaly and chlorophyll concentrations off Kochi"*
@@ -2335,7 +2221,7 @@ Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sen
 """
             else:
                 welcome_text = f"""
-👋 **Welcome to ORCA!** Operating in **{persona_label}** mode.
+👋 **Welcome to ORCA!** Operating in **{clean_mode}** mode.
 
 **Try asking:**
 - *"Where can I fish near Kochi today?"*
@@ -2344,9 +2230,9 @@ Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sen
 - *"मुंबई के पास मछली कहाँ पकड़ें?"* (Hindi)
 - *"ராமேஸ்வரம் அருகே மீன்பிடிக்க எங்கே போவது?"* (Tamil)
 
-Switch between **Fisherman**, **Coastal Authority**, and **Researcher** in the sidebar to inspect role-specific navigation, hazard geofences, and satellite telemetry! 🧭
+Switch between **Fisherman**, **Coastal Authority**, and **Researcher** at the top of the dashboard to inspect role-specific navigation, hazard geofences, and satellite telemetry! 🧭
 """
-            st.markdown(welcome_text)
+            st.markdown(welcome_text.strip())
 
 
 # ── Chat input ────────────────────────────────────────────────────────────────
