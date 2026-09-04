@@ -205,22 +205,36 @@ def get_eo_legend_html() -> str:
     suitable for injection into a Folium map.
     """
     return """
-    <div style="
+    <style>
+    .eo-legend-box {
         position: fixed;
-        bottom: 25px;
-        left: 20px;
+        bottom: 20px;
+        left: 15px;
         z-index: 9999;
-        background: rgba(255, 255, 255, 0.92);
-        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.94);
+        padding: 8px 12px;
         border-radius: 8px;
-        border: 1px solid #ccc;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        border: 1px solid #CBD5E1;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.18);
         font-family: Arial, sans-serif;
         font-size: 11px;
-        line-height: 1.4;
-        max-width: 250px;
-    ">
-        <b style="font-size:12px; color:#0b5ed7;">🛰️ Earth Observation Color Scales</b><br/>
+        line-height: 1.35;
+        max-width: 240px;
+    }
+    @media (max-width: 600px) {
+        .eo-legend-box {
+            max-width: 175px !important;
+            padding: 5px 7px !important;
+            font-size: 9px !important;
+            bottom: 8px !important;
+            left: 8px !important;
+        }
+        .eo-legend-title { font-size: 9.5px !important; }
+        .eo-legend-box span { font-size: 8px !important; }
+    }
+    </style>
+    <div class="eo-legend-box">
+        <b class="eo-legend-title" style="font-size:12px; color:#0b5ed7;">🛰️ Earth Observation Color Scales</b><br/>
 
         <!-- SST Scale -->
         <div style="margin-top:6px;">

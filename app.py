@@ -26,6 +26,7 @@ Run:
 """
 
 import os
+import base64
 import folium
 import streamlit as st
 from streamlit_folium import st_folium
@@ -35,6 +36,13 @@ from tools.map_tools import create_pfz_map, create_weather_map
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "orca_logo.png")
 LOGO_EXISTS = os.path.exists(LOGO_PATH)
+LOGO_B64 = None
+if LOGO_EXISTS:
+    try:
+        with open(LOGO_PATH, "rb") as _f:
+            LOGO_B64 = base64.b64encode(_f.read()).decode("utf-8")
+    except Exception:
+        LOGO_B64 = None
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page configuration
@@ -94,6 +102,23 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: 0 4px 12px rgba(14, 165, 168, 0.4) !important;
 }
 
+/* ── Sidebar logo responsive styling ──────────── */
+[data-testid="stSidebar"] img {
+    max-width: 110px !important;
+    max-height: 70px !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    display: block !important;
+}
+.orca-sidebar-logo {
+    max-width: 110px !important;
+    max-height: 70px !important;
+    object-fit: contain !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    display: inline-block !important;
+}
+
 /* ── Typography ───────────────────────────────── */
 h1, h2, h3 {
     color: #0B2638 !important;
@@ -105,6 +130,43 @@ h1 { font-size: 1.8rem !important; }
 h2 { font-size: 1.3rem !important; }
 h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
+
+/* ── Responsive Brand Hero Header ──────────────────────────── */
+.orca-hero-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 16px !important;
+    margin: 4px 0 10px 0 !important;
+    padding: 0 !important;
+}
+.orca-hero-logo {
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: contain !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(11, 38, 56, 0.15) !important;
+    flex-shrink: 0 !important;
+}
+.orca-hero-text {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+.orca-hero-title {
+    font-size: 1.85rem !important;
+    font-weight: 800 !important;
+    color: #0B2638 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+}
+.orca-hero-subtitle {
+    font-size: 0.82rem !important;
+    color: #64748B !important;
+    margin: 3px 0 0 0 !important;
+    line-height: 1.3 !important;
+}
 
 /* ── Streamlit Top Header Polish ───────────────────────────── */
 header[data-testid="stHeader"] {
@@ -277,6 +339,122 @@ div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) p,
 div[data-testid="stRadio"] label:has(input:checked) p {
     color: #0B2638 !important;
     font-weight: 700 !important;
+}
+
+/* ── Maps & Graphs Responsive Constraints ──────────────────── */
+iframe[title="streamlit_folium.st_folium"],
+div[data-testid="stCustomComponentV1"] iframe {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
+    max-height: 400px !important;
+    width: 100% !important;
+}
+.js-plotly-plot, .plot-container {
+    max-height: 280px !important;
+    width: 100% !important;
+}
+
+/* ── Mobile Responsive Overhaul (<= 768px) ─────────────────── */
+@media (max-width: 768px) {
+    /* Compact padding in main container */
+    .block-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 3.25rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+
+    /* Compact Hero Header on mobile */
+    .orca-hero-header {
+        gap: 10px !important;
+        margin: 2px 0 8px 0 !important;
+    }
+    .orca-hero-logo {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 8px !important;
+    }
+    .orca-hero-title {
+        font-size: 1.35rem !important;
+    }
+    .orca-hero-subtitle {
+        font-size: 0.68rem !important;
+        margin-top: 2px !important;
+    }
+
+    /* Sticky Persona Selector on Mobile */
+    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container),
+    div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
+    div.st-key-sticky_persona_container {
+        top: 2.875rem !important; /* Mobile Streamlit header height */
+        padding-top: 5px !important;
+        padding-bottom: 6px !important;
+    }
+
+    /* Tighter gap & compact buttons */
+    div[role="radiogroup"] {
+        gap: 6px !important;
+        width: 100% !important;
+    }
+    div[role="radiogroup"] > label,
+    div[data-testid="stRadio"] [data-baseweb="radio"] {
+        padding: 4px 6px !important;
+        min-height: 44px !important;
+        border-radius: 6px !important;
+    }
+
+    /* Small radio indicator dot on mobile */
+    div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
+        margin-right: 4px !important;
+        transform: scale(0.82) !important;
+    }
+
+    /* Compact typography inside buttons */
+    div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+    }
+
+    /* Maps: Prevent taking 60-90% of screen height */
+    iframe[title="streamlit_folium.st_folium"],
+    div[data-testid="stCustomComponentV1"] iframe {
+        height: 270px !important;
+        max-height: 270px !important;
+        width: 100% !important;
+    }
+
+    /* Plotly graphs: Compact height */
+    .js-plotly-plot, .plot-container {
+        max-height: 220px !important;
+        width: 100% !important;
+    }
+
+    /* Compact Cards & Metrics */
+    .safety-card-safe, .safety-card-caution, .safety-card-danger {
+        padding: 14px 16px !important;
+    }
+    .safety-verdict {
+        font-size: 1.25rem !important;
+    }
+    .safety-subtitle {
+        font-size: 0.78rem !important;
+        margin-bottom: 12px !important;
+    }
+    .safety-metrics {
+        gap: 14px !important;
+    }
+    .safety-metric-val {
+        font-size: 0.95rem !important;
+    }
+    .safety-metric-lbl {
+        font-size: 0.62rem !important;
+    }
+    .alert-critical, .alert-warning, .alert-advisory, .alert-info {
+        padding: 10px 12px !important;
+    }
+    .zone-card, .route-card, .orca-card, .orca-card-dark {
+        padding: 12px 14px !important;
+    }
 }
 
 /* ── Buttons ──────────────────────────────────── */
@@ -950,7 +1128,7 @@ def render_fisherman_response(
     if fmap is not None:
         ctx.markdown("#### 🗺️ Maritime Zone Map")
         ctx.caption("Click zone markers for details · Green = high potential · Red = hazard zone")
-        st_folium(fmap, width=None, height=440, returned_objects=[], use_container_width=True)
+        st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
 
     # ── 4. Progressive Disclosure Expander: Zones, Routes & Avoidance ─────────
     has_pfz_data = bool(pfz_res and pfz_res.get("success") and pfz_res.get("zones"))
@@ -1278,7 +1456,7 @@ def render_authority_response(
     if fmap is not None:
         ctx.markdown("#### 🗺️ Coastal Surveillance & Hazard Geofence Chart")
         ctx.caption("Red polygon = active storm-surge exclusion zone · Blue track = monitored vessel corridor · Green pins = PFZ clusters")
-        st_folium(fmap, width=None, height=520, returned_objects=[], use_container_width=True)
+        st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
     else:
         ctx.info("📡 No spatial data available. Run a Weather Check or PFZ query to load the geofence chart.")
 
@@ -1467,7 +1645,7 @@ def render_researcher_response(
     if fmap is not None:
         ctx.markdown("#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
         ctx.caption("Use layer control to toggle SST Thermal Gradient and Chlorophyll-a Productivity")
-        st_folium(fmap, width=None, height=500, returned_objects=[], use_container_width=True)
+        st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
 
     # ── 3. Progressive Disclosure: Detailed Scientific Data ───────────────────
     with ctx.expander("🔬 View Detailed Scientific Data", expanded=False):
@@ -1731,9 +1909,13 @@ def render_history():
 # ─────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    if LOGO_EXISTS:
-        st.image(LOGO_PATH, use_container_width=True)
-    st.markdown("<p style='font-size:1.1rem;font-weight:800;color:#F8FAFC;margin:4px 0 0 0;'>ORCA OS</p><p style='font-size:0.75rem;color:#64B6D0;margin:0 0 12px 0;'>Marine Decision Intelligence</p>", unsafe_allow_html=True)
+    if LOGO_B64:
+        st.markdown(f"""
+        <div style="text-align:center;margin-bottom:6px;">
+            <img src="data:image/png;base64,{LOGO_B64}" class="orca-sidebar-logo" alt="ORCA OS">
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown("<p style='font-size:1.05rem;font-weight:800;color:#F8FAFC;margin:2px 0 0 0;text-align:center;'>ORCA OS</p><p style='font-size:0.72rem;color:#64B6D0;margin:0 0 10px 0;text-align:center;'>Marine Decision Intelligence</p>", unsafe_allow_html=True)
 
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
@@ -1892,17 +2074,26 @@ with st.sidebar:
 # Global Top Navigation — Horizontal Persona Selector
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Brand header
-if LOGO_EXISTS:
-    col_logo, col_title = st.columns([1, 7], vertical_alignment="center")
-    with col_logo:
-        st.image(LOGO_PATH, width=90)
-    with col_title:
-        st.title("ORCA")
-        st.caption("Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176")
+# Brand header (fully responsive flexbox — side-by-side on desktop & mobile)
+if LOGO_B64:
+    st.markdown(f"""
+    <div class="orca-hero-header">
+        <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
+        <div class="orca-hero-text">
+            <h1 class="orca-hero-title">ORCA</h1>
+            <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 else:
-    st.title("🌊 ORCA")
-    st.caption("Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176")
+    st.markdown("""
+    <div class="orca-hero-header">
+        <div class="orca-hero-text">
+            <h1 class="orca-hero-title">🌊 ORCA</h1>
+            <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
@@ -2007,12 +2198,12 @@ if active_view == "map":
                 st.rerun()
 
     if st.session_state.current_map is not None:
-        st_folium(st.session_state.current_map, width=None, height=560, returned_objects=[], use_container_width=True)
+        st_folium(st.session_state.current_map, width=None, height=360, returned_objects=[], use_container_width=True)
     else:
         def_loc = "Chennai" if persona == "coastal_authority" else "Kochi"
         res = orchestrator_run({"query": f"Analyze conditions near {def_loc}", "location": def_loc, "persona": persona})
         st.session_state.current_map = generate_map_for_result(res, persona=persona, show_sst_heatmap=True)
-        st_folium(st.session_state.current_map, width=None, height=560, returned_objects=[], use_container_width=True)
+        st_folium(st.session_state.current_map, width=None, height=360, returned_objects=[], use_container_width=True)
 
     if st.button("← Return to Dashboard", type="primary"):
         st.session_state.active_nav_view = "dashboard"
@@ -2190,9 +2381,10 @@ else:
         st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
         st_folium(
             st.session_state.current_map,
-            width=850,
-            height=500,
+            width=None,
+            height=360,
             returned_objects=[],
+            use_container_width=True,
         )
     elif persona == "coastal_authority" and not st.session_state.messages:
         st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
@@ -2205,9 +2397,10 @@ else:
         )
         st_folium(
             default_auth_map,
-            width=850,
-            height=480,
+            width=None,
+            height=360,
             returned_objects=[],
+            use_container_width=True,
         )
         with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
             col_a, col_b, col_c = st.columns(3)

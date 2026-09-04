@@ -268,7 +268,7 @@ def create_pfz_map(
         chl_group.add_to(fmap)
 
         # Layer Control for toggling between satellite layers
-        folium.LayerControl(position="topright", collapsed=False).add_to(fmap)
+        folium.LayerControl(position="topright", collapsed=True).add_to(fmap)
 
         # Floating color ramp legend
         fmap.get_root().html.add_child(folium.Element(get_eo_legend_html()))
@@ -525,7 +525,7 @@ def create_weather_map(
         ).add_to(chl_group)
         chl_group.add_to(fmap)
 
-        folium.LayerControl(position="topright", collapsed=False).add_to(fmap)
+        folium.LayerControl(position="topright", collapsed=True).add_to(fmap)
         fmap.get_root().html.add_child(folium.Element(get_eo_legend_html()))
 
     # Persona: Coastal Authority Geofence Polygon
