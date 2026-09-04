@@ -1719,6 +1719,9 @@ with st.sidebar:
     st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
 
     # ── Stakeholder Persona Context ──────────────────────────────────────────
+    if "stakeholder_persona_radio" in st.session_state and st.session_state.stakeholder_persona_radio:
+        st.session_state.current_persona = st.session_state.stakeholder_persona_radio
+
     _sidebar_persona_label = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
     if "Artisanal Fisherman" in _sidebar_persona_label:
         _sidebar_persona = "fisherman"
@@ -1728,18 +1731,17 @@ with st.sidebar:
         _sidebar_persona = "researcher"
 
     show_sst = False
-    if _sidebar_persona == "coastal_authority":
+    if "Coastal Authority" in st.session_state.current_persona:
         st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>Coastal Operations</p>", unsafe_allow_html=True)
         if st.button("📢 Broadcast Evacuation Alert", use_container_width=True, type="primary"):
-            st.success(
-                "✅ **Emergency Alert Transmitted!**\n\n"
-                "• **VHF Marine:** Channel 16 Broadcast Active\n"
-                "• **NAVTEX:** Urgent Warning (518 kHz)\n"
-                "• **SMS Gateway:** Dispatched to 142 registered craft\n"
-                "• **Geofence:** Maritime Exclusion Zone active"
-            )
+            st.toast("🚨 Emergency Evacuation Alert broadcasted via VHF Ch 16 and NAVTEX.", icon="📢")
+            st.session_state.messages.append({
+                "role": "system",
+                "content": "System: Evacuation broadcast transmitted to all vessels in Sector.",
+            })
+            st.rerun()
         st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
-    elif _sidebar_persona == "researcher":
+    elif "Researcher" in st.session_state.current_persona:
         st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>EO Telemetry Layers</p>", unsafe_allow_html=True)
         show_sst = st.checkbox(
             "🌡️ Overlay SST / Chl HeatMap",
@@ -1883,9 +1885,13 @@ persona_options = [
 ]
 
 def _on_persona_change():
-    """Clear chat and map when persona is switched via top nav."""
+    """Clear chat, map, synchronize persona state, and force a clean UI refresh."""
+    new_persona = st.session_state.get("stakeholder_persona_radio")
+    if new_persona:
+        st.session_state.current_persona = new_persona
     st.session_state.messages = []
     st.session_state.current_map = None
+    st.rerun()
 
 current_stored = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
 default_idx = 0
