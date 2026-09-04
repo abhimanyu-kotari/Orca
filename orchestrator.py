@@ -51,6 +51,7 @@ from agents.hazard_agent import run as hazard_agent_run
 from tools.navigation_tools import calculate_optimal_route
 from tools.map_tools import _generate_coastal_geofence_coords
 from tools.eo_tools import generate_eo_grid
+from tools.weather_tools import get_coordinates
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -570,14 +571,38 @@ def run(inputs: dict) -> dict:
                 "synthesis_source": "rule-based",
             }
 
-        weather_res = weather_agent_run({
-            "location": location,
+        # Resolve explicit coordinates for the target location
+        input_lat = inputs.get("lat")
+        input_lon = inputs.get("lon")
+
+        target_lat = None
+        target_lon = None
+        resolved_loc_name = location
+
+        if input_lat is not None and input_lon is not None:
+            target_lat = float(input_lat)
+            target_lon = float(input_lon)
+        else:
+            # Explicitly geocode the extracted location name
+            geo = get_coordinates(location)
+            if geo.get("success"):
+                target_lat = float(geo["lat"])
+                target_lon = float(geo["lon"])
+                resolved_loc_name = geo.get("location", location)
+
+        weather_inputs = {
+            "location": resolved_loc_name,
             "time_context": time_context,
-        })
+        }
+        if target_lat is not None and target_lon is not None:
+            weather_inputs["lat"] = target_lat
+            weather_inputs["lon"] = target_lon
+
+        weather_res = weather_agent_run(weather_inputs)
         agents_invoked.append("weather_agent")
 
-        lat = weather_res.get("lat")
-        lon = weather_res.get("lon")
+        lat = target_lat if target_lat is not None else weather_res.get("lat")
+        lon = target_lon if target_lon is not None else weather_res.get("lon")
 
         if lat is None or lon is None or not weather_res.get("success"):
             return {
@@ -595,7 +620,8 @@ def run(inputs: dict) -> dict:
                 "synthesis_source": "rule-based",
             }
 
-        eo_data = generate_eo_grid(center_lat=lat, center_lon=lon, radius_km=120.0)
+        # Explicitly pass the resolved geocoded coordinates into eo_tools.generate_eo_grid
+        eo_data = generate_eo_grid(center_lat=float(lat), center_lon=float(lon), radius_km=120.0)
         agents_invoked.append("eo_tools")
 
         synthesis = (

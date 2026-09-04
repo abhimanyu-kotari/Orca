@@ -418,6 +418,29 @@ class TestOrchestratorUnit(unittest.TestCase):
         self.assertIn("Which coastal sector", result["synthesis"])
         self.assertIsNone(result["eo_result"])
 
+    @patch("orchestrator.intent_agent_run")
+    @patch("orchestrator.weather_agent_run")
+    @patch("orchestrator.get_coordinates")
+    def test_ecosystem_query_explicit_geocoded_coords_passed_to_eo(self, mock_geo, mock_w, mock_i):
+        """Orchestrator must explicitly pass geocoded coordinates to eo_tools rather than default coords."""
+        mock_i.return_value = _intent("ecosystem_query", location="Kochi")
+        mock_geo.return_value = {"success": True, "location": "Kochi, Kerala, India", "lat": 9.9679, "lon": 76.2444}
+        mock_w.return_value = {
+            "success": True, "location": "Kochi, Kerala, India",
+            "lat": 9.9679, "lon": 76.2444, "verdict": "SAFE",
+            "summary": "Weather is safe.", "reasoning": "Calm seas.",
+            "key_metrics": {"max_wave_height_m": 0.8, "max_wind_speed_kmh": 12.0},
+        }
+
+        result = orchestrator_run({"query": "Analyze SST anomaly and chlorophyll concentrations off Kochi"})
+
+        self.assertTrue(result["success"])
+        self.assertIsNotNone(result["eo_result"])
+        center = result["eo_result"]["center_coords"]
+        # Verify coordinates are around Kochi (~9.9°N, ~76.2°E), NOT Berlin (52.5°N, 13.4°E)
+        self.assertAlmostEqual(center[0], 9.9679, places=2)
+        self.assertAlmostEqual(center[1], 76.2444, places=2)
+
 
 
 

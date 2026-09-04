@@ -41,6 +41,7 @@ OUTPUTS (success=False):
 """
 
 import json
+import re
 import httpx
 from langdetect import detect as langdetect_detect, LangDetectException
 
@@ -117,6 +118,89 @@ LANG_CODE_TO_NAME: dict[str, str] = {
     "ur": "Urdu",
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Coastal location dictionary & stop-words for accurate entity extraction
+# ─────────────────────────────────────────────────────────────────────────────
+KNOWN_COASTAL_LOCATIONS = [
+    "kochi", "cochin", "chennai", "madras", "mumbai", "bombay", "visakhapatnam", "vizag",
+    "rameswaram", "rameshwaram", "mangalore", "mangaluru", "goa", "panaji", "karwar",
+    "veraval", "porbandar", "paradip", "paradeep", "puri", "digha", "haldia",
+    "kannur", "kozhikode", "calicut", "alappuzha", "alleppey", "thiruvananthapuram", "trivandrum",
+    "tuticorin", "thoothukudi", "kanyakumari", "nagapattinam", "cuddalore", "pondicherry", "puducherry",
+    "machilipatnam", "kakinada", "bhavnagar", "surat", "ratnagiri", "malvan", "port blair",
+    "andaman", "nicobar", "lakshadweep", "kavaratti", "ennore", "chilika", "sundarbans",
+    "daman", "diu", "dwarka", "okha", "mandvi", "kandla", "mundra", "jafrabad", "alibag",
+    "dapoli", "devgad", "bhatkal", "udupi", "malpe", "kasaragod", "kollam", "quilon",
+    "vizhinjam", "varkala", "munambam", "ponnani", "beypore", "thalassery", "mahe",
+    "karaikal", "pamban", "mandapam", "colachel", "nellore", "ongole", "bapatla",
+    "narsapur", "bheemunipatnam", "gopalpur", "chandipur", "balasore", "bakkhali", "sagar island"
+]
+
+CANONICAL_LOCATION_NAMES = {
+    "cochin": "Kochi",
+    "madras": "Chennai",
+    "bombay": "Mumbai",
+    "vizag": "Visakhapatnam",
+    "rameshwaram": "Rameswaram",
+    "mangaluru": "Mangalore",
+    "panaji": "Goa",
+    "calicut": "Kozhikode",
+    "alleppey": "Alappuzha",
+    "trivandrum": "Thiruvananthapuram",
+    "thoothukudi": "Tuticorin",
+    "paradeep": "Paradip",
+    "quilon": "Kollam",
+}
+
+NON_LOCATION_WORDS = {
+    "what", "where", "when", "which", "how", "safe", "fishing", "sea", "near", "morning",
+    "today", "tomorrow", "ocean", "weather", "wave", "condition", "the", "is", "it",
+    "will", "tell", "show", "check", "about", "around", "does", "like", "conditions",
+    "surge", "storm", "risk", "alert", "level", "analyze", "analysis", "sst",
+    "chlorophyll", "anomaly", "concentration", "concentrations", "temperature",
+    "temperatures", "ecosystem", "productivity", "marine", "satellite", "telemetry",
+    "forecast", "data", "report", "status", "overview", "zone", "zones", "route",
+    "planning", "transit", "navigation", "water", "waters", "assess", "examine",
+    "evaluate", "monitor", "detect", "inspect", "explore", "view", "give", "find",
+    "help", "please", "could", "would", "should", "off", "into", "onto", "from",
+    "with", "have", "some", "good", "best", "very", "high", "much", "many",
+    "indian", "india", "bay", "coast", "coastal", "waters", "port", "harbour", "harbor"
+}
+
+
+def _extract_location_from_text(text: str) -> str | None:
+    """
+    Extract a valid coastal location from text using a 3-tier strategy:
+    1. Direct match against known Indian coastal ports and maritime regions.
+    2. Preposition phrase extraction ('off Kochi', 'near Chennai', etc.).
+    3. Capitalized token scan excluding all non-location stop words.
+    """
+    if not text:
+        return None
+
+    lower_text = text.lower()
+
+    # Tier 1: Exact match against known coastal ports/cities
+    for loc in KNOWN_COASTAL_LOCATIONS:
+        pattern = r'\b' + re.escape(loc) + r'\b'
+        if re.search(pattern, lower_text):
+            return CANONICAL_LOCATION_NAMES.get(loc, loc.title())
+
+    # Tier 2: Preposition match ('off <Location>', 'near <Location>', etc.)
+    prep_match = re.search(r'\b(?:off|near|around|in|at|from|to|for)\s+([A-Za-z\-]+)\b', text, re.IGNORECASE)
+    if prep_match:
+        cand = prep_match.group(1).strip("?,.")
+        if cand.lower() not in NON_LOCATION_WORDS and len(cand) >= 3:
+            return CANONICAL_LOCATION_NAMES.get(cand.lower(), cand.title())
+
+    # Tier 3: Capitalized word search excluding stop words
+    for word in text.split():
+        clean = word.strip("?,.!:;\"'")
+        if clean and clean[0].isupper() and len(clean) >= 3 and clean.lower() not in NON_LOCATION_WORDS:
+            return CANONICAL_LOCATION_NAMES.get(clean.lower(), clean.title())
+
+    return None
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Private helpers
@@ -161,9 +245,11 @@ Intent options:
 Rules:
 - "safety_check" and "weather_check" are similar; prefer "safety_check" when
   the user explicitly asks if it is "safe" or whether they "can go" somewhere.
+- "ecosystem_query": questions about chlorophyll, SST (sea surface temperature), thermal anomalies, upwelling, primary productivity, satellite oceanography, or marine ecological health.
 - Detect the language from the script and vocabulary, not from the place names.
-- For location: extract the most specific geographic entity mentioned.
-  If the user says "near Kochi" extract "Kochi". If none, use null.
+- For location: extract the actual coastal town, port, city, island, or region (e.g. "Kochi", "Chennai", "Visakhapatnam", "Rameswaram", "Mumbai", "Veraval", "Mangalore").
+  Pay special attention to phrasing like "off Kochi", "near Chennai", "off Veraval".
+  CRITICAL: NEVER extract action verbs, inquiry terms, or oceanographic parameters as the location. Specifically, NEVER return "Analyze", "Analysis", "Check", "Assess", "Examine", "SST", "Chlorophyll", "Anomaly", "Productivity", "Temperature", "Ocean", "Sea", "Satellite", "Weather", "Conditions" as a location. If no coastal place name is mentioned, set "location" to null.
 - Respond ONLY with valid JSON — no markdown fences, no extra text.
 
 User query: "{query}"
@@ -249,19 +335,8 @@ def _fallback_parse(query: str, error: str) -> dict:
     else:
         intent = "unknown"
 
-    # --- Location extraction — run on the TRANSLATED text ---
-    # After translation, place names appear in English (e.g. "Kochi", "Chennai")
-    # which the capitalised-word heuristic can detect reliably.
-    location = None
-    skip = {"what", "where", "when", "safe", "fishing", "sea", "near", "morning",
-            "today", "tomorrow", "ocean", "weather", "wave", "condition", "the",
-            "is", "it", "will", "tell", "show", "check", "about", "around",
-            "does", "like", "how", "conditions", "surge", "storm", "risk", "alert", "level"}
-    for word in translated.split():
-        clean = word.strip("?,.")
-        if clean and clean[0].isupper() and len(clean) > 3 and clean.lower() not in skip:
-            location = clean
-            break
+    # --- Location extraction — run on the TRANSLATED text (and original query) ---
+    location = _extract_location_from_text(translated) or _extract_location_from_text(query)
 
     # --- Time context — also from translated text ---
     if "tomorrow" in q:
@@ -363,9 +438,20 @@ def run(inputs: dict) -> dict:
 
     # Ensure entities sub-dict is well-formed
     raw_entities   = parsed.get("entities", {})
-    location       = raw_entities.get("location")       or None
+    raw_location   = raw_entities.get("location")
     raw_time       = raw_entities.get("time_context", "today")
     time_context   = raw_time if raw_time in ("today", "tomorrow", "3 days") else "today"
+
+    location = None
+    if raw_location and isinstance(raw_location, str):
+        clean_cand = re.sub(r'^(?:off|near|around|in|at|from|to|for)\s+', '', raw_location.strip(), flags=re.IGNORECASE)
+        if clean_cand.lower() not in NON_LOCATION_WORDS and clean_cand.lower() not in ("none", "null", "n/a", "unknown"):
+            location = CANONICAL_LOCATION_NAMES.get(clean_cand.lower(), clean_cand.title())
+
+    # Fallback/refinement: If Gemini failed to extract a valid location or extracted an invalid word,
+    # use our rule-based coastal extractor to recover it directly from the query.
+    if not location:
+        location = _extract_location_from_text(query)
 
     # Ensure language fields are present
     language       = parsed.get("language", "English")
