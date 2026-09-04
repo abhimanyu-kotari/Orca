@@ -36,8 +36,11 @@ def get_coordinates(location_name: str) -> dict:
     Nominatim is OpenStreetMap's free geocoder — no API key required,
     but it enforces a 1 request/second rate limit.
 
+    Country is strictly restricted to India (country_codes='in') and queries
+    are prioritized for coastal Indian regions.
+
     Args:
-        location_name (str): e.g. "Rameswaram", "Mumbai port", "Visakhapatnam"
+        location_name (str): e.g. "Rameswaram", "Mumbai port", "Kundapura"
 
     Returns:
         On success:
@@ -50,19 +53,42 @@ def get_coordinates(location_name: str) -> dict:
         On failure:
             {
                 "success": False,
-                "error":   "Could not find location: 'XYZ'"
+                "error":   "Location not found in Indian coastal regions. Please check the spelling (e.g., Kundapura)."
             }
     """
+    clean_loc = (location_name or "").strip()
+    if not clean_loc:
+        return {
+            "success": False,
+            "error": "Location not found in Indian coastal regions. Please check the spelling (e.g., Kundapura).",
+        }
+
     geocoder = Nominatim(user_agent="orca_marine_platform_v1")
 
-    try:
-        result = geocoder.geocode(location_name, timeout=10)
+    # 1. Query Appending: automatically append ", coastal India" to prioritize Indian coastal regions
+    if not clean_loc.lower().endswith("coastal india"):
+        appended_query = f"{clean_loc}, coastal India"
+    else:
+        appended_query = clean_loc
 
+    try:
+        # 1. Country Restriction: strictly enforce country_codes='in'
+        result = geocoder.geocode(appended_query, country_codes="in", timeout=10)
+
+        # 2. If primary coastal-appended query did not return a match, fallback to query + ', India' or base query
+        if result is None and appended_query != clean_loc:
+            # Fallback A: try with ", India"
+            if not clean_loc.lower().endswith("india"):
+                result = geocoder.geocode(f"{clean_loc}, India", country_codes="in", timeout=10)
+            # Fallback B: try base query directly locked to India
+            if result is None:
+                result = geocoder.geocode(clean_loc, country_codes="in", timeout=10)
+
+        # 3. Fallback Logic: If geocoder fails to find a location within India
         if result is None:
             return {
                 "success": False,
-                "error": f"Could not find location: '{location_name}'. "
-                         "Try a more specific name (e.g. 'Rameswaram, Tamil Nadu').",
+                "error": "Location not found in Indian coastal regions. Please check the spelling (e.g., Kundapura).",
             }
 
         return {
@@ -76,6 +102,11 @@ def get_coordinates(location_name: str) -> dict:
         return {"success": False, "error": "Geocoder timed out. Check your internet connection."}
     except GeocoderUnavailable:
         return {"success": False, "error": "Nominatim geocoder is currently unavailable."}
+    except Exception:
+        return {
+            "success": False,
+            "error": "Location not found in Indian coastal regions. Please check the spelling (e.g., Kundapura).",
+        }
 
 
 # ─────────────────────────────────────────────────────────────────────────────

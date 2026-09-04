@@ -132,6 +132,7 @@ KNOWN_COASTAL_LOCATIONS = [
     "andaman", "nicobar", "lakshadweep", "kavaratti", "ennore", "chilika", "sundarbans",
     "daman", "diu", "dwarka", "okha", "mandvi", "kandla", "mundra", "jafrabad", "alibag",
     "dapoli", "devgad", "bhatkal", "udupi", "malpe", "kasaragod", "kollam", "quilon",
+    "kundapura", "kundapur", "gangolli", "honnavar", "kumta",
     "vizhinjam", "varkala", "munambam", "ponnani", "beypore", "thalassery", "mahe",
     "karaikal", "pamban", "mandapam", "colachel", "nellore", "ongole", "bapatla",
     "narsapur", "bheemunipatnam", "gopalpur", "chandipur", "balasore", "bakkhali", "sagar island"
@@ -151,6 +152,11 @@ CANONICAL_LOCATION_NAMES = {
     "thoothukudi": "Tuticorin",
     "paradeep": "Paradip",
     "quilon": "Kollam",
+    "kundapur": "Kundapura",
+    "kundapura": "Kundapura",
+    "gangolli": "Gangolli",
+    "honnavar": "Honnavar",
+    "kumta": "Kumta",
 }
 
 NON_LOCATION_WORDS = {

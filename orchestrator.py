@@ -264,6 +264,29 @@ def _execute_orchestration(inputs: dict) -> dict:
 
         agents_invoked.extend(["weather_agent", "pfz_agent"])
 
+        # Check if location resolution failed for both agents (e.g. geocoding failed or not in Indian coastal regions)
+        if not weather_res.get("success") and not pfz_res.get("success"):
+            err_msg = (
+                pfz_res.get("error")
+                or weather_res.get("error")
+                or f"Location not found in Indian coastal regions. Please check the spelling (e.g., Kundapura)."
+            )
+            return {
+                "success": False,
+                "intent": intent,
+                "intent_result": intent_result,
+                "agents_invoked": agents_invoked,
+                "weather_result": weather_res,
+                "pfz_result": pfz_res,
+                "navigation_result": None,
+                "eo_result": None,
+                "navigation_suspended": False,
+                "pfz_suppressed": False,
+                "pfz_suppression_reason": None,
+                "synthesis": f"📍 {err_msg}",
+                "synthesis_source": "rule-based",
+            }
+
         verdict = weather_res.get("verdict", "SAFE") if weather_res.get("success") else "SAFE"
 
         # ── Cross-Reference & Safety Override ────────────────────────────────
@@ -516,6 +539,11 @@ def _execute_orchestration(inputs: dict) -> dict:
         t_lat, t_lon, t_name = _extract_target_coords(pfz_res) if pfz_res.get("success") else (None, None, "Target PFZ")
 
         if u_lat is None or u_lon is None or t_lat is None or t_lon is None:
+            err_msg = (
+                (pfz_res.get("error") if pfz_res else None)
+                or (weather_res.get("error") if weather_res else None)
+                or f"Could not locate destination fishing coordinates near {location}."
+            )
             return {
                 "success": False,
                 "intent": intent,
@@ -528,7 +556,7 @@ def _execute_orchestration(inputs: dict) -> dict:
                 "navigation_suspended": is_danger,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
-                "synthesis": f"Could not locate destination fishing coordinates near {location}.",
+                "synthesis": f"📍 {err_msg}",
                 "synthesis_source": "rule-based",
             }
 
@@ -648,6 +676,7 @@ def _execute_orchestration(inputs: dict) -> dict:
         lon = target_lon if target_lon is not None else weather_res.get("lon")
 
         if lat is None or lon is None or not weather_res.get("success"):
+            err_msg = (weather_res.get("error") if weather_res else None) or f"Could not retrieve oceanographic coordinates for {location}."
             return {
                 "success": False,
                 "intent": intent,
@@ -659,7 +688,7 @@ def _execute_orchestration(inputs: dict) -> dict:
                 "eo_result": None,
                 "pfz_suppressed": False,
                 "pfz_suppression_reason": None,
-                "synthesis": f"Could not retrieve oceanographic coordinates for {location}.",
+                "synthesis": f"📍 {err_msg}",
                 "synthesis_source": "rule-based",
             }
 
