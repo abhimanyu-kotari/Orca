@@ -132,12 +132,20 @@ div[data-testid="stRadio"],
 }
 
 /* Clean, simple horizontal persona selector buttons */
+div[role="radiogroup"] {
+    justify-content: center !important;
+}
+.stRadio > label,
+div[data-testid="stRadio"] > label {
+    display: none !important;
+}
 div[data-testid="stRadio"] > div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
     gap: 12px !important;
     width: 100% !important;
     align-items: center !important;
+    justify-content: center !important;
 }
 div[data-testid="stRadio"] [data-baseweb="radio"],
 div[data-testid="stRadio"] label {
@@ -1871,6 +1879,15 @@ with sticky_persona_container:
     }
     div.st-key-sticky_persona_container div[data-testid="stRadio"] {
         border-bottom: none !important;
+    }
+    /* Center the radio buttons */
+    div[role="radiogroup"] {
+        justify-content: center !important;
+    }
+    /* Hide label fallback */
+    .stRadio > label,
+    div[data-testid="stRadio"] > label {
+        display: none !important;
     }
     /* Fallback directly on .stRadio if container wrapper is not matched */
     div[data-testid="stRadio"]:not(div.st-key-sticky_persona_container div[data-testid="stRadio"]),
