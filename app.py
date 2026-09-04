@@ -85,6 +85,14 @@ html, body, [data-testid="stAppViewContainer"] {
     border-color: #0EA5A8 !important;
     color: #F8FAFC !important;
 }
+[data-testid="stSidebar"] .stButton > button[kind="primary"],
+[data-testid="stSidebar"] .stButton > button[data-testid="baseButton-primary"] {
+    background: linear-gradient(135deg, #0EA5A8 0%, #0891B2 100%) !important;
+    border: 1.5px solid #22D3EE !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 168, 0.4) !important;
+}
 
 /* ── Typography ───────────────────────────────── */
 h1, h2, h3 {
@@ -98,28 +106,81 @@ h2 { font-size: 1.3rem !important; }
 h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
 
-/* ── Top nav persona pills ────────────────────── */
-div[data-testid="stHorizontalBlock"] .stRadio > div { gap: 8px !important; }
-div[data-testid="stHorizontalBlock"] .stRadio > div > label {
-    background-color: #EFF6FF !important;
-    border: 1.5px solid #BFDBFE !important;
-    border-radius: 24px !important;
-    padding: 6px 20px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    color: #1E40AF !important;
+/* ── Top nav persona selector — Prominent Enterprise Role Cards ── */
+div[data-testid="stRadio"] {
+    width: 100% !important;
+    margin: 8px 0 16px 0 !important;
+}
+div[data-testid="stRadio"] > div[role="radiogroup"] {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 16px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+div[data-testid="stRadio"] [data-baseweb="radio"],
+div[data-testid="stRadio"] label {
+    flex: 1 1 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #FFFFFF !important;
+    border: 2px solid #CBD5E1 !important;
+    border-radius: 14px !important;
+    padding: 16px 20px !important;
+    min-height: 64px !important;
     cursor: pointer !important;
-    transition: all 0.15s ease !important;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 6px rgba(11, 38, 56, 0.06) !important;
+    margin: 0 !important;
 }
-div[data-testid="stHorizontalBlock"] .stRadio > div > label[data-checked="true"],
-div[data-testid="stHorizontalBlock"] .stRadio > div > label:has(input:checked) {
-    background-color: #0B2638 !important;
-    border-color: #0B2638 !important;
+/* Hide the native round radio button circle */
+div[data-testid="stRadio"] input[type="radio"],
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stMarkdownContainer"]),
+div[data-testid="stRadio"] label > div:first-child:not([data-testid="stMarkdownContainer"]) {
+    display: none !important;
+}
+/* Typography on inactive card */
+div[data-testid="stRadio"] [data-baseweb="radio"] p,
+div[data-testid="stRadio"] label p,
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+    font-size: 1.08rem !important;
+    font-weight: 700 !important;
+    color: #0B2638 !important;
+    letter-spacing: -0.01em !important;
+    margin: 0 !important;
+    text-align: center !important;
+    line-height: 1.35 !important;
+}
+/* Hover state */
+div[data-testid="stRadio"] [data-baseweb="radio"]:hover,
+div[data-testid="stRadio"] label:hover {
+    border-color: #0EA5A8 !important;
+    background: #F0FDFA !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(14, 165, 168, 0.2) !important;
+}
+div[data-testid="stRadio"] [data-baseweb="radio"]:hover p,
+div[data-testid="stRadio"] label:hover p {
+    color: #0B2638 !important;
+}
+/* Selected / Active state */
+div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked),
+div[data-testid="stRadio"] label:has(input:checked),
+div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"],
+div[data-testid="stRadio"] label[aria-checked="true"] {
+    background: linear-gradient(135deg, #0B2638 0%, #163C55 100%) !important;
+    border-color: #0EA5A8 !important;
+    box-shadow: 0 8px 24px rgba(11, 38, 56, 0.35), 0 0 0 2px #0EA5A8 !important;
+    transform: translateY(-2px) !important;
+}
+div[data-testid="stRadio"] [data-baseweb="radio"]:has(input:checked) p,
+div[data-testid="stRadio"] label:has(input:checked) p,
+div[data-testid="stRadio"] [data-baseweb="radio"][aria-checked="true"] p,
+div[data-testid="stRadio"] label[aria-checked="true"] p {
     color: #FFFFFF !important;
-}
-div[data-testid="stHorizontalBlock"] .stRadio > div > label:hover {
-    background-color: #DBEAFE !important;
-    border-color: #0B2638 !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
 }
 
 /* ── Buttons ──────────────────────────────────── */
@@ -366,6 +427,9 @@ if "show_explainer" not in st.session_state:
     st.session_state.show_explainer = False
 if "active_layers" not in st.session_state:
     st.session_state.active_layers = ["SST", "Chlorophyll", "PFZ"]
+if "active_nav_view" not in st.session_state:
+    st.session_state.active_nav_view = "dashboard"
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Display constants & stylings
@@ -1627,17 +1691,29 @@ with st.sidebar:
 
     # ── Primary Navigation ───────────────────────────────────────────────────
     st.markdown("<p style='font-size:0.68rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;'>Platform Navigation</p>", unsafe_allow_html=True)
+    active_nav = st.session_state.get("active_nav_view", "dashboard")
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
-        st.button("📊 Dashboard", use_container_width=True)
-        st.button("💬 Ask ORCA", use_container_width=True)
-        st.button("📑 Reports", use_container_width=True)
+        if st.button("📊 Dashboard", use_container_width=True, type="primary" if active_nav == "dashboard" else "secondary"):
+            st.session_state.active_nav_view = "dashboard"
+            st.rerun()
+        if st.button("💬 Ask ORCA", use_container_width=True, type="primary" if active_nav == "ask_orca" else "secondary"):
+            st.session_state.active_nav_view = "ask_orca"
+            st.rerun()
+        if st.button("📑 Reports", use_container_width=True, type="primary" if active_nav == "reports" else "secondary"):
+            st.session_state.active_nav_view = "reports"
+            st.rerun()
     with col_nav2:
-        st.button("🗺️ Marine Map", use_container_width=True)
-        st.button("🚨 Alerts", use_container_width=True)
+        if st.button("🗺️ Marine Map", use_container_width=True, type="primary" if active_nav == "map" else "secondary"):
+            st.session_state.active_nav_view = "map"
+            st.rerun()
+        if st.button("🚨 Alerts", use_container_width=True, type="primary" if active_nav == "alerts" else "secondary"):
+            st.session_state.active_nav_view = "alerts"
+            st.rerun()
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state.messages = []
             st.session_state.current_map = None
+            st.session_state.active_nav_view = "dashboard"
             st.rerun()
 
     st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
@@ -1821,6 +1897,24 @@ for idx, opt in enumerate(persona_options):
         default_idx = idx
         break
 
+st.markdown("""
+<div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:14px; padding:12px 18px 8px 18px; margin: 4px 0 10px 0; box-shadow:0 1px 4px rgba(11,38,56,0.05);">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <span style="font-size:0.78rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#0B2638;">
+        ⚓ OPERATIONAL STAKEHOLDER PROFILE
+      </span>
+      <p style="font-size:0.78rem; color:#64748B; margin:2px 0 0 0;">
+        Select your active role to adapt AI synthesis, risk thresholds, telemetry indices, and geospatial layers
+      </p>
+    </div>
+    <span style="font-size:0.72rem; font-weight:700; color:#0EA5A8; background:#F0FDFA; padding:4px 12px; border-radius:20px; border:1px solid #CCFBF1;">
+      ⚡ Adaptive AI Operating System
+    </span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 persona_label = st.radio(
     "**Select Role:**",
     persona_options,
@@ -1847,8 +1941,6 @@ else:
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
-
-
 # Dynamic Persona Header Banner
 if persona == "coastal_authority":
     st.warning("""
@@ -1868,47 +1960,244 @@ elif persona == "researcher":
     col3.metric("Thermocline Depth", "42 m", "-3 m")
     col4.metric("Mean Salinity", "34.9 PSU", "Normal")
 
-st.divider()
+active_view = st.session_state.get("active_nav_view", "dashboard")
 
-# 1. Render message history
-render_history()
+# ── Navigation Views Dispatcher ───────────────────────────────────────────────
+if active_view == "map":
+    st.markdown("### 🗺️ Interactive Marine GIS & Earth Observation Map")
+    st.caption("Real-time coastal surveillance, satellite SST/Chlorophyll thermal gradient layers, and active navigation tracks.")
+    
+    col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns(6)
+    sectors = [
+        ("📍 Kochi", "Kochi"),
+        ("📍 Malpe", "Malpe"),
+        ("📍 Mangalore", "Mangalore"),
+        ("📍 Mumbai", "Mumbai"),
+        ("📍 Chennai", "Chennai"),
+        ("📍 Veraval", "Veraval"),
+    ]
+    for c, (btn_label, port_name) in zip([col_s1, col_s2, col_s3, col_s4, col_s5, col_s6], sectors):
+        if c.button(btn_label, use_container_width=True):
+            with st.spinner(f"Rendering GIS spatial layers for {port_name}..."):
+                res = orchestrator_run({"query": f"Analyze conditions near {port_name}", "location": port_name, "persona": persona})
+                st.session_state.current_map = generate_map_for_result(res, persona=persona, show_sst_heatmap=True)
+                st.rerun()
 
-# 2. Render latest interactive Folium map if available, or default authority map on initial load
-if st.session_state.current_map is not None:
-    st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
-    st_folium(
-        st.session_state.current_map,
-        width=850,
-        height=500,
-        returned_objects=[],
-    )
-elif persona == "coastal_authority" and not st.session_state.messages:
-    st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
-    default_auth_map = create_weather_map(
-        user_lat=13.0827,
-        user_lon=80.2707,
-        user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
-        safety_verdict="CAUTION",
-        persona="coastal_authority",
-    )
-    st_folium(
-        default_auth_map,
-        width=850,
-        height=480,
-        returned_objects=[],
-    )
-    with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
-        col_a, col_b, col_c = st.columns(3)
-        col_a.metric("Active Vessels in Geofence", "142 Small Craft", "Evacuation Ready")
-        col_b.metric("Significant Wave Height", "2.10 m", "Elevated Swell")
-        col_c.metric("Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
-        st.caption("Active surveillance baseline for Coastal Warning Zone 4. Ask a query below or use direct controls to query any port.")
+    if st.session_state.current_map is not None:
+        st_folium(st.session_state.current_map, width=None, height=560, returned_objects=[], use_container_width=True)
+    else:
+        def_loc = "Chennai" if persona == "coastal_authority" else "Kochi"
+        res = orchestrator_run({"query": f"Analyze conditions near {def_loc}", "location": def_loc, "persona": persona})
+        st.session_state.current_map = generate_map_for_result(res, persona=persona, show_sst_heatmap=True)
+        st_folium(st.session_state.current_map, width=None, height=560, returned_objects=[], use_container_width=True)
 
-# 3. Welcome banner when chat is fresh (tailored to active Persona)
-if not st.session_state.messages:
-    with st.chat_message("assistant"):
-        if persona == "coastal_authority":
-            welcome_text = f"""
+    if st.button("← Return to Dashboard", type="primary"):
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
+
+elif active_view == "alerts":
+    st.markdown("### 🚨 Coastal Disaster & Hazard Warning Command Center")
+    st.caption("Active monitoring across IMD weather alerts, convective lightning hazards, and IMBL sovereign geofences.")
+    
+    st.markdown("""
+<div class="alert-critical">
+  <span class="alert-severity-pill pill-critical">🔴 CRITICAL</span>
+  <p class="alert-title">🛑 International Maritime Boundary Line (IMBL) Standoff</p>
+  <p class="alert-meta">Palk Strait / Sir Creek Corridors · Active 24/7 Geofence</p>
+  <p style="font-size:0.85rem;color:#374151;margin:0;">Vessels approaching within 5 NM of the sovereign maritime boundary face apprehension risk. Automated course deviation and VHF radio standoff protocol enforced.</p>
+</div>
+<div class="alert-critical">
+  <span class="alert-severity-pill pill-critical">🔴 CRITICAL</span>
+  <p class="alert-title">⚡ Convective Storm & Acute Lightning Hazard</p>
+  <p class="alert-meta">CAPE > 1500 J/kg Threshold Active · Southwest Monsoon Front</p>
+  <p style="font-size:0.85rem;color:#374151;margin:0;">High convective available potential energy detected. Open water craft face severe risk of direct lightning strikes. Small-craft departures prohibited in active storm cells.</p>
+</div>
+<div class="alert-warning">
+  <span class="alert-severity-pill pill-warning">🟠 WARNING</span>
+  <p class="alert-title">🌊 Gale Wind & High Swell Watch (Level-1)</p>
+  <p class="alert-meta">Significant Wave Height 2.2m – 2.8m · Beaufort Force 6</p>
+  <p style="font-size:0.85rem;color:#374151;margin:0;">Steep, short-period waves detected over continental shelf edge. Artisanal craft advised to operate with mandatory life-jacket compliance and active AIS transponders.</p>
+</div>
+<div class="alert-info">
+  <span class="alert-severity-pill pill-info">ℹ️ ADVISORY</span>
+  <p class="alert-title">🐟 Commercial Fleet Density Advisory</p>
+  <p class="alert-meta">Gangolli / Kundapura & Kochi Inshore Banks</p>
+  <p style="font-size:0.85rem;color:#374151;margin:0;">INCOIS thermal front convergence indicates high pelagic biomass. Expect dense trawler concentration in designated PFZ corridors.</p>
+</div>
+""", unsafe_allow_html=True)
+
+    c_al1, c_al2 = st.columns([1, 1])
+    with c_al1:
+        if st.button("🔍 Run Live Sector Safety Scan", type="primary", use_container_width=True):
+            with st.spinner("Executing live safety & hazard scan..."):
+                scan_res = orchestrator_run({"query": "Check current sea state and hazard warnings near Kochi", "persona": persona})
+                st.session_state.messages.append({"role": "user", "content": "🚨 Manual Live Safety & Hazard Scan"})
+                if persona == "fisherman":
+                    st.session_state.messages.append({"role": "assistant", "content": scan_res.get("synthesis",""), "orch_result": scan_res, "is_fisherman_render": True})
+                elif persona == "coastal_authority":
+                    st.session_state.messages.append({"role": "assistant", "content": scan_res.get("synthesis",""), "orch_result": scan_res, "is_authority_render": True})
+                else:
+                    st.session_state.messages.append({"role": "assistant", "content": scan_res.get("synthesis",""), "orch_result": scan_res, "is_researcher_render": True})
+                st.session_state.active_nav_view = "dashboard"
+                st.rerun()
+    with c_al2:
+        if st.button("← Return to Dashboard", use_container_width=True):
+            st.session_state.active_nav_view = "dashboard"
+            st.rerun()
+
+elif active_view == "reports":
+    import datetime
+    st.markdown("### 📑 Official Marine Intelligence & Voyage Clearance Report")
+    st.caption("ORCA Decision Support System · ISRO SIH Problem Statement 26176")
+    now_rep = datetime.datetime.now()
+    rep_content = f"""================================================================================
+ORCA MARINE DECISION INTELLIGENCE ADVISORY REPORT
+Reference ID    : ORCA-VOYAGE-{now_rep.strftime('%Y%m%d-%H%M%S')}
+Generated Date  : {now_rep.strftime('%d %B %Y, %H:%M:%S IST')}
+Operating Role  : {persona_label}
+Target Sector   : Coastal Waters of Western / Peninsular India
+================================================================================
+
+1. EXECUTIVE VOYAGE CLEARANCE
+--------------------------------------------------------------------------------
+Operational Verdict : LEVEL-0 BENIGN (Safe For Departure)
+Composite Risk Score: 12 / 100 (Low Marine Risk)
+Vessel Suitability  : Artisanal Craft, Mechanized Trawlers, Oceanographic Vessels
+Advisory Directive  : Sea conditions cleared for standard marine operations.
+
+2. METEOROLOGICAL TELEMETRY (IMD / OPEN-METEO COMPOSITE)
+--------------------------------------------------------------------------------
+Peak Wind Speed     : 13.8 km/h (Beaufort 3 - Gentle Breeze)
+Significant Wave    : 0.92 m (Safe Small-Craft Threshold < 2.50 m)
+Swell Height        : 0.78 m (Wave Period: 9.4s)
+Convective Energy   : 380 J/kg (CAPE Limit: 1500 J/kg, Lightning Risk: Low)
+Precipitation Rate  : 0.0 mm/hr (Clear Maritime Horizon)
+
+3. SATELLITE EARTH OBSERVATION INDICES (ISRO OCEANSAT-3 / SENTINEL-3)
+--------------------------------------------------------------------------------
+Sea Surface Temp    : 28.40 °C (Climatology Delta: +0.30°C)
+Chlorophyll-a Conc  : 2.10 mg/m³ (Coastal Upwelling Thermal Front)
+Thermocline Depth   : ~38 m (Mixed Pycnocline Layer)
+Marine Productivity : HIGH - Pelagic Shoal Aggregation (Mackerel / Sardine / Tuna)
+
+4. MARITIME GEOFENCING & NAVIGATION SUMMARY
+--------------------------------------------------------------------------------
+IMBL Standoff       : Fully Compliant (> 28 NM clearance from international boundary)
+Exclusion Zones     : No active naval firing zones or storm-surge exclusions.
+Fuel Optimization   : Direct displacement route cleared (est. 18-24% fuel saved).
+
+================================================================================
+Validated by : ORCA Autonomous Multi-Agent Orchestration Framework
+Authorized by: Marine Safety Division (Demonstration Engine)
+================================================================================
+"""
+    st.code(rep_content, language="text")
+    c_dl1, c_dl2 = st.columns([1, 1])
+    with c_dl1:
+        st.download_button(
+            "📥 Download Official Advisory Report (.txt)",
+            data=rep_content,
+            file_name=f"ORCA_Marine_Report_{now_rep.strftime('%Y%m%d_%H%M%S')}.txt",
+            mime="text/plain",
+            use_container_width=True,
+            type="primary",
+        )
+    with c_dl2:
+        if st.button("← Return to Dashboard", use_container_width=True):
+            st.session_state.active_nav_view = "dashboard"
+            st.rerun()
+
+elif active_view == "ask_orca":
+    st.markdown("### 💬 Ask ORCA — Multi-Agent Marine AI Assistant")
+    st.caption("Direct natural language interaction in English, हिन्दी, தமிழ், മലയാളം, and తెలుగు.")
+    
+    st.markdown("#### ⚡ Suggested Queries for Active Role:")
+    if persona == "fisherman":
+        p_queries = [
+            "Where can I fish near Kochi today?",
+            "Is it safe to go fishing near Malpe tomorrow morning?",
+            "Check IMBL boundary clearance near Rameswaram",
+            "What is the sea wave height near Karwar today?",
+        ]
+    elif persona == "coastal_authority":
+        p_queries = [
+            "Check storm surge and cyclone risk near Chennai Sector 4",
+            "Show active vessel exclusion zones near Mumbai",
+            "Is evacuation recommended off Paradip today?",
+            "Assess lightning hazard and CAPE index for Kochi port",
+        ]
+    else:
+        p_queries = [
+            "Analyze SST anomaly and chlorophyll concentrations off Kochi",
+            "What is the thermocline depth and upwelling status near Mangalore?",
+            "Compare primary productivity indices off Veraval",
+            "Check coastal salinity and wind stress curl near Tuticorin",
+        ]
+    
+    c_q1, c_q2 = st.columns(2)
+    for i, q in enumerate(p_queries):
+        col_q = c_q1 if i % 2 == 0 else c_q2
+        if col_q.button(f"👉 {q}", use_container_width=True):
+            with st.spinner("Processing through ORCA multi-agent engine..."):
+                q_res = orchestrator_run({"query": q, "persona": persona})
+                st.session_state.messages.append({"role": "user", "content": q})
+                if persona == "fisherman":
+                    st.session_state.messages.append({"role": "assistant", "content": q_res.get("synthesis",""), "orch_result": q_res, "is_fisherman_render": True})
+                elif persona == "coastal_authority":
+                    st.session_state.messages.append({"role": "assistant", "content": q_res.get("synthesis",""), "orch_result": q_res, "is_authority_render": True})
+                else:
+                    st.session_state.messages.append({"role": "assistant", "content": q_res.get("synthesis",""), "orch_result": q_res, "is_researcher_render": True})
+                st.session_state.current_map = generate_map_for_result(q_res, persona=persona, show_sst_heatmap=True)
+                st.session_state.active_nav_view = "dashboard"
+                st.rerun()
+
+    if st.button("← Return to Dashboard", use_container_width=True):
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
+
+else:
+    # ── Default "dashboard" view ──
+    st.divider()
+
+    # 1. Render message history
+    render_history()
+
+    # 2. Render latest interactive Folium map if available, or default authority map on initial load
+    if st.session_state.current_map is not None:
+        st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
+        st_folium(
+            st.session_state.current_map,
+            width=850,
+            height=500,
+            returned_objects=[],
+        )
+    elif persona == "coastal_authority" and not st.session_state.messages:
+        st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
+        default_auth_map = create_weather_map(
+            user_lat=13.0827,
+            user_lon=80.2707,
+            user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
+            safety_verdict="CAUTION",
+            persona="coastal_authority",
+        )
+        st_folium(
+            default_auth_map,
+            width=850,
+            height=480,
+            returned_objects=[],
+        )
+        with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
+            col_a, col_b, col_c = st.columns(3)
+            col_a.metric("Active Vessels in Geofence", "142 Small Craft", "Evacuation Ready")
+            col_b.metric("Significant Wave Height", "2.10 m", "Elevated Swell")
+            col_c.metric("Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
+            st.caption("Active surveillance baseline for Coastal Warning Zone 4. Ask a query below or use direct controls to query any port.")
+
+    # 3. Welcome banner when chat is fresh (tailored to active Persona)
+    if not st.session_state.messages:
+        with st.chat_message("assistant"):
+            if persona == "coastal_authority":
+                welcome_text = f"""
 👋 **Welcome to ORCA Operations!** Operating in **{persona_label}** mode.
 
 **Try asking:**
@@ -1920,8 +2209,8 @@ if not st.session_state.messages:
 
 Use the sidebar to broadcast emergency evacuation notices via VHF Ch 16, NAVTEX, and coastal SMS! 📢
 """
-        elif persona == "researcher":
-            welcome_text = f"""
+            elif persona == "researcher":
+                welcome_text = f"""
 👋 **Welcome to ORCA Research!** Operating in **{persona_label}** mode.
 
 **Try asking:**
@@ -1933,8 +2222,8 @@ Use the sidebar to broadcast emergency evacuation notices via VHF Ch 16, NAVTEX,
 
 Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sentinel-3 telemetry! 🛰️
 """
-        else:
-            welcome_text = f"""
+            else:
+                welcome_text = f"""
 👋 **Welcome to ORCA!** Operating in **{persona_label}** mode.
 
 **Try asking:**
@@ -1946,10 +2235,12 @@ Toggle the thermal gradient HeatMap in the sidebar to visualize Oceansat-3 & Sen
 
 Switch between **Fisherman**, **Coastal Authority**, and **Researcher** in the sidebar to inspect role-specific navigation, hazard geofences, and satellite telemetry! 🧭
 """
-        st.markdown(welcome_text)
+            st.markdown(welcome_text)
+
 
 # ── Chat input ────────────────────────────────────────────────────────────────
 if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safety..."):
+    st.session_state.active_nav_view = "dashboard"
 
     # A. Display user query
     st.session_state.messages.append({"role": "user", "content": user_query})
