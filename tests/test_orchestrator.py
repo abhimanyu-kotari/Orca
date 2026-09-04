@@ -441,6 +441,32 @@ class TestOrchestratorUnit(unittest.TestCase):
         self.assertAlmostEqual(center[0], 9.9679, places=2)
         self.assertAlmostEqual(center[1], 76.2444, places=2)
 
+    # ------------------------------------------------------------------ #
+    # 8. Natural language fishing phrasing & typo tolerance
+    # ------------------------------------------------------------------ #
+    def test_intent_agent_natural_phrasing_and_typos(self):
+        """Verify intent_agent correctly classifies natural language fishing queries and handles typos."""
+        from agents.intent_agent import _classify_intent_from_text, _extract_location_from_text
+
+        # Test location extraction with common preposition typos and city misspellings
+        self.assertEqual(_extract_location_from_text("find fish neare kochi"), "Kochi")
+        self.assertEqual(_extract_location_from_text("where to fish ner chenai"), "Chennai")
+        self.assertEqual(_extract_location_from_text("catch fish arround veravl"), "Veraval")
+        self.assertEqual(_extract_location_from_text("fishing spots offf manglore"), "Mangalore")
+        self.assertEqual(_extract_location_from_text("good place to fish ner mumbay"), "Mumbai")
+        self.assertEqual(_extract_location_from_text("fishing spot near rameswarm"), "Rameswaram")
+
+        # Test natural language fishing intent classification
+        self.assertEqual(_classify_intent_from_text("find fish near Kochi"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("where to fish"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("catch fish near Chennai"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("fishing spots near Mangalore"), "pfz_location")
+        self.assertEqual(_classify_intent_from_text("good place to fish"), "pfz_location")
+
+        # Test safety check precedence
+        self.assertEqual(_classify_intent_from_text("is it safe to fish near Kochi"), "safety_check")
+        self.assertEqual(_classify_intent_from_text("can I go fishing today"), "safety_check")
+
 
 
 
@@ -481,7 +507,7 @@ class TestOrchestratorIntegration(unittest.TestCase):
                             f"Missing keys in live PFZ result: {missing}")
         print(f"\n    PFZ suppressed: {result.get('pfz_suppressed')}")
         print(f"    Agents: {result.get('agents_invoked')}")
-        print(f"    Synthesis: {result.get('synthesis', '')[:80]}")
+        print(f"    Synthesis: {result.get('synthesis', '').encode('ascii', 'replace').decode()[:80]}")
 
     def test_LIVE_danger_suppresses_pfz(self):
         """

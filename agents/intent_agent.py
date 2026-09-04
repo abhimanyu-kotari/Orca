@@ -42,6 +42,7 @@ OUTPUTS (success=False):
 
 import json
 import re
+import difflib
 import httpx
 from langdetect import detect as langdetect_detect, LangDetectException
 
@@ -91,7 +92,7 @@ if GEMINI_API_KEY:
 INTENT_TYPES: dict[str, str] = {
     "weather_check":   "General weather / sea / wave conditions for a location",
     "safety_check":    "Is it safe to go fishing or venture into the sea?",
-    "pfz_location":    "Where are today's Potential Fishing Zones (PFZ)?",
+    "pfz_location":    "Potential Fishing Zones (PFZ), fishing spots, where to find or catch fish, fishing grounds",
     "route_planning":  "Safe navigation route from one point to another",
     "alert_query":     "Cyclone, lightning, storm surge, or hazard warnings",
     "ecosystem_query": "Chlorophyll, SST, fish productivity, ecosystem health",
@@ -164,16 +165,46 @@ NON_LOCATION_WORDS = {
     "evaluate", "monitor", "detect", "inspect", "explore", "view", "give", "find",
     "help", "please", "could", "would", "should", "off", "into", "onto", "from",
     "with", "have", "some", "good", "best", "very", "high", "much", "many",
-    "indian", "india", "bay", "coast", "coastal", "waters", "port", "harbour", "harbor"
+    "indian", "india", "bay", "coast", "coastal", "waters", "port", "harbour", "harbor",
+    "catch", "fish", "spot", "spots", "place", "places", "ground", "grounds", "area", "areas",
+    "shoal", "shoals", "boat", "trawler", "vessel", "trip", "go", "going", "gone", "can",
+    "may", "want", "neare", "ner", "neer", "naer", "clos", "close", "arround", "arund"
 }
+
+PREPOSITION_TYPO_PATTERN = re.compile(
+    r'\b(?:neare?|ner|neer|naer|nre|near\s+to|close\s+to|clos\s+to|offf?|of|ar+ound|arund|round|inn?|att?|fro[m]?|frm|for|towards?|to)\s+([A-Za-z\-]+)\b',
+    re.IGNORECASE
+)
+
+
+def _resolve_location_candidate(cand: str) -> str | None:
+    """
+    Resolve a candidate token to a known coastal location, handling canonical mapping
+    and typo tolerance via difflib fuzzy matching.
+    """
+    if not cand:
+        return None
+    cand_clean = cand.strip("?,.!:;\"'").lower()
+    if cand_clean in NON_LOCATION_WORDS or len(cand_clean) < 3:
+        return None
+    if cand_clean in KNOWN_COASTAL_LOCATIONS:
+        return CANONICAL_LOCATION_NAMES.get(cand_clean, cand_clean.title())
+    if cand_clean in CANONICAL_LOCATION_NAMES:
+        return CANONICAL_LOCATION_NAMES[cand_clean]
+    matches = difflib.get_close_matches(cand_clean, KNOWN_COASTAL_LOCATIONS, n=1, cutoff=0.70)
+    if matches:
+        matched = matches[0]
+        return CANONICAL_LOCATION_NAMES.get(matched, matched.title())
+    return None
 
 
 def _extract_location_from_text(text: str) -> str | None:
     """
-    Extract a valid coastal location from text using a 3-tier strategy:
+    Extract a valid coastal location from text using a 4-tier strategy with typo tolerance:
     1. Direct match against known Indian coastal ports and maritime regions.
-    2. Preposition phrase extraction ('off Kochi', 'near Chennai', etc.).
-    3. Capitalized token scan excluding all non-location stop words.
+    2. Preposition match with typo tolerance ('off Kochi', 'neare Kochi', 'ner Chennai', etc.).
+    3. Fuzzy token scan resolving typos (e.g. 'kochii', 'chenai', 'rameswarm').
+    4. Capitalized token scan excluding all non-location stop words.
     """
     if not text:
         return None
@@ -186,14 +217,24 @@ def _extract_location_from_text(text: str) -> str | None:
         if re.search(pattern, lower_text):
             return CANONICAL_LOCATION_NAMES.get(loc, loc.title())
 
-    # Tier 2: Preposition match ('off <Location>', 'near <Location>', etc.)
-    prep_match = re.search(r'\b(?:off|near|around|in|at|from|to|for)\s+([A-Za-z\-]+)\b', text, re.IGNORECASE)
+    # Tier 2: Preposition match with typo tolerance
+    prep_match = PREPOSITION_TYPO_PATTERN.search(text)
     if prep_match:
-        cand = prep_match.group(1).strip("?,.")
+        cand = prep_match.group(1).strip("?,.!:;\"'")
+        resolved = _resolve_location_candidate(cand)
+        if resolved:
+            return resolved
         if cand.lower() not in NON_LOCATION_WORDS and len(cand) >= 3:
             return CANONICAL_LOCATION_NAMES.get(cand.lower(), cand.title())
 
-    # Tier 3: Capitalized word search excluding stop words
+    # Tier 3: Fuzzy token scan across all candidate words
+    for word in text.split():
+        clean = word.strip("?,.!:;\"'")
+        resolved = _resolve_location_candidate(clean)
+        if resolved:
+            return resolved
+
+    # Tier 4: Capitalized word search excluding stop words
     for word in text.split():
         clean = word.strip("?,.!:;\"'")
         if clean and clean[0].isupper() and len(clean) >= 3 and clean.lower() not in NON_LOCATION_WORDS:
@@ -244,11 +285,13 @@ Intent options:
 
 Rules:
 - "safety_check" and "weather_check" are similar; prefer "safety_check" when
-  the user explicitly asks if it is "safe" or whether they "can go" somewhere.
+  the user explicitly asks if it is "safe" or whether they "can go" somewhere (e.g. "is it safe to fish", "can I go out to sea"). If safety or danger is questioned, prefer "safety_check" even if fishing or weather is mentioned.
+- "pfz_location": Potential Fishing Zones (PFZ), fishing spots, finding fish, catching fish, where to fish, best fishing grounds, or locating fish shoals (e.g. "find fish", "catch fish", "fishing spot", "where to fish", "good place to fish", "best fishing grounds").
 - "ecosystem_query": questions about chlorophyll, SST (sea surface temperature), thermal anomalies, upwelling, primary productivity, satellite oceanography, or marine ecological health.
 - Detect the language from the script and vocabulary, not from the place names.
 - For location: extract the actual coastal town, port, city, island, or region (e.g. "Kochi", "Chennai", "Visakhapatnam", "Rameswaram", "Mumbai", "Veraval", "Mangalore").
-  Pay special attention to phrasing like "off Kochi", "near Chennai", "off Veraval".
+  Pay special attention to phrasing like "off Kochi", "near Chennai", "neare Kochi", "ner Chennai", "off Veraval".
+  Gracefully resolve common spelling typos in coastal locations (e.g. "kochii" -> "Kochi", "chenai" -> "Chennai", "rameswarm" -> "Rameswaram").
   CRITICAL: NEVER extract action verbs, inquiry terms, or oceanographic parameters as the location. Specifically, NEVER return "Analyze", "Analysis", "Check", "Assess", "Examine", "SST", "Chlorophyll", "Anomaly", "Productivity", "Temperature", "Ocean", "Sea", "Satellite", "Weather", "Conditions" as a location. If no coastal place name is mentioned, set "location" to null.
 - Respond ONLY with valid JSON — no markdown fences, no extra text.
 
@@ -292,6 +335,59 @@ def _translate_to_english(text: str, lang_code: str) -> str:
         return text          # Silent fallback to original
 
 
+def _classify_intent_from_text(text: str) -> str:
+    """
+    Robust rule-based intent classification handling natural language phrasing and keywords.
+    Used in fallback paths and when Gemini classification needs reinforcement.
+    """
+    if not text:
+        return "unknown"
+    q = text.lower()
+
+    # 1. Alert / Disaster
+    if any(w in q for w in ["cyclone", "surge", "hazard", "alert", "warning", "lightning", "flood", "disaster", "evacuat", "tsunami", "gale"]):
+        return "alert_query"
+
+    # 2. Safety Check (takes precedence over fishing if safety is mentioned)
+    if any(w in q for w in ["safe", "ventur", "danger", "can i go", "should i go", "is it safe", "safety"]):
+        return "safety_check"
+
+    # 3. Route Planning
+    if any(w in q for w in ["route", "navigate", "path", "direction", "reach", "transit", "waypoint", "bearing", "optimal route"]):
+        return "route_planning"
+
+    # 4. Ecosystem Query (SST, chlorophyll, etc.)
+    if any(w in q for w in ["chlorophyll", "sst", "temperature anomaly", "ecosystem", "productivity", "upwelling", "ocm-3", "ocean colour", "ocean color"]):
+        return "ecosystem_query"
+
+    # 5. Potential Fishing Zone (PFZ) / Natural language fishing queries
+    pfz_phrases = [
+        "pfz", "fishing zone", "fishing zones", "fishing ground", "fishing grounds",
+        "fishing spot", "fishing spots", "find fish", "catch fish", "where to fish",
+        "where can i fish", "where do i fish", "where should i fish", "good place to fish",
+        "best place to fish", "fish shoal", "fish shoals", "fish aggregation",
+        "catch tuna", "find tuna", "catch sardine", "look for fish", "looking for fish"
+    ]
+    if any(p in q for p in pfz_phrases):
+        return "pfz_location"
+    if re.search(r'\b(?:find|catch|locate|hunt)\s+fish\b', q):
+        return "pfz_location"
+    if re.search(r'\bwhere\s+(?:can\s+i|to|do\s+we|should\s+i)\s+fish\b', q):
+        return "pfz_location"
+    if re.search(r'\bfishing\s+(?:spot|spots|zone|zones|ground|grounds|area|areas|place|places)\b', q):
+        return "pfz_location"
+
+    # 6. Weather Check
+    if any(w in q for w in ["weather", "wave", "wind", "rain", "sea condition", "storm", "swell", "tide"]):
+        return "weather_check"
+
+    # 7. Casual Chat
+    if any(w in q for w in ["hi", "hello", "hey", "thank", "good morning", "good evening", "who are you"]):
+        return "casual_chat"
+
+    return "unknown"
+
+
 def _fallback_parse(query: str, error: str) -> dict:
     """
     Rule-based fallback used when Gemini is unavailable or returns bad JSON.
@@ -317,23 +413,10 @@ def _fallback_parse(query: str, error: str) -> dict:
     # Work on the translated (or original if already English) lowercased text
     q = translated.lower()
 
-    # --- Keyword intent classification (English keywords only, safe now) ---
-    if any(w in q for w in ["cyclone", "surge", "hazard", "alert", "warning", "lightning", "flood", "disaster", "evacuat"]):
-        intent = "alert_query"
-    elif any(w in q for w in ["safe", "ventur", "danger", "can i go", "should i go"]):
-        intent = "safety_check"
-    elif any(w in q for w in ["weather", "wave", "wind", "rain", "sea condition", "storm"]):
-        intent = "weather_check"
-    elif any(w in q for w in ["fishing zone", "pfz", "where to fish", "catch fish"]):
-        intent = "pfz_location"
-    elif any(w in q for w in ["route", "navigate", "path", "direction", "reach"]):
-        intent = "route_planning"
-    elif any(w in q for w in ["chlorophyll", "sst", "temperature", "ecosystem", "productivity"]):
-        intent = "ecosystem_query"
-    elif any(w in q for w in ["hi", "hello", "hey", "thank", "good morning", "good evening"]):
-        intent = "casual_chat"
-    else:
-        intent = "unknown"
+    # --- Rule-based intent classification ---
+    intent = _classify_intent_from_text(translated)
+    if intent == "unknown":
+        intent = _classify_intent_from_text(query)
 
     # --- Location extraction — run on the TRANSLATED text (and original query) ---
     location = _extract_location_from_text(translated) or _extract_location_from_text(query)
@@ -431,10 +514,14 @@ def run(inputs: dict) -> dict:
 
     # ── Step 2: Validate and normalise the parsed response ────────────────────
 
-    # Ensure intent is one of our known types
+    # Ensure intent is one of our known types; if unknown, reinforce with rule-based classification
     intent = parsed.get("intent", "unknown")
-    if intent not in INTENT_TYPES:
-        intent = "unknown"
+    if intent not in INTENT_TYPES or intent == "unknown":
+        rule_intent = _classify_intent_from_text(query)
+        if rule_intent in INTENT_TYPES and rule_intent != "unknown":
+            intent = rule_intent
+        else:
+            intent = "unknown"
 
     # Ensure entities sub-dict is well-formed
     raw_entities   = parsed.get("entities", {})
@@ -444,9 +531,17 @@ def run(inputs: dict) -> dict:
 
     location = None
     if raw_location and isinstance(raw_location, str):
-        clean_cand = re.sub(r'^(?:off|near|around|in|at|from|to|for)\s+', '', raw_location.strip(), flags=re.IGNORECASE)
-        if clean_cand.lower() not in NON_LOCATION_WORDS and clean_cand.lower() not in ("none", "null", "n/a", "unknown"):
-            location = CANONICAL_LOCATION_NAMES.get(clean_cand.lower(), clean_cand.title())
+        # Resolve extracted candidate directly (handles typos and canonical mapping)
+        resolved_direct = _resolve_location_candidate(raw_location)
+        if resolved_direct:
+            location = resolved_direct
+        else:
+            clean_cand = re.sub(r'^(?:off|near|around|in|at|from|to|for)\s+', '', raw_location.strip(), flags=re.IGNORECASE)
+            resolved_clean = _resolve_location_candidate(clean_cand)
+            if resolved_clean:
+                location = resolved_clean
+            elif clean_cand.lower() not in NON_LOCATION_WORDS and clean_cand.lower() not in ("none", "null", "n/a", "unknown"):
+                location = CANONICAL_LOCATION_NAMES.get(clean_cand.lower(), clean_cand.title())
 
     # Fallback/refinement: If Gemini failed to extract a valid location or extracted an invalid word,
     # use our rule-based coastal extractor to recover it directly from the query.
