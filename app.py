@@ -4215,8 +4215,8 @@ with st.sidebar:
 # Brand header (fully responsive flexbox — side-by-side on desktop & mobile)
 # We place the Logo/Title, Tour Guide, and Language Selector in a single responsive row.
 # Injecting align-items: center specifically for the very first HorizontalBlock on the page
-st.markdown("<style>div[data-testid='stVerticalBlock'] > div:first-child > div[data-testid='stHorizontalBlock'] { align-items: center !important; }</style>", unsafe_allow_html=True)
-hero_col1, hero_col2, hero_col3 = st.columns([5, 1.8, 2.2])
+# Custom vertical alignment handled by st.columns natively
+hero_col1, hero_col2, hero_col3 = st.columns([4.5, 1.5, 2.5], vertical_alignment="bottom")
 
 with hero_col1:
     if LOGO_B64:
