@@ -1028,6 +1028,253 @@ if "active_layers" not in st.session_state:
     st.session_state.active_layers = ["SST", "Chlorophyll", "PFZ"]
 if "active_nav_view" not in st.session_state:
     st.session_state.active_nav_view = "dashboard"
+if "orca_tour_step" not in st.session_state:
+    st.session_state.orca_tour_step = 1          # 1–7: active step; 0: tour done/hidden
+if "orca_tour_shown" not in st.session_state:
+    st.session_state.orca_tour_shown = False     # flips to True once tour starts
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ORCA Interactive Tour Guide
+# ─────────────────────────────────────────────────────────────────────────────
+
+TOUR_STEPS = [
+    {
+        "title": "Welcome to Project ORCA 🌊",
+        "subtitle": "STEP 1 OF 7  •  SYSTEM OVERVIEW",
+        "icon": "🛰️",
+        "badge": "ISRO · SIH 26176",
+        "body": (
+            "ORCA is a <strong>collaborative multi-agent AI platform</strong> built for India's maritime stakeholders. "
+            "It fuses real-time satellite imagery, oceanographic telemetry, and AI reasoning to deliver "
+            "actionable ocean intelligence — in your language."
+        ),
+        "tags": ["Collaborative Agentic AI", "Multilingual", "Offline-Ready"],
+        "highlight": None,
+    },
+    {
+        "title": "Choose Your Role 🎭",
+        "subtitle": "STEP 2 OF 7  •  PERSONA SELECTION",
+        "icon": "👥",
+        "badge": "3 STAKEHOLDER MODES",
+        "body": (
+            "ORCA adapts its interface and intelligence to <strong>three distinct stakeholder personas</strong>. "
+            "Select your role from the <strong>top navigation bar</strong> after this tour ends."
+        ),
+        "tags": ["🎣 Artisanal Fisherman", "🚨 Coastal Authority", "🔬 Marine Researcher"],
+        "highlight": "Use the horizontal role selector at the top of the main panel.",
+    },
+    {
+        "title": "Set Your Language 🌐",
+        "subtitle": "STEP 3 OF 7  •  MULTILINGUAL SUPPORT",
+        "icon": "🗣️",
+        "badge": "9 LANGUAGES",
+        "body": (
+            "Ask questions in <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা</strong> and more. "
+            "ORCA auto-detects your language and responds accordingly. "
+            "You can also override it using the <strong>Language</strong> selector in the sidebar."
+        ),
+        "tags": ["Auto Language Detection", "9 Regional Scripts", "Indian Languages First"],
+        "highlight": "Look for the 🌐 Language selector in the left sidebar.",
+    },
+    {
+        "title": "Ask a Query 💬",
+        "subtitle": "STEP 4 OF 7  •  CHAT INTERFACE",
+        "icon": "💡",
+        "badge": "NATURAL LANGUAGE AI",
+        "body": (
+            "Type any maritime question in the <strong>chat bar at the bottom</strong> of the screen. "
+            "ORCA's multi-agent engine will parse your intent, fetch live satellite and weather data, "
+            "and synthesize a decision card with maps and safety verdicts."
+        ),
+        "tags": ["Intent Recognition", "Live Satellite Data", "Safety Verdicts"],
+        "highlight": "Try: \"Is it safe to fish near Kochi today?\" or \"Check cyclone risk near Chennai.\"",
+    },
+    {
+        "title": "Interpret Your Results 📊",
+        "subtitle": "STEP 5 OF 7  •  RESPONSE TABS",
+        "icon": "📋",
+        "badge": "RICH DATA CARDS",
+        "body": (
+            "Each response is organized into <strong>4 smart tabs</strong>: a Decision Card with safety verdict, "
+            "an interactive Map, detailed Oceanographic Data, and AI Reasoning. "
+            "Scroll through tabs to explore all dimensions of the analysis."
+        ),
+        "tags": ["Decision Card", "Interactive Map", "Ocean Telemetry", "AI Reasoning"],
+        "highlight": "Tap the tab headers in each response card to switch views.",
+    },
+    {
+        "title": "Explore the Map and Alerts 🗺️",
+        "subtitle": "STEP 6 OF 7  •  NAVIGATION AND GIS",
+        "icon": "🗺️",
+        "badge": "LIVE GIS LAYERS",
+        "body": (
+            "Use the <strong>sidebar navigation buttons</strong> to open the full GIS map, "
+            "view active coastal hazard alerts, or launch the quick-query panel. "
+            "The map shows PFZ zones, geofences, SST thermal layers, and navigation routes."
+        ),
+        "tags": ["PFZ Zones", "Cyclone Geofences", "SST Heatmap", "Navigation Tracks"],
+        "highlight": "Use Map, Alerts, and Ask ORCA buttons in the sidebar to explore.",
+    },
+    {
+        "title": "You're Ready to Go! 🚀",
+        "subtitle": "STEP 7 OF 7  •  GET STARTED",
+        "icon": "✅",
+        "badge": "MISSION READY",
+        "body": (
+            "ORCA is now ready to assist you. Select your persona, type a query, and let the "
+            "<strong>ORCA multi-agent engine</strong> do the rest. "
+            "You can relaunch this tour anytime using the <strong>Help / Tour Guide</strong> button in the sidebar."
+        ),
+        "tags": ["Multi-Agent AI", "ISRO Oceansat-3", "IMD Weather", "INCOIS PFZ"],
+        "highlight": None,
+    },
+]
+
+
+def render_tour_guide() -> None:
+    """
+    Render the ORCA interactive onboarding tour guide overlay.
+
+    Displays a dark-themed, fixed-position modal over the page using CSS injected
+    via st.markdown and rich HTML via st.components.v1.html. Navigation (Prev / Skip /
+    Next) uses Streamlit native buttons that write to st.session_state.orca_tour_step
+    and call st.rerun(), keeping everything frontend-only with no backend changes.
+
+    Call once, right after the brand hero header in the main panel. Self-terminates
+    when orca_tour_step == 0 (tour dismissed).
+    """
+    step = st.session_state.get("orca_tour_step", 0)
+    if step == 0:
+        return  # Tour already done / dismissed
+
+    import streamlit.components.v1 as components
+
+    step_idx = step - 1  # 0-based index into TOUR_STEPS
+    if step_idx < 0 or step_idx >= len(TOUR_STEPS):
+        st.session_state.orca_tour_step = 0
+        return
+
+    data = TOUR_STEPS[step_idx]
+    total = len(TOUR_STEPS)
+
+    # Build dot pagination HTML
+    dots_html = "".join(
+        f'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;'
+        f'background:{"#0EA5A8" if i == step_idx else "#1E3A52"};margin:0 3px;"></span>'
+        for i in range(total)
+    )
+
+    # Build tag pills
+    tags_html = "".join(
+        f'<span style="display:inline-block;background:#0B2638;border:1px solid #0EA5A8;'
+        f'color:#22D3EE;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin:3px 4px;">'
+        f'{t}</span>'
+        for t in data["tags"]
+    )
+
+    highlight_html = ""
+    if data.get("highlight"):
+        highlight_html = (
+            '<div style="background:#082032;border-left:3px solid #0EA5A8;border-radius:0 8px 8px 0;'
+            'padding:8px 12px;margin-top:12px;font-size:12px;color:#94A3B8;line-height:1.5;">'
+            f'💡 {data["highlight"]}</div>'
+        )
+
+    tour_html = f"""<!DOCTYPE html>
+<html>
+<head>
+<style>
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{ background: transparent; font-family: 'Inter', 'Segoe UI', sans-serif; }}
+.tour-card {{
+  background: linear-gradient(145deg, #061826 0%, #0B2638 60%, #0A3040 100%);
+  border: 1px solid #1E4A6E;
+  border-radius: 20px;
+  padding: 28px 32px 22px 32px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(14,165,168,0.15);
+  color: #F8FAFC;
+}}
+.tour-subtitle {{
+  font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #0EA5A8; margin-bottom: 10px;
+}}
+.tour-badge {{
+  display: inline-block;
+  background: rgba(14,165,168,0.15); border: 1px solid rgba(14,165,168,0.4);
+  color: #22D3EE; border-radius: 20px; padding: 2px 10px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 14px;
+}}
+.tour-icon {{ font-size: 2.2rem; margin-bottom: 10px; display: block; }}
+.tour-title {{ font-size: 1.4rem; font-weight: 800; color: #F8FAFC; margin-bottom: 12px; line-height: 1.2; letter-spacing: -0.02em; }}
+.tour-body {{ font-size: 0.84rem; line-height: 1.65; color: #94A3B8; margin-bottom: 14px; }}
+.tour-body strong {{ color: #E2E8F0; }}
+.tour-tags {{ margin-bottom: 4px; }}
+.tour-dots {{ text-align: center; margin-top: 16px; }}
+.tour-divider {{ border: none; border-top: 1px solid #1E3A52; margin: 16px 0 0 0; }}
+</style>
+</head>
+<body>
+<div class="tour-card">
+  <div class="tour-subtitle">{data["subtitle"]}</div>
+  <span class="tour-icon">{data["icon"]}</span>
+  <div class="tour-badge">{data["badge"]}</div>
+  <div class="tour-title">{data["title"]}</div>
+  <div class="tour-body">{data["body"]}</div>
+  <div class="tour-tags">{tags_html}</div>
+  {highlight_html}
+  <hr class="tour-divider">
+  <div class="tour-dots">{dots_html}</div>
+</div>
+</body>
+</html>"""
+
+    # Inject full-screen dark overlay backdrop and fixed positioning via st.markdown
+    st.markdown("""
+<style>
+.orca-tour-backdrop {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+    background: rgba(4, 10, 20, 0.90) !important;
+    z-index: 9990 !important;
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+    pointer-events: none !important;
+}
+/* Lift the tour iframe and buttons above the backdrop */
+section[data-testid="stMain"] iframe,
+section[data-testid="stMain"] [data-testid="column"] .stButton > button {
+    position: relative !important;
+    z-index: 9996 !important;
+}
+</style>
+<div class="orca-tour-backdrop"></div>
+""", unsafe_allow_html=True)
+
+    # Render the tour card HTML (via iframe-sandboxed components.html)
+    components.html(tour_html, height=410, scrolling=False)
+
+    # Navigation button row: Back | Skip | Next/Finish
+    col_prev, col_skip, col_next = st.columns([1, 1.2, 1])
+    with col_prev:
+        if step > 1:
+            if st.button("← Back", key="tour_prev_btn", use_container_width=True):
+                st.session_state.orca_tour_step -= 1
+                st.rerun()
+    with col_skip:
+        if step < total:
+            if st.button("✕  Skip Tour", key="tour_skip_btn", use_container_width=True):
+                st.session_state.orca_tour_step = 0
+                st.rerun()
+    with col_next:
+        next_label = "Next Step →" if step < total else "🚀  Start ORCA!"
+        if st.button(next_label, key="tour_next_btn", type="primary", use_container_width=True):
+            if step < total:
+                st.session_state.orca_tour_step += 1
+            else:
+                st.session_state.orca_tour_step = 0
+            st.rerun()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3034,6 +3281,11 @@ with st.sidebar:
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
+    if st.button("❓ Help / Tour Guide", use_container_width=True):
+        st.session_state.orca_tour_step = 1
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
+
     st.markdown("<hr style='border-color:#1E3A52;margin:10px 0;'>", unsafe_allow_html=True)
 
     # ── Advisory Language Selector ────────────────────────────────────────────
@@ -3237,6 +3489,9 @@ else:
     """, unsafe_allow_html=True)
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
+
+# ── Tour Guide: auto-show on first visit, callable from sidebar ───────────────
+render_tour_guide()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Sticky Persona Selector (Horizontal Radio)
