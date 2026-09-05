@@ -237,350 +237,18 @@ h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !
 
 /* ── Responsive Brand Hero Header ──────────────────────────── */
 .orca-hero-header {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 16px !important;
-    margin: 4px 0 10px 0 !important;
-    padding: 0 !important;
-}
-.orca-hero-logo {
-    width: 60px !important;
-    height: 60px !important;
-    object-fit: contain !important;
-    border-radius: 10px !important;
-    box-shadow: 0 4px 12px rgba(11, 38, 56, 0.15) !important;
-    flex-shrink: 0 !important;
-}
-.orca-hero-text {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-}
-.orca-hero-title {
-    font-size: 1.85rem !important;
-    font-weight: 800 !important;
-    color: #0B2638 !important;
-    letter-spacing: -0.02em !important;
-    line-height: 1.15 !important;
-    margin: 0 !important;
-}
-.orca-hero-subtitle {
-    font-size: 0.82rem !important;
-    color: #64748B !important;
-    margin: 3px 0 0 0 !important;
-    line-height: 1.3 !important;
-}
-
-/* ── Streamlit Top Header Polish ───────────────────────────── */
-header[data-testid="stHeader"] {
-    background-color: #F8FAFC !important;
-    height: 3.75rem !important;
-    min-height: 3.75rem !important;
-    max-height: 3.75rem !important;
-    z-index: 990 !important; /* Lower than sticky container so it never overlaps buttons */
-}
-header[data-testid="stHeader"] div[data-testid="stToolbar"],
-header[data-testid="stHeader"] button[data-testid="stExpandSidebar"] {
-    z-index: 1005 !important;
-}
-
-/* ── Sticky Persona Selector (Horizontal Radio) ───────────── */
-/* ONLY the outermost element container is sticky */
-div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: 3.75rem !important;
-    z-index: 1000 !important; /* Higher than stHeader to guarantee full visibility */
-    background-color: #F8FAFC !important;
-    padding-top: 16px !important; /* Generous breathing room above top border */
-    padding-bottom: 12px !important;
-    border-bottom: 1px solid #E2E8F0 !important;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    box-sizing: border-box !important;
-}
-
-/* ALL inner containers are strictly STATIC - prevents nested sticky sliding & clipping */
-div.st-key-sticky_persona_container,
-div.st-key-sticky_persona_container div[data-testid="stElementContainer"],
-div.st-key-sticky_persona_container div[data-testid="stRadio"],
-div.st-key-sticky_persona_container .stRadio {
-    position: static !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
-/* Ensure Leaflet controls and map canvas stay below the sticky widgets */
-.leaflet-top, .leaflet-bottom {
-    z-index: 400 !important;
-}
-.leaflet-pane {
-    z-index: 200 !important;
-}
-
-/* Hide label */
-.stRadio > label,
-div[data-testid="stRadio"] > label {
-    display: none !important;
-}
-
-/* Force outer radio to center contents across the screen */
-div.stRadio,
-div[data-testid="stRadio"] {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-}
-
-/* Force the inner radiogroup row to center and stretch children equally */
-div[role="radiogroup"],
-div[data-testid="stRadioGroup"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important; /* CRITICAL: Never wrap buttons to multiple lines */
-    justify-content: center !important;
-    align-items: stretch !important; /* CRITICAL: All 3 buttons stretch to identical height */
-    align-content: stretch !important;
-    width: 100% !important;
-    max-width: 960px !important;
-    margin: 0 auto !important;
-    gap: 10px !important;
-}
-
-/* Strictly uniform layout for all 3 buttons: equal width, height, padding, styling */
-div[role="radiogroup"] > label,
-div[data-testid="stRadioGroup"] > label,
-label[data-testid="stRadioOption"],
-label.react-aria-Radio,
-div[data-testid="stRadio"] [data-baseweb="radio"] {
-    flex: 1 1 0 !important;
-    width: 0 !important; /* CRITICAL: exactly equal 1/3 width distribution */
-    min-width: 0 !important;
-    height: auto !important; /* CRITICAL: Must be auto, NOT 100%, so align-self: stretch takes effect */
-    min-height: 52px !important;
-    align-self: stretch !important; /* CRITICAL: Forces all 3 buttons to identical height */
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: #FFFFFF !important;
-    border: 1.5px solid #CBD5E1 !important;
-    border-radius: 8px !important;
-    padding: 6px 10px !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-    text-align: center !important;
-}
-
-/* Inner containers inside each button */
-label[data-testid="stRadioOption"] > div,
-div[role="radiogroup"] > label > div {
-    display: flex !important;
-    flex: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-label[data-testid="stRadioOption"] > div > div,
-div[role="radiogroup"] > label > div > div {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    gap: 6px !important;
-}
-
-/* Radio circle alignment */
-label[data-testid="stRadioOption"] div:has(> input[type="radio"]),
-label[data-testid="stRadioOption"] div[class*="eqiohyi4"],
-div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
-    flex-shrink: 0 !important;
-    margin-right: 4px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Radio label text formatting & centering */
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] {
-    flex: 1 !important;
-    min-width: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    width: 100% !important;
-}
-
-div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-    font-size: 0.82rem !important;
-    font-weight: 600 !important;
-    line-height: 1.25 !important;
-    color: #1E293B !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    text-align: center !important;
-    word-break: normal !important;
-}
-
-/* Hover & Active States */
-div[data-testid="stRadio"] label:hover,
-label[data-testid="stRadioOption"]:hover {
-    border-color: #0EA5A8 !important;
-    background: #F0FDFA !important;
-}
-div[data-testid="stRadio"] label:has(input:checked),
-label[data-testid="stRadioOption"][data-selected="true"],
-label[data-testid="stRadioOption"]:has(input:checked) {
-    background: #F0FDFA !important;
-    border-color: #0EA5A8 !important;
-    border-width: 2px !important;
-    box-shadow: 0 2px 8px rgba(14, 165, 168, 0.18) !important;
-}
-div[data-testid="stRadio"] label:has(input:checked) p,
-label[data-testid="stRadioOption"][data-selected="true"] p {
-    color: #0B2638 !important;
-    font-weight: 700 !important;
-}
-
-/* ── Telemetry & Metrics Responsive Styling ────────────────── */
-[data-testid="stMetric"] {
-    background: #F8FAFC !important;
-    border: 1px solid #E2E8F0 !important;
-    border-radius: 8px !important;
-    padding: 8px 10px !important;
-    text-align: center !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-}
-[data-testid="stMetricLabel"] {
-    font-size: 0.74rem !important;
-    font-weight: 600 !important;
-    color: #64748B !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    line-height: 1.2 !important;
-}
-[data-testid="stMetricLabel"] p {
-    font-size: 0.74rem !important;
-    margin: 0 !important;
-    white-space: normal !important;
-}
-[data-testid="stMetricValue"] {
-    font-size: 1.12rem !important;
-    font-weight: 800 !important;
-    color: #0B2638 !important;
-    line-height: 1.2 !important;
-}
-[data-testid="stMetricValue"] div {
-    font-size: 1.12rem !important;
-}
-[data-testid="stMetricDelta"] {
-    font-size: 0.70rem !important;
-    line-height: 1.2 !important;
-    font-weight: 500 !important;
-}
-
-/* ── Alert & Info Banners Compact Styling ──────────────────── */
-div[data-testid="stAlert"] {
-    padding: 8px 12px !important;
-    border-radius: 8px !important;
-    margin-bottom: 8px !important;
-}
-div[data-testid="stAlert"] p {
-    font-size: 0.80rem !important;
-    line-height: 1.35 !important;
-    margin: 0 !important;
-}
-
-/* ── Chat Message Compact Styling ──────────────────────────── */
-div[data-testid="stChatMessage"] {
-    padding: 10px 14px !important;
-    border-radius: 10px !important;
-    margin-bottom: 8px !important;
-}
-
-/* ── Maps & Graphs Responsive Constraints ──────────────────── */
-iframe[title="streamlit_folium.st_folium"],
-div[data-testid="stCustomComponentV1"] iframe {
-    border-radius: 12px !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
-    min-height: 350px !important;
-    height: 360px !important;
-    max-height: 420px !important;
-    width: 100% !important;
-}
-.js-plotly-plot, .plot-container {
-    max-height: 260px !important;
-    width: 100% !important;
-}
-
-/* ── Mobile Responsive Overhaul (<= 768px) ─────────────────── */
-@media (max-width: 768px) {
-    /* Mobile sizing fixes for Streamlit components */
-    div[data-testid="stExpander"], div.stAlert {
-        width: 90vw !important;
-        max-width: 350px !important;
-        margin: 0 auto !important;
-        padding: 10px !important;
-    }
-
-    
-    /* Force top control bar columns to stack cleanly on mobile */
-    div[data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap !important;
         gap: 8px !important;
-    }
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        min-width: 100% !important;
-    }
-
-    /* Compact padding in main container */
-    .block-container {
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-        padding-top: 3.25rem !important;
-        padding-bottom: 2.25rem !important;
-    }
-
-    /* Compact Hero Header on mobile */
-    .orca-hero-header {
-        gap: 10px !important;
-        margin: 2px 0 6px 0 !important;
+        margin: 0px 0 2px 0 !important;
     }
     .orca-hero-logo {
-        width: 38px !important;
-        height: 38px !important;
-        border-radius: 8px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
     }
     .orca-hero-title {
-        font-size: 1.25rem !important;
+        font-size: 1.15rem !important;
+        line-height: 1.1 !important;
+        margin: 0 !important;
     }
     .orca-hero-subtitle {
         font-size: 0.67rem !important;
@@ -1060,7 +728,98 @@ hr { border-color: #E2E8F0 !important; }
 
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 1280px) { .safety-metrics { gap: 16px; } }
-@media (max-width: 768px)  { .safety-verdict { font-size: 1.2rem; } .zone-metrics { flex-direction: column; gap: 6px; } }
+@media (max-width: 768px)  { 
+    .safety-verdict { font-size: 1.2rem; } 
+    .zone-metrics { flex-direction: column; gap: 6px; } 
+
+    /* Reduce excessive top whitespace on mobile */
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.65rem !important;
+        padding-right: 0.65rem !important;
+    }
+
+    /* Mobile Header: Row 1 = Logo/Title, Row 2 = Help button & Language selectbox side-by-side */
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        align-items: center !important;
+        margin-bottom: 2px !important;
+    }
+
+    /* Column 1: Logo & Title (compact 100% width row) */
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 0px !important;
+        padding-bottom: 0px !important;
+    }
+
+    /* Column 2: Help / Tour Guide button (~44% width) */
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
+        width: 44% !important;
+        flex: 1 1 44% !important;
+        min-width: 110px !important;
+        max-width: 46% !important;
+    }
+
+    /* Column 3: Advisory Language selector (~53% width) */
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+        width: 53% !important;
+        flex: 1 1 53% !important;
+        min-width: 125px !important;
+        max-width: 55% !important;
+    }
+
+    /* Compact button styling on mobile */
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type button {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 4px 6px !important;
+        font-size: 0.78rem !important;
+        white-space: nowrap !important;
+    }
+
+    /* Compact selectbox styling on mobile */
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
+    .block-container div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div {
+        height: 36px !important;
+        min-height: 36px !important;
+        font-size: 0.8rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Compact Hero Header on mobile */
+    .orca-hero-header {
+        gap: 8px !important;
+        margin: 0px 0 2px 0 !important;
+    }
+    .orca-hero-logo {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
+    }
+    .orca-hero-title {
+        font-size: 1.15rem !important;
+        line-height: 1.1 !important;
+        margin: 0 !important;
+    }
+    .orca-hero-subtitle {
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+    }
+
+    /* Tighten Divider */
+    .orca-nav-divider {
+        margin: 6px 0 8px 0 !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1519,72 +1278,93 @@ def render_product_tour(force_open: bool = False) -> None:
                 #orca-product-tour-overlay {
                     padding: 0 !important;
                 }
+                /* Ultra-compact modal card on mobile */
                 .orca-tour-modal-card {
-                    max-width: 320px !important;
-                    min-width: 260px !important;
-                    max-height: 85vh !important;
+                    max-width: 250px !important;
+                    min-width: 220px !important;
+                    max-height: 82vh !important;
                     overflow-y: auto !important;
-                    padding: 10px 14px !important;
+                    padding: 8px 12px 10px 12px !important;
                     border-radius: 12px !important;
+                    border-top: 3.5px solid #0EA5A8 !important;
                     margin: 0 !important;
+                    box-shadow: 0 16px 36px -8px rgba(11, 38, 56, 0.45) !important;
+                }
+                /* Hide bulky pills on mobile to save ~40px vertical space */
+                .orca-tour-pills {
+                    display: none !important;
                 }
                 .orca-tour-title {
-                    font-size: 0.98rem !important;
-                    margin-bottom: 4px !important;
-                    line-height: 1.2 !important;
+                    font-size: 0.88rem !important;
+                    margin-bottom: 2px !important;
+                    line-height: 1.15 !important;
                 }
                 .orca-tour-body {
-                    font-size: 0.82rem !important;
-                    line-height: 1.35 !important;
-                    margin-bottom: 6px !important;
-                }
-                .orca-tour-location-banner {
-                    font-size: 9.5px !important;
-                    padding: 3px 6px !important;
+                    font-size: 0.74rem !important;
+                    line-height: 1.3 !important;
                     margin-bottom: 4px !important;
                 }
-                .orca-tour-step-label {
+                .orca-tour-location-banner {
                     font-size: 8.5px !important;
+                    padding: 2px 5px !important;
                     margin-bottom: 3px !important;
+                    border-radius: 6px !important;
+                }
+                .orca-tour-step-label {
+                    font-size: 7.5px !important;
+                    margin-bottom: 2px !important;
+                }
+                .orca-tour-badge {
+                    font-size: 7.5px !important;
+                    padding: 1px 6px !important;
+                    margin-bottom: 2px !important;
                 }
                 .orca-tour-tip {
-                    font-size: 0.72rem !important;
-                    margin: 4px 0 !important;
-                    padding: 5px 8px !important;
-                }
-                .orca-tour-pills span, .orca-tour-pill {
-                    font-size: 9px !important;
-                    padding: 2px 6px !important;
+                    font-size: 0.68rem !important;
+                    margin: 3px 0 !important;
+                    padding: 4px 6px !important;
+                    line-height: 1.25 !important;
+                    border-left-width: 2.5px !important;
                 }
                 .orca-tour-logo-img {
-                    width: 30px !important;
-                    height: 30px !important;
-                    min-width: 30px !important;
-                    min-height: 30px !important;
-                    max-width: 30px !important;
-                    max-height: 30px !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    min-width: 24px !important;
+                    min-height: 24px !important;
+                    max-width: 24px !important;
+                    max-height: 24px !important;
+                    border-radius: 6px !important;
+                    margin: 1px 0 3px 0 !important;
                 }
                 .orca-tour-btn-next, .orca-tour-btn-back {
-                    padding: 5px 10px !important;
-                    font-size: 0.78rem !important;
-                    min-height: auto !important;
+                    padding: 4px 8px !important;
+                    font-size: 0.72rem !important;
+                    min-height: 28px !important;
+                    border-radius: 6px !important;
                 }
                 .orca-tour-modal-card hr.orca-tour-divider {
-                    margin: 6px 0 !important;
+                    margin: 4px 0 !important;
                 }
                 .orca-tour-dots {
                     gap: 3px !important;
                 }
+                .orca-tour-dot {
+                    height: 4px !important;
+                    width: 4px !important;
+                }
+                .orca-tour-dot.active {
+                    width: 14px !important;
+                }
                 .orca-tour-close-x {
-                    width: 24px !important;
-                    height: 24px !important;
-                    top: 6px !important;
-                    right: 6px !important;
-                    font-size: 11px !important;
+                    width: 20px !important;
+                    height: 20px !important;
+                    top: 5px !important;
+                    right: 5px !important;
+                    font-size: 9px !important;
                 }
                 #orca-tour-beacon {
-                    font-size: 9px !important;
-                    padding: 3px 7px !important;
+                    font-size: 8.5px !important;
+                    padding: 2px 6px !important;
                 }
             }
         `;
@@ -1711,13 +1491,13 @@ def render_product_tour(force_open: bool = False) -> None:
         if (!card) return;
 
         // Adaptive card width
-        const cardWidth = isMobile ? Math.min(310, winWidth - 24) : Math.min(500, winWidth - 48);
+        const cardWidth = isMobile ? Math.min(250, winWidth - 20) : Math.min(480, winWidth - 48);
         card.style.width = cardWidth + 'px';
         card.style.maxWidth = cardWidth + 'px';
         card.style.margin = '0px';
 
         // Measure current card height
-        const cardHeight = card.offsetHeight || (isMobile ? 260 : 340);
+        const cardHeight = card.offsetHeight || (isMobile ? 180 : 320);
 
         if (targetEl) {
             let measuredEl = targetEl;
