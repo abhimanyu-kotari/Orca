@@ -785,7 +785,7 @@ hr { border-color: #E2E8F0 !important; }
     .safety-verdict { font-size: 1.2rem; } 
     .zone-metrics { flex-direction: column; gap: 6px; } 
 
-    /* ── Universal overflow safeguard ───────────────────────── */
+    /* 1. Stop the horizontal screen stretching globally */
     .block-container {
         max-width: 100vw !important;
         overflow-x: hidden !important;
@@ -796,34 +796,29 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
 
-    /* THE ROOT CAUSE FIX: Target exactly the header block using :has() */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
+    /* 2. Lock the top header to a strict horizontal row */
+    div[data-testid="stHorizontalBlock"]:first-of-type {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        align-items: center !important;
         width: 100% !important;
-        box-sizing: border-box !important;
-        gap: 8px !important;
+        gap: 10px !important;
     }
 
-    /* HIDE the middle column (Tour Guide header button) on mobile */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2) {
+    /* 3. BRUTE-FORCE HIDE THE TOUR GUIDE (Middle Column) */
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
         display: none !important;
+        width: 0 !important;
+        flex: 0 !important;
     }
 
-    /* Re-balance: Logo column — fixed narrow width */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 50px !important;
+    /* 4. Let the Logo (Col 1) and Language (Col 3) safely share the screen */
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1),
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+        display: block !important;
+        flex: 1 1 0 !important;
         min-width: 0 !important;
-        overflow: hidden !important;
-    }
-
-    /* Re-balance: Language dropdown column — takes all remaining space */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
+        width: auto !important;
     }
 
     /* SHOW the sidebar Tour Guide button on mobile */
