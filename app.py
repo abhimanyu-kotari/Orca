@@ -1033,7 +1033,7 @@ if "open_tour_modal" not in st.session_state:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ORCA ProductTour Component — Spotlight Cutout, Beacons & Interactive Walkthrough
+# ORCA ProductTour Component — Crystal-Clear Spotlight, Mobile-Ready, Zero-Blur
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRODUCT_TOUR_STEPS = [
@@ -1127,7 +1127,7 @@ PRODUCT_TOUR_STEPS = [
 def render_product_tour(force_open: bool = False) -> None:
     """
     Renders the ProductTour with crystal-clear spotlight cutout, pointing beacons,
-    bulletproof event handlers (never freezes on Next Step), and zero server rerun lag.
+    mobile responsiveness, and guaranteed clearance positioning.
     """
     import json
     import streamlit.components.v1 as cv1
@@ -1139,6 +1139,7 @@ def render_product_tour(force_open: bool = False) -> None:
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <style>
   body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
@@ -1159,38 +1160,7 @@ def render_product_tour(force_open: bool = False) -> None:
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             
-            /* Main Overlay Container */
-            #orca-product-tour-overlay {
-                position: fixed !important;
-                inset: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                background: rgba(15, 23, 42, 0.65) !important;
-                backdrop-filter: blur(4px) !important;
-                -webkit-backdrop-filter: blur(4px) !important;
-                z-index: 999990 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 0 16px !important;
-                box-sizing: border-box !important;
-                opacity: 0;
-                transition: opacity 0.25s ease-out, background 0.25s ease !important;
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-                overflow-y: auto !important;
-                pointer-events: auto !important;
-            }
-            #orca-product-tour-overlay.orca-tour-active {
-                opacity: 1 !important;
-            }
-            /* When spotlight is active, overlay background is transparent so the cutout is 100% crystal daylight clear! */
-            #orca-product-tour-overlay.orca-has-spotlight {
-                background: transparent !important;
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
-            }
-            
-            /* Spotlight Cutout Box */
+            /* Spotlight Cutout Box — MUST BE BEHIND OVERLAY (z-index: 999980) so its 9999px shadow NEVER dims the card! */
             #orca-tour-spotlight {
                 position: fixed !important;
                 border-radius: 12px !important;
@@ -1199,7 +1169,7 @@ def render_product_tour(force_open: bool = False) -> None:
                             0 0 25px rgba(14, 165, 168, 0.75),
                             0 0 0 9999px rgba(15, 23, 42, 0.72) !important;
                 pointer-events: none !important;
-                z-index: 999992 !important;
+                z-index: 999980 !important;
                 transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
                 opacity: 0;
                 display: none;
@@ -1212,7 +1182,7 @@ def render_product_tour(force_open: bool = False) -> None:
             /* Animated Pointing Beacon */
             #orca-tour-beacon {
                 position: fixed !important;
-                z-index: 1000000 !important;
+                z-index: 999985 !important;
                 background: linear-gradient(135deg, #0EA5A8 0%, #0891B2 100%) !important;
                 color: #FFFFFF !important;
                 font-size: 11px !important;
@@ -1228,6 +1198,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 transition: all 0.3s ease !important;
                 letter-spacing: 0.04em !important;
                 text-transform: uppercase !important;
+                white-space: nowrap !important;
             }
             #orca-tour-beacon.active {
                 display: flex !important;
@@ -1237,13 +1208,45 @@ def render_product_tour(force_open: bool = False) -> None:
                 50% { transform: translateY(-6px); }
             }
 
-            /* Modal Card */
+            /* Main Overlay Container — Sits ABOVE the spotlight (z-index: 999990) */
+            #orca-product-tour-overlay {
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(15, 23, 42, 0.68) !important;
+                backdrop-filter: blur(4px) !important;
+                -webkit-backdrop-filter: blur(4px) !important;
+                z-index: 999990 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 16px !important;
+                box-sizing: border-box !important;
+                opacity: 0;
+                transition: opacity 0.25s ease-out, background 0.25s ease !important;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                pointer-events: auto !important;
+            }
+            #orca-product-tour-overlay.orca-tour-active {
+                opacity: 1 !important;
+            }
+            /* When spotlight is active, overlay background is transparent because the spotlight 9999px shadow does the dimming! */
+            #orca-product-tour-overlay.orca-has-spotlight {
+                background: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+
+            /* Modal Card — Pure solid #FFFFFF, NEVER blurred or dimmed (z-index: 999995) */
             .orca-tour-modal-card {
                 background: #FFFFFF !important;
                 border-radius: 20px !important;
                 border: 1px solid #E2E8F0 !important;
                 border-top: 5px solid #0EA5A8 !important;
-                box-shadow: 0 25px 60px -12px rgba(11, 38, 56, 0.4), 0 0 0 1px rgba(14, 165, 168, 0.15) !important;
+                box-shadow: 0 25px 60px -12px rgba(11, 38, 56, 0.5), 0 0 0 1px rgba(14, 165, 168, 0.2) !important;
                 max-width: 560px !important;
                 width: 100% !important;
                 position: relative !important;
@@ -1253,7 +1256,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 box-sizing: border-box !important;
                 transform: scale(0.96);
                 transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.3s ease, margin-left 0.3s ease !important;
-                z-index: 1000002 !important;
+                z-index: 999995 !important;
             }
             #orca-product-tour-overlay.orca-tour-active .orca-tour-modal-card {
                 transform: scale(1) !important;
@@ -1262,13 +1265,13 @@ def render_product_tour(force_open: bool = False) -> None:
                 position: absolute !important;
                 top: 14px !important;
                 right: 14px !important;
-                width: 30px !important;
-                height: 30px !important;
+                width: 32px !important;
+                height: 32px !important;
                 border-radius: 50% !important;
                 background: #F1F5F9 !important;
                 border: 1px solid #E2E8F0 !important;
                 color: #64748B !important;
-                font-size: 14px !important;
+                font-size: 15px !important;
                 font-weight: 700 !important;
                 cursor: pointer !important;
                 display: flex !important;
@@ -1438,6 +1441,59 @@ def render_product_tour(force_open: bool = False) -> None:
                 box-shadow: 0 6px 18px rgba(14, 165, 168, 0.45) !important;
                 transform: translateY(-1px) !important;
             }
+
+            /* ── MOBILE RESPONSIVENESS (< 768px) ── */
+            @media (max-width: 768px) {
+                #orca-product-tour-overlay {
+                    padding: 8px !important;
+                    align-items: flex-start !important;
+                    justify-content: center !important;
+                }
+                .orca-tour-modal-card {
+                    max-width: 100% !important;
+                    width: calc(100vw - 20px) !important;
+                    padding: 16px 16px 14px 16px !important;
+                    border-radius: 16px !important;
+                    margin-left: 0 !important;
+                    margin-right: 0 !important;
+                }
+                .orca-tour-title {
+                    font-size: 1.15rem !important;
+                    margin-bottom: 6px !important;
+                }
+                .orca-tour-body {
+                    font-size: 0.82rem !important;
+                    line-height: 1.5 !important;
+                    margin-bottom: 8px !important;
+                }
+                .orca-tour-location-banner {
+                    font-size: 10.5px !important;
+                    padding: 4px 8px !important;
+                    margin-bottom: 8px !important;
+                }
+                .orca-tour-tip {
+                    padding: 6px 10px !important;
+                    font-size: 11px !important;
+                    margin-top: 8px !important;
+                }
+                .orca-tour-btn-back,
+                .orca-tour-btn-next {
+                    min-height: 38px !important;
+                    padding: 8px 14px !important;
+                    font-size: 11.5px !important;
+                }
+                .orca-tour-close-x {
+                    width: 28px !important;
+                    height: 28px !important;
+                    top: 10px !important;
+                    right: 10px !important;
+                    font-size: 13px !important;
+                }
+                #orca-tour-beacon {
+                    font-size: 9.5px !important;
+                    padding: 4px 10px !important;
+                }
+            }
         `;
         parentDoc.head.appendChild(style);
     }
@@ -1466,7 +1522,9 @@ def render_product_tour(force_open: bool = False) -> None:
             if (targetType === 'authority') return findRadioByText('Authority');
             if (targetType === 'researcher') return findRadioByText('Researcher');
             if (targetType === 'language') {
-                return parentDoc.querySelector('[data-testid="stSidebar"] [data-testid="stSelectbox"]') || parentDoc.querySelector('[data-testid="stSidebar"]');
+                const sb = parentDoc.querySelector('[data-testid="stSidebar"] [data-testid="stSelectbox"]');
+                if (sb && sb.getBoundingClientRect().width > 0) return sb;
+                return null; // Don't spotlight hidden sidebar on mobile
             }
             if (targetType === 'chat') {
                 return parentDoc.querySelector('[data-testid="stChatInput"]') || parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
@@ -1494,27 +1552,28 @@ def render_product_tour(force_open: bool = False) -> None:
             parentDoc.body.appendChild(beacon);
         }
 
+        const isMobile = parentWin.innerWidth < 768;
         const data = steps[parentWin.__orcaTourStep];
         const targetEl = findTargetElement(data.target_type);
 
         if (targetEl) {
             const rect = targetEl.getBoundingClientRect();
             
-            // Activate spotlight cutout directly over target
+            // Activate spotlight cutout directly over target (behind overlay)
             spotlight.style.top = (rect.top - 6) + 'px';
             spotlight.style.left = (rect.left - 8) + 'px';
             spotlight.style.width = (rect.width + 16) + 'px';
             spotlight.style.height = (rect.height + 12) + 'px';
             spotlight.classList.add('active');
 
-            // Tell overlay that spotlight is active (makes overlay transparent so cutout is 100% crystal daylight clear!)
+            // Tell overlay that spotlight is active (makes overlay transparent so cutout is crystal daylight clear!)
             if (overlay) overlay.classList.add('orca-has-spotlight');
 
             // Position animated beacon strictly ABOVE the target element
             if (data.beacon_text) {
                 beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
-                beacon.style.top = Math.max(8, rect.top - 36) + 'px';
-                beacon.style.left = Math.max(10, rect.left + 8) + 'px';
+                beacon.style.top = Math.max(8, rect.top - (isMobile ? 28 : 34)) + 'px';
+                beacon.style.left = Math.max(8, rect.left + (isMobile ? 4 : 8)) + 'px';
                 beacon.classList.add('active');
             } else {
                 beacon.classList.remove('active');
@@ -1522,28 +1581,30 @@ def render_product_tour(force_open: bool = False) -> None:
 
             // GUARANTEED CLEARANCE CARD POSITIONING (NEVER OVERLAPS TARGET!):
             if (card && overlay) {
-                if (data.target_type === 'language') {
+                if (data.target_type === 'chat') {
+                    // Chat target at bottom: card sits comfortably at the TOP of the screen, leaving 300px+ clearance!
+                    overlay.style.alignItems = 'flex-start';
+                    overlay.style.justifyContent = 'center';
+                    card.style.marginLeft = '0px';
+                    card.style.marginTop = isMobile ? '12px' : '36px';
+                } else if (data.target_type === 'language' && !isMobile) {
+                    // Desktop sidebar: card sits in the main panel to the right of sidebar
                     overlay.style.alignItems = 'flex-start';
                     overlay.style.justifyContent = 'flex-start';
-                    card.style.marginLeft = Math.max(20, rect.right + 28) + 'px';
-                    card.style.marginTop = Math.max(30, rect.top - 20) + 'px';
-                } else if (data.target_type === 'chat') {
-                    overlay.style.alignItems = 'flex-start';
-                    overlay.style.justifyContent = 'center';
-                    card.style.marginLeft = '0px';
-                    card.style.marginTop = Math.max(20, rect.top - 410) + 'px';
+                    card.style.marginLeft = Math.max(20, rect.right + 24) + 'px';
+                    card.style.marginTop = Math.max(24, rect.top - 20) + 'px';
                 } else {
-                    // Top targets (Fisherman, Authority, Researcher):
-                    // Card sits STRICTLY BELOW the spotlight box with guaranteed clearance:
+                    // Top targets (Fisherman, Authority, Researcher, or mobile):
+                    // Card sits strictly below the spotlight box with guaranteed clearance!
                     overlay.style.alignItems = 'flex-start';
                     overlay.style.justifyContent = 'center';
                     card.style.marginLeft = '0px';
-                    const safeTop = Math.max(40, rect.bottom + 24);
+                    const safeTop = Math.max(20, rect.bottom + (isMobile ? 14 : 22));
                     card.style.marginTop = safeTop + 'px';
                 }
             }
         } else {
-            // General overview (Steps 1 & 7): center card, deactivate spotlight
+            // General overview (Steps 1 & 7, or hidden sidebar on mobile): center card, deactivate spotlight
             spotlight.classList.remove('active');
             beacon.classList.remove('active');
             if (overlay) {
@@ -1671,7 +1732,7 @@ def render_product_tour(force_open: bool = False) -> None:
         // Update spotlight and card positioning
         setTimeout(updateSpotlightAndPosition, 30);
 
-        // BULLETPROOF EVENT ATTACHMENT WITH STOP PROPAGATION (IMMUNE TO ANY STREAMLIT BUBBLING)
+        // BULLETPROOF EVENT ATTACHMENT WITH STOP PROPAGATION
         const btnX = parentDoc.getElementById('orca-tour-btn-x');
         if (btnX) {
             btnX.onclick = function(e) {
@@ -1736,7 +1797,7 @@ def render_product_tour(force_open: bool = False) -> None:
             overlay.classList.add('orca-tour-active');
         });
 
-        // Re-align on window resize or scroll
+        // Re-align on window resize or orientation change
         parentWin.removeEventListener('resize', updateSpotlightAndPosition);
         parentWin.addEventListener('resize', updateSpotlightAndPosition);
     }
