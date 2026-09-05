@@ -1545,62 +1545,70 @@ def render_product_tour(force_open: bool = False) -> None:
 
     function findLanguageElement() {
         try {
-            // Strategy 1: Look for .stSelectbox or [data-testid="stSelectbox"] inside sidebar
-            const sbList = parentDoc.querySelectorAll('[data-testid="stSidebar"] .stSelectbox, [data-testid="stSidebar"] [data-testid="stSelectbox"], section .stSelectbox, section [data-testid="stSelectbox"], .stSelectbox, [data-testid="stSelectbox"]');
-            for (const sb of sbList) {
-                const r = sb.getBoundingClientRect();
-                if (r.width > 50 && r.height > 20) {
-                    const txt = sb.textContent || '';
-                    if (txt.includes('Advisory Language') || txt.includes('Language') || txt.includes('English') || txt.includes('भाषा') || txt.includes('மொழி')) {
+            // Priority 0: Explicit marker placed right above the selectbox in Python
+            const marker = parentDoc.getElementById('orca-tour-lang-marker');
+            if (marker) {
+                const container = marker.closest('[data-testid="stElementContainer"], .element-container') || marker.parentElement;
+                if (container) {
+                    let next = container.nextElementSibling || marker.nextElementSibling;
+                    while (next) {
+                        const sb = (next.querySelector && (next.querySelector('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"]'))) || 
+                                   (next.getAttribute && next.getAttribute('data-testid') === 'stSelectbox' ? next : null);
+                        if (sb) return sb;
+                        const txt = (next.textContent || '').toLowerCase();
+                        if (txt.includes('language') || txt.includes('advisory')) return next;
+                        next = next.nextElementSibling;
+                    }
+                }
+            }
+
+            // Priority 1: Label search across parentDoc (just like findRadioByText!)
+            const labels = parentDoc.querySelectorAll('[data-testid="stSidebar"] label, [data-testid="stSidebar"] [data-testid="stWidgetLabel"], label, [data-testid="stWidgetLabel"]');
+            for (const l of labels) {
+                const txt = (l.textContent || '').toLowerCase();
+                if (txt.includes('advisory language') || (txt.includes('language') && (txt.includes('advisory') || txt.includes('भाषा') || txt.includes('மொழி')))) {
+                    const widget = l.closest('[data-testid="stSelectbox"]') || l.closest('.stSelectbox') || l.closest('[data-baseweb="select"]') || l.parentElement;
+                    if (widget) return widget;
+                    return l;
+                }
+            }
+
+            // Priority 2: Text matching on any element inside the sidebar
+            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"], section[data-testid="stSidebar"], .stSidebar');
+            if (sidebar) {
+                const ariaEl = sidebar.querySelector('[aria-label*="Language"], [aria-label*="भाषा"], [aria-label*="மொழி"], [aria-label*="Advisory"]');
+                if (ariaEl) {
+                    const widget = ariaEl.closest('[data-testid="stSelectbox"]') || ariaEl.closest('.stSelectbox') || ariaEl;
+                    if (widget) return widget;
+                }
+
+                const sideSelectboxes = sidebar.querySelectorAll('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"]');
+                for (const sb of sideSelectboxes) {
+                    const txt = (sb.textContent || '').toLowerCase();
+                    if (txt.includes('language') || txt.includes('advisory') || txt.includes('english') || txt.includes('भाषा') || txt.includes('மொழி')) {
                         return sb;
                     }
                 }
-            }
 
-            // Strategy 2: Text scan across all p, span, label, div for exact text
-            const allCandidates = parentDoc.querySelectorAll('p, span, label, div');
-            for (const el of allCandidates) {
-                const txt = el.textContent || '';
-                if ((txt.includes('Advisory Language') || (txt.includes('भाषा') && txt.includes('மொழி')) || (txt.includes('English') && txt.includes('GB'))) && el.children.length === 0) {
-                    // Ascend to selectbox container
-                    let curr = el;
-                    while (curr && curr !== parentDoc.body) {
-                        if (curr.classList && (curr.classList.contains('stSelectbox') || curr.getAttribute('data-testid') === 'stSelectbox')) {
-                            const r = curr.getBoundingClientRect();
-                            if (r.width > 50) return curr;
-                        }
-                        if (curr.querySelector && (curr.querySelector('[role="combobox"]') || curr.querySelector('input') || curr.querySelector('button'))) {
-                            const r = curr.getBoundingClientRect();
-                            if (r.width > 80 && r.height >= 30) return curr;
-                        }
-                        curr = curr.parentElement;
-                    }
-                    if (el.parentElement) {
-                        const r = el.parentElement.getBoundingClientRect();
-                        if (r.width > 50) return el.parentElement;
-                    }
+                if (sideSelectboxes.length > 0) {
+                    return sideSelectboxes[0];
                 }
             }
 
-            // Strategy 3: Find any selectbox or combobox inside the sidebar
-            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]') || 
-                            parentDoc.querySelector('section[data-testid="stSidebar"]') || 
-                            parentDoc.querySelector('.stSidebar') ||
-                            parentDoc.querySelector('section');
-            if (sidebar) {
-                const combo = sidebar.querySelector('.stSelectbox') || 
-                              sidebar.querySelector('[data-testid="stSelectbox"]') || 
-                              sidebar.querySelector('[role="combobox"]') || 
-                              sidebar.querySelector('div[data-baseweb="select"]');
-                if (combo) {
-                    const widget = combo.closest('.stSelectbox') || combo.closest('[data-testid="stSelectbox"]') || combo;
-                    if (widget.getBoundingClientRect().width > 50) return widget;
+            // Priority 3: Any combobox or selectbox in document with 'language'
+            const allCombos = parentDoc.querySelectorAll('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"], [role="combobox"]');
+            for (const cb of allCombos) {
+                const txt = (cb.textContent || '').toLowerCase();
+                const aria = (cb.getAttribute('aria-label') || '').toLowerCase();
+                if (txt.includes('language') || txt.includes('advisory') || txt.includes('english') || aria.includes('language')) {
+                    const widget = cb.closest('[data-testid="stSelectbox"]') || cb.closest('.stSelectbox') || cb;
+                    return widget;
                 }
             }
 
-            // Strategy 4: Fallback to first selectbox on page
-            const anySb = parentDoc.querySelector('.stSelectbox') || parentDoc.querySelector('[data-testid="stSelectbox"]');
-            if (anySb && anySb.getBoundingClientRect().width > 50) return anySb;
+            // Priority 4: Fallback to the first selectbox anywhere on the page
+            const fallbackSb = parentDoc.querySelector('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"]');
+            if (fallbackSb) return fallbackSb;
         } catch (e) {
             console.warn('findLanguageElement error:', e);
         }
@@ -1648,65 +1656,77 @@ def render_product_tour(force_open: bool = False) -> None:
         const targetEl = findTargetElement(data.target_type);
 
         if (targetEl) {
-            const rect = targetEl.getBoundingClientRect();
-            
-            // Activate spotlight cutout directly over target (behind overlay)
-            spotlight.style.top = (rect.top - 6) + 'px';
-            spotlight.style.left = (rect.left - 8) + 'px';
-            spotlight.style.width = (rect.width + 16) + 'px';
-            spotlight.style.height = (rect.height + 12) + 'px';
-            spotlight.classList.add('active');
-
-            // Tell overlay that spotlight is active (makes overlay transparent so cutout is crystal daylight clear!)
-            if (overlay) overlay.classList.add('orca-has-spotlight');
-
-            // Position animated beacon strictly ABOVE the target element
-            if (data.beacon_text) {
-                beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
-                beacon.style.top = Math.max(8, rect.top - (isMobile ? 28 : 34)) + 'px';
-                beacon.style.left = Math.max(8, rect.left + (isMobile ? 4 : 8)) + 'px';
-                beacon.classList.add('active');
-            } else {
-                beacon.classList.remove('active');
+            let measuredEl = targetEl;
+            let rect = measuredEl.getBoundingClientRect();
+            // If the element has tiny dimensions or is a zero-size marker/label child, resolve to its widget container
+            if (rect.width <= 10 && measuredEl.parentElement) {
+                measuredEl = measuredEl.closest('[data-testid="stSelectbox"]') || 
+                             measuredEl.closest('.stSelectbox') || 
+                             measuredEl.closest('[data-baseweb="select"]') || 
+                             measuredEl.parentElement;
+                rect = measuredEl.getBoundingClientRect();
             }
 
-            // GUARANTEED CLEARANCE CARD POSITIONING (NEVER OVERLAPS TARGET!):
-            if (card && overlay) {
-                if (data.target_type === 'chat') {
-                    // Chat target at bottom: card sits comfortably at the TOP of the screen, leaving 300px+ clearance!
-                    overlay.style.alignItems = 'flex-start';
-                    overlay.style.justifyContent = 'center';
-                    card.style.marginLeft = '0px';
-                    card.style.marginTop = isMobile ? '12px' : '36px';
-                } else if (data.target_type === 'language' && !isMobile) {
-                    // Desktop sidebar: card sits in the main panel to the right of sidebar
-                    overlay.style.alignItems = 'flex-start';
-                    overlay.style.justifyContent = 'flex-start';
-                    card.style.marginLeft = Math.max(20, rect.right + 24) + 'px';
-                    card.style.marginTop = Math.max(24, rect.top - 20) + 'px';
+            if (rect.width > 0 && rect.right > 0) {
+                // Activate spotlight cutout directly over target (behind overlay)
+                spotlight.style.top = (rect.top - 6) + 'px';
+                spotlight.style.left = (rect.left - 8) + 'px';
+                spotlight.style.width = (rect.width + 16) + 'px';
+                spotlight.style.height = (rect.height + 12) + 'px';
+                spotlight.classList.add('active');
+
+                // Tell overlay that spotlight is active (makes overlay transparent so cutout is crystal daylight clear!)
+                if (overlay) overlay.classList.add('orca-has-spotlight');
+
+                // Position animated beacon strictly ABOVE the target element
+                if (data.beacon_text) {
+                    beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
+                    beacon.style.top = Math.max(8, rect.top - (isMobile ? 28 : 34)) + 'px';
+                    beacon.style.left = Math.max(8, rect.left + (isMobile ? 4 : 8)) + 'px';
+                    beacon.classList.add('active');
                 } else {
-                    // Top targets (Fisherman, Authority, Researcher, or mobile):
-                    // Card sits strictly below the spotlight box with guaranteed clearance!
-                    overlay.style.alignItems = 'flex-start';
-                    overlay.style.justifyContent = 'center';
-                    card.style.marginLeft = '0px';
-                    const safeTop = Math.max(20, rect.bottom + (isMobile ? 14 : 22));
-                    card.style.marginTop = safeTop + 'px';
+                    beacon.classList.remove('active');
                 }
+
+                // GUARANTEED CLEARANCE CARD POSITIONING (NEVER OVERLAPS TARGET!):
+                if (card && overlay) {
+                    if (data.target_type === 'chat') {
+                        // Chat target at bottom: card sits comfortably at the TOP of the screen, leaving 300px+ clearance!
+                        overlay.style.alignItems = 'flex-start';
+                        overlay.style.justifyContent = 'center';
+                        card.style.marginLeft = '0px';
+                        card.style.marginTop = isMobile ? '12px' : '36px';
+                    } else if (data.target_type === 'language' && !isMobile) {
+                        // Desktop sidebar: card sits in the main panel to the right of sidebar
+                        overlay.style.alignItems = 'flex-start';
+                        overlay.style.justifyContent = 'flex-start';
+                        card.style.marginLeft = Math.max(20, rect.right + 24) + 'px';
+                        card.style.marginTop = Math.max(24, rect.top - 20) + 'px';
+                    } else {
+                        // Top targets (Fisherman, Authority, Researcher, or mobile):
+                        // Card sits strictly below the spotlight box with guaranteed clearance!
+                        overlay.style.alignItems = 'flex-start';
+                        overlay.style.justifyContent = 'center';
+                        card.style.marginLeft = '0px';
+                        const safeTop = Math.max(20, rect.bottom + (isMobile ? 14 : 22));
+                        card.style.marginTop = safeTop + 'px';
+                    }
+                }
+                return;
             }
-        } else {
-            // General overview (Steps 1 & 7, or hidden sidebar on mobile): center card, deactivate spotlight
-            spotlight.classList.remove('active');
-            beacon.classList.remove('active');
-            if (overlay) {
-                overlay.classList.remove('orca-has-spotlight');
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-            }
-            if (card) {
-                card.style.marginTop = '0px';
-                card.style.marginLeft = '0px';
-            }
+        }
+
+        // Fallback: General overview (Steps 1 & 7, or target not found/off-screen)
+        spotlight.classList.remove('active');
+        beacon.classList.remove('active');
+        if (overlay) {
+            overlay.classList.remove('orca-has-spotlight');
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+        }
+        if (card) {
+            card.style.marginTop = '0px';
+            card.style.marginLeft = '0px';
         }
     }
 
@@ -1825,6 +1845,7 @@ def render_product_tour(force_open: bool = False) -> None:
         setTimeout(updateSpotlightAndPosition, 40);
         setTimeout(updateSpotlightAndPosition, 120);
         setTimeout(updateSpotlightAndPosition, 300);
+        setTimeout(updateSpotlightAndPosition, 600);
 
         // BULLETPROOF EVENT ATTACHMENT WITH STOP PROPAGATION
         const btnX = parentDoc.getElementById('orca-tour-btn-x');
@@ -1898,11 +1919,11 @@ def render_product_tour(force_open: bool = False) -> None:
         parentWin.addEventListener('scroll', updateSpotlightAndPosition);
 
         try {
-            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]') || parentDoc.querySelector('.stSidebar');
-            if (sidebar) {
-                sidebar.removeEventListener('scroll', updateSpotlightAndPosition);
-                sidebar.addEventListener('scroll', updateSpotlightAndPosition);
-            }
+            const scrollContainers = parentDoc.querySelectorAll('[data-testid="stSidebar"], [data-testid="stSidebarContent"], [data-testid="stSidebarUserContent"], section, .stSidebar');
+            scrollContainers.forEach(el => {
+                el.removeEventListener('scroll', updateSpotlightAndPosition);
+                el.addEventListener('scroll', updateSpotlightAndPosition);
+            });
         } catch (e) {}
     }
 
@@ -3963,8 +3984,8 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("<hr style='border-color:#1E3A52;margin:10px 0;'>", unsafe_allow_html=True)
-
     # ── Advisory Language Selector ────────────────────────────────────────────
+    st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
     lang_keys = list(LANG_DISPLAY.keys())
     lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
     curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
