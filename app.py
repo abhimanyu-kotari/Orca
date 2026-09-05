@@ -796,17 +796,24 @@ hr { border-color: #E2E8F0 !important; }
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        overflow: hidden !important;
-        width: 100% !important; /* using 100% instead of 100vw to prevent horizontal scroll blowout */
-        gap: 5px !important;
+        width: 100% !important; 
+        gap: 8px !important;
         box-sizing: border-box !important;
     }
+    
+    /* Hide the logo column entirely on mobile */
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+        display: none !important;
+    }
+
     /* Let the Tour Guide and Language columns share the space evenly (50/50) */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+        display: block !important;
         flex: 1 1 0 !important;
         min-width: 0 !important;
-        width: calc(50% - 3px) !important;
-        max-width: calc(50% - 3px) !important;
+        width: calc(50% - 4px) !important;
+        max-width: calc(50% - 4px) !important;
     }
 
     /* Center persona radio tabs when they wrap */
@@ -3990,16 +3997,37 @@ with st.sidebar:
 # Global Top Navigation — Horizontal Persona Selector
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── Navbar Row (Help Button, Advisory Language) ──
-col1, col2 = st.columns([1, 1], vertical_alignment="bottom")
+# ── Navbar Row (Logo & Title, Help Button, Advisory Language) ──
+col1, col2, col3 = st.columns([1.5, 1, 1], vertical_alignment="bottom")
 
 with col1:
+    if LOGO_B64:
+        st.markdown(f"""
+        <div class="orca-hero-header" style="margin: 0 !important;">
+            <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
+            <div class="orca-hero-text">
+                <span class="orca-hero-title">ORCA</span>
+                <span class="orca-hero-subtitle">Satellite Intelligence</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="orca-hero-header" style="margin: 0 !important;">
+            <div class="orca-hero-text">
+                <span class="orca-hero-title">🌊 ORCA</span>
+                <span class="orca-hero-subtitle">Satellite Intelligence</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+with col2:
     if st.button("Tour Guide", use_container_width=True):
         st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
-with col2:
+with col3:
     st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="display:none;"></div>', unsafe_allow_html=True)
     lang_keys = list(LANG_DISPLAY.keys())
     lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
