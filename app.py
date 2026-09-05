@@ -1524,64 +1524,77 @@ def render_product_tour(force_open: bool = False) -> None:
                     align-items: flex-start !important;
                     justify-content: center !important;
                 }
+                /* Shrink the main popover card */
                 .orca-tour-modal-card {
-                    width: 90vw !important;
-                    max-width: 350px !important;
-                    max-height: 92vh !important;
+                    width: 85vw !important;
+                    max-width: 280px !important; /* User requested 280px */
+                    min-width: 250px !important;
+                    max-height: 85vh !important;
                     overflow-y: auto !important;
                     padding: 10px !important;
-                    border-radius: 16px !important;
+                    border-radius: 12px !important;
                     margin: 0 auto !important;
                 }
-                .orca-tour-modal-card h3, .orca-tour-modal-card h4 {
-                    font-size: 1.1rem !important;
-                }
-                .orca-tour-modal-card p, .orca-tour-modal-card span {
-                    font-size: 0.9rem !important;
-                }
-                .orca-tour-logo-img {
-                    width: 40px !important;
-                    height: 40px !important;
-                    min-width: 40px !important;
-                    min-height: 40px !important;
-                    max-width: 40px !important;
-                    max-height: 40px !important;
-                }
+                /* Shrink all text inside the popover to save space */
                 .orca-tour-title {
-                    font-size: 1.15rem !important;
-                    margin-bottom: 6px !important;
+                    font-size: 1rem !important;
+                    margin-bottom: 5px !important;
+                    line-height: 1.2 !important;
                 }
                 .orca-tour-body {
-                    font-size: 0.82rem !important;
-                    line-height: 1.5 !important;
-                    margin-bottom: 8px !important;
+                    font-size: 0.85rem !important;
+                    line-height: 1.3 !important;
+                    margin-bottom: 6px !important;
                 }
                 .orca-tour-location-banner {
-                    font-size: 10.5px !important;
-                    padding: 4px 8px !important;
-                    margin-bottom: 8px !important;
+                    font-size: 10px !important;
+                    padding: 3px 6px !important;
+                    margin-bottom: 5px !important;
+                }
+                .orca-tour-step {
+                    font-size: 9px !important;
+                    margin-bottom: 4px !important;
                 }
                 .orca-tour-tip {
+                    font-size: 0.75rem !important;
+                    margin: 4px 0 !important;
                     padding: 6px 10px !important;
-                    font-size: 11px !important;
-                    margin-top: 8px !important;
                 }
-                .orca-tour-btn-back,
-                .orca-tour-btn-next {
-                    min-height: 38px !important;
-                    padding: 8px 14px !important;
-                    font-size: 11.5px !important;
+                .orca-tour-pills span {
+                    font-size: 9.5px !important;
+                    padding: 3px 6px !important;
+                }
+                .orca-tour-logo-img {
+                    width: 32px !important;
+                    height: 32px !important;
+                    min-width: 32px !important;
+                    min-height: 32px !important;
+                    max-width: 32px !important;
+                    max-height: 32px !important;
+                }
+                /* Make the buttons smaller */
+                .orca-tour-btn-next, .orca-tour-btn-back {
+                    padding: 5px 10px !important;
+                    font-size: 0.8rem !important;
+                    min-height: auto !important;
+                }
+                /* Reduce margins on internal elements */
+                .orca-tour-modal-card hr.orca-tour-divider {
+                    margin: 8px 0 !important;
+                }
+                .orca-tour-dots {
+                    gap: 3px !important;
                 }
                 .orca-tour-close-x {
-                    width: 28px !important;
-                    height: 28px !important;
-                    top: 10px !important;
-                    right: 10px !important;
-                    font-size: 13px !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    top: 8px !important;
+                    right: 8px !important;
+                    font-size: 11px !important;
                 }
                 #orca-tour-beacon {
-                    font-size: 9.5px !important;
-                    padding: 4px 10px !important;
+                    font-size: 9px !important;
+                    padding: 4px 8px !important;
                 }
             }
         `;
