@@ -44,6 +44,35 @@ if LOGO_EXISTS:
     except Exception:
         LOGO_B64 = None
 
+
+def format_clean_location(full_loc: str) -> str:
+    """
+    Shorten verbose Nominatim reverse-geocoded addresses into clean 'City, State' labels.
+    E.g. 'Kundapura, Railway Station Road, Kandhavara, Koni, Kundapura, Udupi, Karnataka, 576211, India'
+         -> 'Kundapura, Karnataka'
+    """
+    if not full_loc or not isinstance(full_loc, str):
+        return full_loc or ""
+    parts = [p.strip() for p in full_loc.split(",") if p.strip()]
+    if len(parts) <= 2:
+        return full_loc
+
+    primary = parts[0]
+    state_or_district = None
+    for p in reversed(parts):
+        lower = p.lower()
+        if lower in ("india", "bharat") or p.isnumeric() or (len(p) == 6 and p.isdigit()):
+            continue
+        if any(w in lower for w in ("railway", "station", "road", "street", "lane", "cross", "opp", "near", "taluk", "circle", "post")):
+            continue
+        state_or_district = p
+        break
+
+    if state_or_district and state_or_district.lower() != primary.lower():
+        return f"{primary}, {state_or_district}"
+    return primary
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Page configuration
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1806,7 +1835,6 @@ def render_fisherman_response(
 
     # ── 1. Sea Safety Status Card (Default View) ─────────────────────────────
     now_str      = datetime.datetime.now().strftime("%d %b %Y • %H:%M IST")
-    from tools.weather_tools import format_clean_location
     raw_location = (weather_res.get("location", "N/A") if weather_res
                     else (pfz_res.get("location", "N/A") if pfz_res else "N/A"))
     location_str = format_clean_location(raw_location)
@@ -1871,8 +1899,6 @@ def render_fisherman_response(
         ctx.markdown(synthesis)
 
     # ── 3. Tabbed Operational Workspace (Decluttered View) ───────────────────
-    from tools.weather_tools import format_clean_location
-
     has_pfz_data     = bool(pfz_res and pfz_res.get("success") and pfz_res.get("zones"))
     has_nav_data     = bool(nav_res and nav_res.get("success"))
     has_weather_data = bool(weather_res and weather_res.get("success"))
@@ -2292,7 +2318,6 @@ def render_authority_response(
     level_label, level_dot, banner_type = _AUTHORITY_LEVEL_META.get(
         verdict or "SAFE", ("Level-0 / Benign", "🟢", "success")
     )
-    from tools.weather_tools import format_clean_location
     raw_auth_loc = (
         weather_res.get("location", "N/A") if weather_res else
         pfz_res.get("location", "N/A") if pfz_res else "N/A"
