@@ -790,14 +790,12 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
 
-    /* Lock the header to a single horizontal row */
+    /* THE ROOT CAUSE FIX: Strict Grid layout */
     div[data-testid="stHorizontalBlock"]:first-of-type {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        width: 100% !important; 
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
         gap: 8px !important;
+        width: 100% !important; 
         box-sizing: border-box !important;
     }
     
@@ -806,14 +804,31 @@ hr { border-color: #E2E8F0 !important; }
         display: none !important;
     }
 
-    /* Let the Tour Guide and Language columns share the space evenly (50/50) */
+    /* Force the 2nd and 3rd columns to strictly obey the 1fr grid cells */
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
         display: block !important;
-        flex: 1 1 0 !important;
+        width: 100% !important;
         min-width: 0 !important;
-        width: calc(50% - 4px) !important;
-        max-width: calc(50% - 4px) !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    /* CRITICAL FIX: Force internal Streamlit/Base Web elements to shrink */
+    div[data-testid="stHorizontalBlock"]:first-of-type * {
+        min-width: 0 !important;
+    }
+    
+    /* Truncate text (e.g. 'Tour Gu...') and reduce button padding on extremely small phones */
+    div[data-testid="stHorizontalBlock"]:first-of-type p,
+    div[data-testid="stHorizontalBlock"]:first-of-type span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    div[data-testid="stHorizontalBlock"]:first-of-type button {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
     }
 
     /* Center persona radio tabs when they wrap */
