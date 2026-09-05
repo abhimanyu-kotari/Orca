@@ -787,17 +787,19 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.5rem !important;
     }
 
-    /* ── Mobile Top Header (Streamlit Native Selectors) ────────── */
+    /* ── Mobile Top Header (CSS Grid — viewport-safe) ───────────── */
     div[data-testid="stHorizontalBlock"]:first-of-type {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        display: grid !important;
+        grid-template-columns: 45px 1fr 1fr !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow: hidden !important;
+        gap: 8px !important;
     }
 
     div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="column"] {
+        width: 100% !important;
         min-width: 0 !important;
-        width: auto !important;
-        flex: 1 1 0 !important;
     }
 
     div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="column"]:nth-child(1) div[data-testid="stMarkdownContainer"] {
