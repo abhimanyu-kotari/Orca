@@ -2298,6 +2298,7 @@ def render_authority_response(
             result["language"] = t_name
         except Exception:
             pass
+    loc         = CARD_LOCALIZATION.get(active_lang, CARD_LOCALIZATION.get("en", {}))
     intent      = result.get("intent", "casual_chat")
     is_casual   = (intent == "casual_chat") or (not weather_res and not pfz_res and not nav_res)
 
@@ -2353,183 +2354,179 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    alerts_rendered = False
-    if verdict == "DANGER":
+    # ── 2. Executive Action Directive (Single crisp banner, no raw text dumps) ──
+    if verdict == "DANGER" or n_critical > 0:
         ctx.markdown(f"""
-<div class="alert-critical">
-  <span class="alert-severity-pill pill-critical">🔴 CRITICAL</span>
-  <p class="alert-title">Severe Maritime Hazard — {level_label}</p>
-  <p class="alert-meta">📍 {location_str} &nbsp;·&nbsp; ⏱ {now_str}</p>
-  <p style="font-size:0.82rem;color:#374151;margin:0;">SEVERE STATE: Activate Level-2/3 response. Issue vessel exclusion and evacuation protocols. All small-craft launches prohibited.</p>
+<div class="alert-critical" style="margin-bottom:12px;">
+  <span class="alert-severity-pill pill-critical">🔴 CRITICAL PROTOCOL ENFORCED</span>
+  <p class="alert-title" style="margin-top:4px;">🚨 MANDATORY HARBOR RECALL & VESSEL EXCLUSION — {level_label}</p>
+  <p style="font-size:0.82rem;color:#374151;margin:4px 0 0 0;">Ingress/egress strictly prohibited for all motorized trawlers and artisanal craft. Immediate evacuation protocols active for sector <b>{location_str}</b>.</p>
 </div>
 """, unsafe_allow_html=True)
-        alerts_rendered = True
-
-    if lightning_hazard:
+    elif verdict == "CAUTION":
         ctx.markdown(f"""
-<div class="alert-critical">
-  <span class="alert-severity-pill pill-critical">🔴 CRITICAL</span>
-  <p class="alert-title">⚡ Convective Storm Alert — Lightning Hazard</p>
-  <p class="alert-meta">CAPE: {m.get("max_cape_jkg",0):.0f} J/kg &nbsp;·&nbsp; Threshold: 1500 J/kg</p>
-  <p style="font-size:0.82rem;color:#374151;margin:0;">Prohibit all small-craft launches. Activate port storm-clearance protocol. Expected duration: 18:00–23:00 IST.</p>
+<div class="alert-warning" style="margin-bottom:12px;">
+  <span class="alert-severity-pill pill-warning">🟠 COASTAL WATCH ACTIVE</span>
+  <p class="alert-title" style="margin-top:4px;">⚠️ LEVEL-1 SURVEILLANCE — Elevated Sea State</p>
+  <p style="font-size:0.82rem;color:#374151;margin:4px 0 0 0;">Small craft advisory issued. Vessel traffic under Level-1 surveillance. Monitor IMD bulletins for escalation in <b>{location_str}</b>.</p>
 </div>
 """, unsafe_allow_html=True)
-        alerts_rendered = True
-
-    if imbl_active:
-        imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0) if nav_res else 0.0
-        imbl_bdry = nav_res.get("imbl_closest_boundary", "IMBL") if nav_res else "IMBL"
+    else:
         ctx.markdown(f"""
-<div class="alert-critical">
-  <span class="alert-severity-pill pill-critical">🔴 CRITICAL</span>
-  <p class="alert-title">🛑 IMBL Proximity Breach — Risk of Impoundment</p>
-  <p class="alert-meta">Distance: {imbl_dist:.1f} NM from {imbl_bdry}</p>
-  <p style="font-size:0.82rem;color:#374151;margin:0;">Immediate vessel recall recommended. Coordinate with Coast Guard. Risk of foreign maritime apprehension.</p>
-</div>
-""", unsafe_allow_html=True)
-        alerts_rendered = True
-
-    if verdict == "CAUTION":
-        ctx.markdown(f"""
-<div class="alert-warning">
-  <span class="alert-severity-pill pill-warning">🟠 WARNING</span>
-  <p class="alert-title">Level-1 Coastal Watch — Elevated Sea State</p>
-  <p class="alert-meta">📍 {location_str} &nbsp;·&nbsp; ⏱ {now_str}</p>
-  <p style="font-size:0.82rem;color:#374151;margin:0;">Small craft advisory issued. Vessel traffic under Level-1 surveillance. Monitor IMD bulletins for escalation.</p>
-</div>
-""", unsafe_allow_html=True)
-        alerts_rendered = True
-
-    if pfz_res and pfz_res.get("success"):
-        zones    = pfz_res.get("zones", [])
-        best     = pfz_res.get("best_zone", {})
-        best_nm  = best.get("name", "—") if best else "—"
-        ctx.markdown(f"""
-<div class="alert-info">
-  <span class="alert-severity-pill pill-info">ℹ ADVISORY</span>
-  <p class="alert-title">📍 Vessel Activity Expected — {len(zones)} Active PFZ Clusters</p>
-  <p class="alert-meta">Sector: {pfz_res.get("location","N/A")} · Highest density: {best_nm}</p>
-  <p style="font-size:0.82rem;color:#374151;margin:0;">Include active PFZ cluster in coastal surveillance sweep. Small craft vessels operating in this sector.</p>
+<div class="alert-info" style="background:#F0FDF4;border-color:#22c55e;margin-bottom:12px;">
+  <span class="alert-severity-pill pill-safe">🟢 LEVEL-0 BENIGN</span>
+  <p class="alert-title" style="margin-top:4px;color:#15803D;">✅ STANDARD MARITIME CLEARANCE</p>
+  <p style="font-size:0.82rem;color:#374151;margin:4px 0 0 0;">All sea-state and convective thresholds within normal limits across <b>{location_str}</b>. Routine port clearance maintained.</p>
 </div>
 """, unsafe_allow_html=True)
 
-    if not alerts_rendered and verdict == "SAFE":
-        ctx.markdown(f"""
-<div class="alert-info" style="background:#F0FDF4;border-color:#22c55e;">
-  <span class="alert-severity-pill pill-safe">🟢 ALL CLEAR</span>
-  <p class="alert-title">No Active Alerts — Standard Maritime Advisory in Effect</p>
-  <p class="alert-meta">📍 {location_str} &nbsp;·&nbsp; ⏱ {now_str}</p>
-  <p style="font-size:0.82rem;color:#374151;margin:0;">All sea-state thresholds within normal limits. Routine monitoring protocol maintained.</p>
+    # ── 3. Four-Tab Operations Workspace (Zero Clutter) ──────────────────────
+    t_map, t_hazards, t_telemetry, t_reasoning = ctx.tabs([
+        loc.get("tab_auth_map", "🗺️ Surveillance & Geofences"),
+        loc.get("tab_auth_hazards", "🚨 Hazard & Evacuation Protocols"),
+        loc.get("tab_auth_telemetry", "📊 Disaster Telemetry & Thresholds"),
+        loc.get("tab_auth_reasoning", "🧠 IMD Reasoning & Dispatch Chain"),
+    ])
+
+    # ── TAB 1: Surveillance & Geofences ──
+    with t_map:
+        if fmap is not None:
+            st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
+            t_map.caption("Red polygon = Active storm-surge exclusion geofence · Blue track = Monitored vessel corridor · Green pins = PFZ clusters")
+            recall_txt = "Enforced 🚨" if verdict == "DANGER" else ("Standby ⚠️" if verdict == "CAUTION" else "Cleared 🟢")
+            t_map.markdown(f"""
+<div class="hotspot-quick-chip">
+  📍 <b>Monitored Sector:</b> <b>{location_str}</b> &nbsp;·&nbsp;
+  🛡️ <b>Geofence:</b> 15 km Coastal Exclusion Zone &nbsp;·&nbsp;
+  🚨 <b>Harbor Recall:</b> <b>{recall_txt}</b>
+</div>
+""", unsafe_allow_html=True)
+        else:
+            t_map.info(f"No spatial geofence map required for {location_str}.")
+
+    # ── TAB 2: Hazard & Evacuation Protocols ──
+    with t_hazards:
+        if lightning_hazard:
+            t_hazards.markdown(f"""
+<div class="alert-critical" style="margin-bottom:8px;">
+  <span class="alert-severity-pill pill-critical">🔴 HIGH CONVECTIVE RISK</span>
+  <p class="alert-title">⚡ Convective Storm Alert — Acute Lightning Hazard</p>
+  <p class="alert-meta">CAPE Energy: <b>{m.get('max_cape_jkg',0):.0f} J/kg</b> (Safety Threshold: 1500 J/kg)</p>
+  <p style="font-size:0.82rem;color:#374151;margin:4px 0 0 0;">Prohibit all small-craft launches. Open water craft face severe risk of direct lightning strikes. Activate port storm-clearance protocol.</p>
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 2. Operational Synthesis (Default View) ──────────────────────────────
-    if synthesis:
-        ctx.markdown(synthesis)
-
-    # ── 3. Folium Map (Default View) ──────────────────────────────────────────
-    if fmap is not None:
-        ctx.markdown("#### 🗺️ Coastal Surveillance & Hazard Geofence Chart")
-        ctx.caption("Red polygon = active storm-surge exclusion zone · Blue track = monitored vessel corridor · Green pins = PFZ clusters")
-        st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
-
-    # ── 3. Progressive Disclosure: Operational Telemetry & Geofence Details ───
-    with ctx.expander("🚨 View Operational Telemetry & Geofence Details", expanded=False):
-        # A. 8-metric Disaster Telemetry
-        if weather_res and weather_res.get("success"):
-            ctx.markdown("##### 📊 Marine & Meteorological Disaster Telemetry")
-            c1, c2, c3, c4 = ctx.columns(4)
-            c1.metric("💨 Peak Wind",    f"{m.get('max_wind_speed_kmh',0.0):.1f} km/h",
-                      "⚠ Gale" if m.get("max_wind_speed_kmh",0) > 40 else "Normal", delta_color="inverse")
-            c2.metric("🌊 Max Wave",     f"{m.get('max_wave_height_m',0.0):.2f} m",
-                      "⚠ Hazard" if m.get("max_wave_height_m",0) > 2.5 else "Normal", delta_color="inverse")
-            c3.metric("🌀 Wind Gust",    f"{m.get('max_wind_gust_kmh',0.0):.1f} km/h",
-                      "⚠ Severe" if m.get("max_wind_gust_kmh",0) > 55 else "Normal", delta_color="inverse")
-            c4.metric("⚡ CAPE Energy",  f"{m.get('max_cape_jkg',0.0):.0f} J/kg",
-                      "⚠ Lightning" if m.get("max_cape_jkg",0) > 1500 else "Stable", delta_color="inverse")
-            c5, c6, c7, c8 = ctx.columns(4)
-            c5.metric("🌊 Swell",        f"{m.get('max_swell_height_m',0.0):.2f} m",
-                      "⚠ High" if m.get("max_swell_height_m",0) > 2.0 else "OK", delta_color="inverse")
-            c6.metric("🌧️ Precipitation", f"{m.get('max_precipitation_mm',0.0):.1f} mm/hr",
-                      "⚠ Heavy" if m.get("max_precipitation_mm",0) > 10 else "Light", delta_color="inverse")
-            c7.metric("🕰️ Wave Period",   f"{m.get('max_wave_period_s',0.0):.1f} s")
-            c8.metric("⛈️ Thunderstorm",  "Active ⚡" if m.get("thunderstorm_likely") else "None", delta_color="off")
-
-        # B. Active Geofence & Surveillance Guidance
-        ctx.markdown("##### 🛡️ Active Geofence & Surveillance Guidance")
-        if nav_res and nav_res.get("imbl_warning_active"):
-            imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
-            imbl_bdry = nav_res.get("imbl_closest_boundary", "IMBL")
-            ctx.markdown(f"""
-<div class="hazard-chip critical">
-  <span class="hazard-icon">🛑</span>
-  <div class="hazard-content">
-    <p class="hazard-title">INTERNATIONAL MARITIME BOUNDARY LINE BREACH</p>
-    <p class="hazard-detail">Restriction: International maritime law · Distance: {imbl_dist:.1f} NM from {imbl_bdry}</p>
-    <p class="hazard-action">→ Immediate vessel recall · Coordinate with Indian Coast Guard · Maintain 5 NM clearance</p>
-  </div>
+        if imbl_active:
+            imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0) if nav_res else 0.0
+            imbl_bdry = nav_res.get("imbl_closest_boundary", "IMBL") if nav_res else "IMBL"
+            t_hazards.markdown(f"""
+<div class="alert-critical" style="margin-bottom:8px;">
+  <span class="alert-severity-pill pill-critical">🛑 SOVEREIGN BOUNDARY</span>
+  <p class="alert-title">🛑 IMBL Proximity Standoff Protocol</p>
+  <p class="alert-meta">Distance to {imbl_bdry}: <b>{imbl_dist:.1f} NM</b> (Mandatory Buffer: 5 NM)</p>
+  <p style="font-size:0.82rem;color:#374151;margin:4px 0 0 0;">Immediate course diversion recommended. Coordinate with Indian Coast Guard. Standoff radio protocol broadcast.</p>
 </div>
 """, unsafe_allow_html=True)
 
         if verdict == "DANGER":
-            ctx.markdown(f"""
+            t_hazards.markdown(f"""
 <div class="hazard-chip critical">
   <span class="hazard-icon">🚨</span>
   <div class="hazard-content">
     <p class="hazard-title">MARITIME EXCLUSION ZONE ACTIVE — LEVEL-2 PROTOCOL</p>
-    <p class="hazard-detail">Restriction: Severe sea state · Sector: {location_str}</p>
-    <p class="hazard-action">→ All small-craft return to port · Activate evacuation protocol · Contact IMD for boundary coords</p>
+    <p class="hazard-detail">Restriction: Severe sea state / squall gale · Sector: {location_str}</p>
+    <p class="hazard-action">→ All small-craft return to port · Activate emergency evacuation protocol · Port ingress closed</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
         elif verdict == "CAUTION":
-            ctx.markdown(f"""
-<div class="hazard-chip">
+            t_hazards.markdown(f"""
+<div class="hazard-chip warning">
   <span class="hazard-icon">⚠️</span>
   <div class="hazard-content">
     <p class="hazard-title">LEVEL-1 COASTAL WATCH ZONE</p>
-    <p class="hazard-detail">Restriction: Elevated sea conditions · Sector: {location_str}</p>
-    <p class="hazard-action">→ Small craft advisory issued · Level-1 surveillance active · Monitor IMD bulletins</p>
+    <p class="hazard-detail">Restriction: Elevated sea state · Sector: {location_str}</p>
+    <p class="hazard-action">→ Small craft advisory issued · Level-1 surveillance active · Mandatory life-jacket compliance</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
-
-        if not imbl_active and verdict == "SAFE":
-            ctx.markdown(f"""
+        else:
+            t_hazards.markdown(f"""
 <div class="hazard-chip" style="background:#F0FDF4;border-color:#BBF7D0;">
   <span class="hazard-icon">✅</span>
   <div class="hazard-content">
-    <p class="hazard-title" style="color:#15803D;">ALL CLEAR — No Active Exclusion Zones</p>
-    <p class="hazard-detail">Standard vessel traffic advisory in effect · Routine monitoring protocol</p>
+    <p class="hazard-title" style="color:#15803D;">ALL CLEAR — Standard Navigational Buffer</p>
+    <p class="hazard-detail">Standard vessel traffic advisory in effect · Normal port clearance protocols active</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-        # C. Operational Synthesis
-        if synthesis:
-            ctx.markdown("##### 🧠 Operational Assessment")
-            ctx.markdown(synthesis)
+        if pfz_res and pfz_res.get("success"):
+            zones = pfz_res.get("zones", [])
+            best = pfz_res.get("best_zone", {})
+            best_nm = best.get("name", "—") if best else "—"
+            t_hazards.markdown(f"""
+<div class="alert-info" style="margin-top:8px;">
+  <span class="alert-severity-pill pill-info">ℹ️ VESSEL ACTIVITY</span>
+  <p class="alert-title">📍 High Small-Craft Density — {len(zones)} Active PFZ Clusters</p>
+  <p class="alert-meta">Sector: {pfz_res.get("location","N/A")} · Top density: {best_nm}</p>
+  <p style="font-size:0.82rem;color:#374151;margin:4px 0 0 0;">Maintain heightened watch on fishing fleets. Ensure priority radio channels remain open for advisories.</p>
+</div>
+""", unsafe_allow_html=True)
 
-        # D. Complete Disaster Telemetry & Pipeline
+        # Simulated Emergency Broadcast Dispatch Panel
+        t_hazards.markdown("##### 📡 Emergency Broadcast & Dispatch Network")
+        col_d1, col_d2, col_d3 = t_hazards.columns(3)
+        col_d1.metric("VHF Ch 16 Broadcast", "TRANSMITTED 🔊" if verdict in ("DANGER", "CAUTION") else "STANDBY 📻", "Emergency Alert")
+        col_d2.metric("NAVTEX Coastal Nav", "ISSUED 📨" if verdict == "DANGER" else "STANDBY", "Port Area 4")
+        col_d3.metric("Fishermen SMS Gateway", "DISPATCHED 📲" if verdict in ("DANGER", "CAUTION") else "ROUTINE", "Coastal Clusters")
+
+    # ── TAB 3: Disaster Telemetry & Thresholds ──
+    with t_telemetry:
         if weather_res and weather_res.get("success"):
+            t_telemetry.markdown("##### 📊 Real-Time Marine Disaster Telemetry")
+            c1, c2, c3, c4 = t_telemetry.columns(4)
+            c1.metric("💨 Peak Wind", f"{m.get('max_wind_speed_kmh',0.0):.1f} km/h",
+                      "⚠ Gale" if m.get("max_wind_speed_kmh",0) > 40 else "Normal", delta_color="inverse")
+            c2.metric("🌊 Max Wave", f"{m.get('max_wave_height_m',0.0):.2f} m",
+                      "⚠ Hazard" if m.get("max_wave_height_m",0) > 2.5 else "Normal", delta_color="inverse")
+            c3.metric("🌀 Wind Gust", f"{m.get('max_wind_gust_kmh',0.0):.1f} km/h",
+                      "⚠ Severe" if m.get("max_wind_gust_kmh",0) > 55 else "Normal", delta_color="inverse")
+            c4.metric("⚡ CAPE Energy", f"{m.get('max_cape_jkg',0.0):.0f} J/kg",
+                      "⚠ Lightning" if m.get("max_cape_jkg",0) > 1500 else "Stable", delta_color="inverse")
+            c5, c6, c7, c8 = t_telemetry.columns(4)
+            c5.metric("🌊 Swell", f"{m.get('max_swell_height_m',0.0):.2f} m",
+                      "⚠ High" if m.get("max_swell_height_m",0) > 2.0 else "OK", delta_color="inverse")
+            c6.metric("🌧️ Precipitation", f"{m.get('max_precipitation_mm',0.0):.1f} mm/hr",
+                      "⚠ Heavy" if m.get("max_precipitation_mm",0) > 10 else "Light", delta_color="inverse")
+            c7.metric("🕰️ Wave Period", f"{m.get('max_wave_period_s',0.0):.1f} s")
+            c8.metric("⛈️ Thunderstorm", "Active ⚡" if m.get("thunderstorm_likely") else "None", delta_color="off")
+
             storm_str = "Yes ⚡" if m.get("thunderstorm_likely") else "No"
-            reasoning = weather_res.get("reasoning", "Assessed against IMD/INCOIS thresholds.")
-            ctx.markdown(
-                f"**📊 Complete Peak Conditions**\n\n"
-                f"| Metric | Value | IMD Threshold |\n|---|---|---|\n"
-                f"| Wind Speed | {m.get('max_wind_speed_kmh',0.0):.1f} km/h | 40.0 km/h |\n"
-                f"| Wind Gust | {m.get('max_wind_gust_kmh',0.0):.1f} km/h | 55.0 km/h |\n"
-                f"| Wave Height | {m.get('max_wave_height_m',0.0):.2f} m | 2.50 m |\n"
-                f"| Swell Height | {m.get('max_swell_height_m',0.0):.2f} m | 2.00 m |\n"
-                f"| Wave Period | {m.get('max_wave_period_s',0.0):.1f} s | — |\n"
-                f"| Precipitation | {m.get('max_precipitation_mm',0.0):.1f} mm/hr | 10.0 mm/hr |\n"
-                f"| CAPE | {m.get('max_cape_jkg',0.0):.0f} J/kg | 1500 J/kg |\n"
-                f"| Thunderstorm | {storm_str} | Danger |\n\n"
-                f"**🧠 IMD Reasoning:** {reasoning}\n\n"
-                f"**🤖 Agent Pipeline:** {_agents_badge(result)}"
+            t_telemetry.markdown(
+                f"**Complete Peak Conditions vs IMD Thresholds**\n\n"
+                f"| Marine Parameter | Monitored Value | IMD Critical Threshold | Operational Status |\n"
+                f"|---|---|---|---|\n"
+                f"| Sustained Wind | {m.get('max_wind_speed_kmh',0.0):.1f} km/h | 40.0 km/h | {'⚠ EXCEEDED' if m.get('max_wind_speed_kmh',0) > 40 else '✅ Safe'} |\n"
+                f"| Wind Gusts | {m.get('max_wind_gust_kmh',0.0):.1f} km/h | 55.0 km/h | {'⚠ EXCEEDED' if m.get('max_wind_gust_kmh',0) > 55 else '✅ Safe'} |\n"
+                f"| Significant Wave | {m.get('max_wave_height_m',0.0):.2f} m | 2.50 m | {'⚠ EXCEEDED' if m.get('max_wave_height_m',0) > 2.5 else '✅ Safe'} |\n"
+                f"| Ocean Swell | {m.get('max_swell_height_m',0.0):.2f} m | 2.00 m | {'⚠ EXCEEDED' if m.get('max_swell_height_m',0) > 2.0 else '✅ Safe'} |\n"
+                f"| Convective CAPE | {m.get('max_cape_jkg',0.0):.0f} J/kg | 1500 J/kg | {'⚡ LIGHTNING' if m.get('max_cape_jkg',0) > 1500 else '✅ Stable'} |\n"
+                f"| Precipitation Rate | {m.get('max_precipitation_mm',0.0):.1f} mm/hr | 10.0 mm/hr | {'⚠ HEAVY' if m.get('max_precipitation_mm',0) > 10 else '✅ Light'} |\n"
+                f"| Thunderstorm Probability | {storm_str} | Active Cell | {'⚡ HAZARD' if m.get('thunderstorm_likely') else '✅ Clear'} |\n"
             )
         else:
-            ctx.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
+            t_telemetry.info(f"No active meteorological telemetry recorded for {location_str}.")
+
+    # ── TAB 4: IMD Reasoning & Dispatch Chain ──
+    with t_reasoning:
+        t_reasoning.markdown("##### 🧠 Official IMD Classification & Operational Reasoning")
+        if synthesis:
+            t_reasoning.markdown(synthesis)
+        elif weather_res:
+            t_reasoning.markdown(weather_res.get("reasoning", "Assessed against IMD/INCOIS thresholds."))
+
+        t_reasoning.markdown(f"**🤖 Multi-Agent Execution Pipeline:** {_agents_badge(result)}")
 
     # ── 4. Data Trust Badge ───────────────────────────────────────────────────
     _render_data_trust_badge(ctx, result)
@@ -2642,12 +2639,7 @@ def render_researcher_response(
 
     # ── 3. Progressive Disclosure: Detailed Scientific Data ───────────────────
     with ctx.expander("🔬 View Detailed Scientific Data", expanded=False):
-        # A. Scientific Assessment Text
-        if synthesis:
-            ctx.markdown("##### 🔬 Scientific Assessment")
-            ctx.markdown(synthesis)
-
-        # B. Earth Observation Diagnostic Summary Table
+        # A. Earth Observation Diagnostic Summary Table
         if eo_res and eo_res.get("success"):
             sst_min      = eo_res.get("min_sst_c", 0.0)
             sst_max      = eo_res.get("max_sst_c", 0.0)
@@ -3412,27 +3404,40 @@ else:
                 use_container_width=True,
             )
         elif persona == "coastal_authority":
-            st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
-            default_auth_map = create_weather_map(
-                user_lat=13.0827,
-                user_lon=80.2707,
-                user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
-                safety_verdict="CAUTION",
-                persona="coastal_authority",
-            )
-            st_folium(
-                default_auth_map,
-                width=None,
-                height=360,
-                returned_objects=[],
-                use_container_width=True,
-            )
-            with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
-                col_a, col_b, col_c = st.columns(3)
-                col_a.metric("Active Vessels in Geofence", "142 Small Craft", "Evacuation Ready")
-                col_b.metric("Significant Wave Height", "2.10 m", "Elevated Swell")
-                col_c.metric("Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
-                st.caption("Active surveillance baseline for Coastal Warning Zone 4. Ask a query below or use direct controls to query any port.")
+            st.markdown("""
+<div style="background:linear-gradient(135deg, #061826, #0f2d42); border:1px solid #1e3a5f; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <div>
+      <span style="background:#dc2626; color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; letter-spacing:0.05em;">ACTIVE SURVEILLANCE SECTOR</span>
+      <h4 style="margin:6px 0 2px 0; color:#F8FAFC; font-size:1.1rem;">Zone 4: Chennai–Ennore Maritime Corridor</h4>
+      <p style="margin:0; font-size:12px; color:#94A3B8;">Pre-loaded operational baseline · 15 km Coastal Exclusion Geofence · IMD Cyclone Watch</p>
+    </div>
+    <div style="text-align:right;">
+      <span style="font-size:12px; color:#38bdf8; font-weight:600;">Status: Level-2 (Moderate Surge Watch)</span>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+            col_a, col_b, col_c = st.columns(3)
+            col_a.metric("🚢 Active Vessels in Sector", "142 Small Craft", "Evacuation Ready")
+            col_b.metric("🌊 Significant Wave Height", "2.10 m", "Elevated Swell")
+            col_c.metric("🌀 Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
+            with st.expander("🗺️ Preview Zone 4 Surveillance Geofence Map", expanded=False):
+                default_auth_map = create_weather_map(
+                    user_lat=13.0827,
+                    user_lon=80.2707,
+                    user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
+                    safety_verdict="CAUTION",
+                    persona="coastal_authority",
+                )
+                st_folium(
+                    default_auth_map,
+                    width=None,
+                    height=300,
+                    returned_objects=[],
+                    use_container_width=True,
+                )
+                st.caption("Baseline surveillance map for Zone 4 (Chennai Sector). Enter a query below or use quick action buttons to analyze any sector.")
 
     # 3. Welcome banner when chat is fresh (tailored to active Persona)
     if not st.session_state.messages:
@@ -3530,3 +3535,4 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
 
     # D. Save latest map to session state (for the persistent map panel above history)
     st.session_state.current_map = fmap
+    st.rerun()
