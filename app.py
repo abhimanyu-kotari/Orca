@@ -763,6 +763,13 @@ hr { border-color: #E2E8F0 !important; }
 }
 [data-testid="stDataFrameContainer"] { border-radius: 10px !important; }
 
+/* Keep top header controls nicely proportioned on desktop */
+@media (min-width: 769px) {
+    div[data-testid="stHorizontalBlock"]:has(#orca-tour-lang-marker) {
+        max-width: 520px;
+    }
+}
+
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 1280px) { .safety-metrics { gap: 16px; } }
 @media (max-width: 768px)  { 
@@ -777,19 +784,23 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.65rem !important;
     }
 
-    /* Ensure the container holding the top controls stays visible and stacks cleanly */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-wrap: wrap !important;
+    /* Target the first column block in the main app (the top header) and force it to stay a horizontal row */
+    .main div[data-testid="stHorizontalBlock"]:first-of-type {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: flex-end !important; /* Keeps them bottom-aligned */
         gap: 10px !important;
     }
-    /* Force the columns inside the header to take up appropriate space on mobile */
-    div[data-testid="column"] {
-        min-width: 120px !important;
-        flex: 1 1 auto !important;
+    
+    /* Force the individual columns inside that row to share the space equally */
+    .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
+        width: 50% !important;
+        min-width: 0 !important;
     }
-
-    div[data-testid="stHorizontalBlock"] button {
+    
+    /* Ensure the button expands to fill its half */
+    .main div[data-testid="stHorizontalBlock"]:first-of-type button {
+        width: 100% !important;
         height: 38px !important;
         min-height: 38px !important;
         padding: 4px 8px !important;
@@ -798,8 +809,9 @@ hr { border-color: #E2E8F0 !important; }
         border-radius: 8px !important;
     }
 
-    div[data-testid="stHorizontalBlock"] div[data-baseweb="select"],
-    div[data-testid="stHorizontalBlock"] div[data-baseweb="select"] > div {
+    /* Ensure selectbox matches button height */
+    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
+    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div {
         height: 38px !important;
         min-height: 38px !important;
         border-radius: 8px !important;
@@ -4000,43 +4012,40 @@ with st.sidebar:
 # Global Top Navigation — Horizontal Persona Selector
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Brand header (fully responsive flexbox — side-by-side on desktop & mobile)
-# We place the Logo/Title, Tour Guide, and Language Selector in a single responsive row.
-# Injecting align-items: center specifically for the very first HorizontalBlock on the page
-# Custom vertical alignment handled by st.columns natively
-# Wrap the header controls inside its own dedicated st.container()
+# ── Brand Header (Logo & Subtitle) ──
+if LOGO_B64:
+    st.markdown(f"""
+    <div class="orca-hero-header" style="margin: 0 0 6px 0 !important;">
+        <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
+        <div class="orca-hero-text">
+            <span class="orca-hero-title">ORCA</span>
+            <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <div class="orca-hero-header" style="margin: 0 0 6px 0 !important;">
+        <div class="orca-hero-text">
+            <span class="orca-hero-title">🌊 ORCA</span>
+            <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ── Top Header Controls (Help / Tour Guide & Advisory Language) ──
+# Dedicated container holding the 2-column controls row side-by-side
 header_container = st.container()
 with header_container:
-    hero_col1, hero_col2, hero_col3 = st.columns([3.2, 1.8, 2.4], vertical_alignment="center")
+    col1, col2 = st.columns([1, 1], vertical_alignment="bottom")
 
-    with hero_col1:
-        if LOGO_B64:
-            st.markdown(f"""
-            <div class="orca-hero-header" style="margin: 0 !important;">
-                <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
-                <div class="orca-hero-text">
-                    <span class="orca-hero-title">ORCA</span>
-                    <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div class="orca-hero-header" style="margin: 0 !important;">
-                <div class="orca-hero-text">
-                    <span class="orca-hero-title">🌊 ORCA</span>
-                    <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    with hero_col2:
+    with col1:
         if st.button("❓ Help / Tour Guide", use_container_width=True):
             st.session_state.open_tour_modal = True
             st.session_state.active_nav_view = "dashboard"
             st.rerun()
 
-    with hero_col3:
+    with col2:
         st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
         lang_keys = list(LANG_DISPLAY.keys())
         lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
