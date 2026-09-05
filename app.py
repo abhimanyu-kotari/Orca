@@ -151,19 +151,31 @@ html, body, [data-testid="stAppViewContainer"] {
     background-color: #FFFFFF !important;
     border-radius: 6px !important;
 }
+/* Force dark text inside the selectbox input field (covers all internal spans/divs) */
+[data-testid="stSidebar"] div[data-baseweb="select"] span, 
+[data-testid="stSidebar"] div[data-baseweb="select"] div,
 [data-testid="stSidebar"] div[data-baseweb="select"] * {
-    color: #1E293B !important; /* Force dark text for high contrast on white background */
+    color: #0B2638 !important; 
 }
-/* Ensure dropdown menu items are readable */
+
+/* Force dark text inside the dropdown list items when opened */
+ul[role="listbox"], 
 ul[data-baseweb="menu"] {
     background-color: #FFFFFF !important;
 }
-ul[data-baseweb="menu"] li {
-    color: #1E293B !important;
+ul[role="listbox"] li, 
+ul[role="listbox"] li span,
+ul[role="listbox"] div,
+ul[data-baseweb="menu"] li,
+ul[data-baseweb="menu"] li span {
+    color: #0B2638 !important;
+    background-color: transparent !important;
 }
+ul[role="listbox"] li:hover,
 ul[data-baseweb="menu"] li:hover {
     background-color: #F1F5F9 !important;
 }
+
 
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
