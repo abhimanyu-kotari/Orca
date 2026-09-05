@@ -796,27 +796,141 @@ hr { border-color: #E2E8F0 !important; }
 
     /* Reduce excessive top whitespace on mobile */
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1.25rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.65rem !important;
-        padding-right: 0.65rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
 
-    /* On mobile, hide the long subtitle sentence so Logo + Title fit cleanly in Column 1 */
+    /* ── Rule 1: Override Mobile Stacking ──────────────────────── */
+    /* Target the container holding the top header columns and force a single horizontal row */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header),
+    .main div[data-testid="stHorizontalBlock"]:first-of-type {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        width: 100% !important;
+        margin: 0 0 4px 0 !important;
+        overflow: visible !important;
+    }
+
+    /* ── Rule 3: Fit to Screen (Flexible Sizing & No Horizontal Scroll) ── */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"],
+    .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
+        width: auto !important;
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+    }
+
+    /* Proportional column distribution on mobile */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1),
+    .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+        flex: 2 1 auto !important;
+        min-width: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2),
+    .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
+        flex: 1.2 1 auto !important;
+        min-width: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3),
+    .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+        flex: 1.3 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Compact Help / Tour Guide Button */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type button {
+        height: 35px !important;
+        min-height: 35px !important;
+        padding: 3px 6px !important;
+        font-size: 0.74rem !important;
+        white-space: nowrap !important;
+        border-radius: 7px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+    }
+
+    /* Compact Advisory Language Dropdown */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"],
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
+    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div {
+        height: 35px !important;
+        min-height: 35px !important;
+        font-size: 0.76rem !important;
+        border-radius: 7px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+    }
+
+    /* ── Rule 2: Scale the Logo ────────────────────────────────── */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) .orca-hero-header,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type .orca-hero-header {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-height: 35px !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) img,
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) .orca-hero-logo,
+    .orca-hero-logo {
+        max-width: 26px !important;
+        max-height: 26px !important;
+        width: 26px !important;
+        height: 26px !important;
+        object-fit: contain !important;
+        border-radius: 5px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .orca-hero-title {
+        font-size: 1.05rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+
     .orca-hero-subtitle {
         display: none !important;
     }
-    .orca-hero-logo {
-        width: 28px !important;
-        height: 28px !important;
-        min-width: 28px !important;
-        min-height: 28px !important;
-        border-radius: 6px !important;
-    }
-    .orca-hero-title {
-        font-size: 1.1rem !important;
-        line-height: 1 !important;
+
+    /* ── Rule 4: Hide Labels & Remove Invisible Padding ────────── */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) label,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type label {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
         margin: 0 !important;
+        padding: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stElementContainer"],
+    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="stElementContainer"] {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    div[data-testid="stElementContainer"]:has(#orca-tour-lang-marker) {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Tighten Divider */
