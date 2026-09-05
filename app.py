@@ -805,7 +805,8 @@ hr { border-color: #E2E8F0 !important; }
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
         flex: 1 1 0 !important;
         min-width: 0 !important;
-        width: 100% !important;
+        width: calc(50% - 3px) !important;
+        max-width: calc(50% - 3px) !important;
     }
 
     /* Center persona radio tabs when they wrap */
