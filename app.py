@@ -779,66 +779,29 @@ hr { border-color: #E2E8F0 !important; }
     .safety-verdict { font-size: 1.2rem; } 
     .zone-metrics { flex-direction: column; gap: 6px; } 
 
-    /* Reduce excessive top whitespace on mobile */
+    /* ── Universal overflow safeguard ───────────────────────── */
     .block-container {
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
         padding-top: 1.25rem !important;
         padding-bottom: 2rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
-    }
-
-    /* ── Mobile Top Header ──────────────────────────────────────── */
-    div[data-testid="stHorizontalBlock"]:first-of-type {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        width: 100% !important;
-        gap: 8px !important;
         box-sizing: border-box !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
-        min-width: 0 !important;
-        flex-shrink: 1 !important;
-        align-self: center !important;
-        padding: 0 2px !important;
+    /* ── Safe mobile header (wrap-friendly, no forced nowrap) ── */
+    div[data-testid="stHorizontalBlock"]:first-of-type {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
     }
 
-    /* Column 1: logo only — shrink-wrap to the image */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 auto !important;
-        max-width: 48px !important;
-    }
-
-    /* Columns 2 & 3: equal share of remaining width */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
-        flex: 1 1 0 !important;
-    }
-
-    /* Hide ONLY the text div — NOT the logo img itself */
-    div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="column"]:nth-child(1) .orca-hero-text {
-        display: none !important;
-    }
-
-    /* Keep logo image crisp at 36px */
-    div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="column"]:nth-child(1) img {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
-        display: block !important;
-        border-radius: 6px !important;
-        object-fit: cover !important;
-    }
-
-    /* ── Persona Radio: center wrapped row on mobile ─────────── */
+    /* ── Persona radio: center the wrapped row ───────────────── */
     div[role="radiogroup"],
     div[data-testid="stRadioGroup"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
         justify-content: center !important;
-        align-items: center !important;
     }
 }
 </style>
