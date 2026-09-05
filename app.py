@@ -790,13 +790,43 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
 
-    /* ── Safe mobile header (wrap-friendly, no forced nowrap) ── */
+    /* ── 2. Force single horizontal row on the top header ───── */
     div[data-testid="stHorizontalBlock"]:first-of-type {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    /* ── Persona radio: center the wrapped row ───────────────── */
+    /* ── 3a. Column 1: fixed 40px logo slot ─────────────────── */
+    div[data-testid="stHorizontalBlock"]:first-of-type
+        > div[data-testid="column"]:nth-child(1) {
+        flex: 0 0 40px !important;
+        width: 40px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* ── 3b. Columns 2 & 3: equal 50/50 split ───────────────── */
+    div[data-testid="stHorizontalBlock"]:first-of-type
+        > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:first-of-type
+        > div[data-testid="column"]:nth-child(3) {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    /* ── 1. Hide text in col 1 — logo img stays untouched ───── */
+    div[data-testid="stHorizontalBlock"]:first-of-type
+        > div[data-testid="column"]:nth-child(1)
+        div[data-testid="stMarkdownContainer"] {
+        display: none !important;
+    }
+
+    /* ── Persona radio: center wrapped row ───────────────────── */
     div[role="radiogroup"],
     div[data-testid="stRadioGroup"] {
         display: flex !important;
