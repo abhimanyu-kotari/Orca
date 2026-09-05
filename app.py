@@ -773,6 +773,12 @@ hr { border-color: #E2E8F0 !important; }
 }
 [data-testid="stDataFrameContainer"] { border-radius: 10px !important; }
 
+/* ── Dual-render: Hide sidebar Tour Guide on desktop, reveal on mobile ───── */
+/* The sidebar Tour Guide button is hidden by default (desktop) */
+#sidebar-tour-btn-marker + div[data-testid="stButton"] {
+    display: none !important;
+}
+
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 1280px) { .safety-metrics { gap: 16px; } }
 @media (max-width: 768px)  { 
@@ -792,42 +798,37 @@ hr { border-color: #E2E8F0 !important; }
 
     /* THE ROOT CAUSE FIX: Target exactly the header block using :has() */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        width: 100% !important; 
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
         box-sizing: border-box !important;
+        gap: 8px !important;
     }
-    
-    /* Hide the specific column containing the logo on mobile */
-    div[data-testid="column"]:has(.orca-hero-header) {
+
+    /* HIDE the middle column (Tour Guide header button) on mobile */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2) {
         display: none !important;
     }
 
-    /* Force the remaining columns (Tour Guide, Language) to strictly obey the grid */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:not(:has(.orca-hero-header)) {
-        display: block !important;
-        width: 100% !important;
+    /* Re-balance: Logo column — fixed narrow width */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
+        flex: 0 0 50px !important;
         min-width: 0 !important;
-        max-width: 100% !important;
         overflow: hidden !important;
     }
 
-    /* CRITICAL FIX: Force internal Streamlit/Base Web elements to shrink */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) * {
+    /* Re-balance: Language dropdown column — takes all remaining space */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
+        flex: 1 1 auto !important;
         min-width: 0 !important;
-    }
-    
-    /* Truncate text (e.g. 'Tour Gu...') and reduce button padding on extremely small phones */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) p,
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) span {
-        white-space: nowrap !important;
         overflow: hidden !important;
-        text-overflow: ellipsis !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
+
+    /* SHOW the sidebar Tour Guide button on mobile */
+    #sidebar-tour-btn-marker + div[data-testid="stButton"] {
+        display: block !important;
     }
 
     /* Center persona radio tabs when they wrap */
@@ -3852,6 +3853,12 @@ with st.sidebar:
         """, unsafe_allow_html=True)
     st.markdown("<p style='font-size:1.05rem;font-weight:800;color:#F8FAFC;margin:2px 0 0 0;text-align:center;'>ORCA OS</p><p style='font-size:0.72rem;color:#64B6D0;margin:0 0 10px 0;text-align:center;'>Marine Decision Intelligence</p>", unsafe_allow_html=True)
 
+    st.markdown("<div id='sidebar-tour-btn-marker' style='display:none'></div>", unsafe_allow_html=True)
+    if st.button("Tour Guide", key="tour_sidebar", use_container_width=True):
+        st.session_state.open_tour_modal = True
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
+
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.current_map = None
@@ -4036,7 +4043,7 @@ with col1:
         """, unsafe_allow_html=True)
 
 with col2:
-    if st.button("Tour Guide", use_container_width=True):
+    if st.button("Tour Guide", key="tour_header", use_container_width=True):
         st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
