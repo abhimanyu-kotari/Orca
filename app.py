@@ -1040,6 +1040,7 @@ PRODUCT_TOUR_STEPS = [
     {
         "step_label": "STEP 1 OF 7  •  SYSTEM OVERVIEW",
         "icon": "🌊",
+        "icon_img": f"data:image/png;base64,{LOGO_B64}" if LOGO_B64 else None,
         "badge": "ISRO · SIH PROBLEM STATEMENT 26176",
         "title": "Welcome to Project ORCA",
         "body": "ORCA (<strong>Ocean Research & Coastal Analytics</strong>) is a <strong>collaborative multi-agent AI platform</strong> built for India's maritime stakeholders. It fuses real-time ISRO satellite data, IMD weather feeds, and INCOIS PFZ advisories into actionable ocean intelligence.",
@@ -1112,6 +1113,7 @@ PRODUCT_TOUR_STEPS = [
     {
         "step_label": "STEP 7 OF 7  •  MISSION READY",
         "icon": "🚀",
+        "icon_img": f"data:image/png;base64,{LOGO_B64}" if LOGO_B64 else None,
         "badge": "ALL SYSTEMS GO",
         "title": "You're Ready to Explore!",
         "body": "You're all set to use Project ORCA. Choose your role, type a query, and explore intelligent ocean analytics. Relaunch this guide anytime using <strong>❓ Help / Tour Guide</strong> in the sidebar.",
@@ -1330,6 +1332,15 @@ def render_product_tour(force_open: bool = False) -> None:
                 line-height: 1 !important;
                 display: block !important;
                 margin-bottom: 4px !important;
+            }
+            .orca-tour-logo-img {
+                width: 52px !important;
+                height: 52px !important;
+                object-fit: contain !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 14px rgba(11, 38, 56, 0.15) !important;
+                margin-bottom: 6px !important;
+                display: block !important;
             }
             .orca-tour-title {
                 font-size: 1.35rem !important;
@@ -1712,7 +1723,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 <button class="orca-tour-close-x" id="orca-tour-btn-x" title="Close Tour">✕</button>
                 ${locationHtml}
                 <div class="orca-tour-step-label">${data.step_label}</div>
-                <span class="orca-tour-icon">${data.icon}</span>
+                ${data.icon_img ? `<img src="${data.icon_img}" class="orca-tour-logo-img" alt="ORCA Logo">` : `<span class="orca-tour-icon">${data.icon}</span>`}
                 <div class="orca-tour-badge">${data.badge}</div>
                 <div class="orca-tour-title">${data.title}</div>
                 <div class="orca-tour-body">${data.body}</div>
