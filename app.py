@@ -1656,6 +1656,30 @@ def render_product_tour(force_open: bool = False) -> None:
         return null;
     }
 
+    function isTargetActuallyVisible(rect, targetEl, data) {
+        if (!targetEl) return false;
+        if (rect.width === 0 || rect.height === 0) return false;
+        
+        if (rect.right <= 0 || rect.left >= parentWin.innerWidth) return false;
+        
+        const sidebar = targetEl.closest('[data-testid="stSidebar"], section[data-testid="stSidebar"], .stSidebar');
+        if (sidebar) {
+            const sr = sidebar.getBoundingClientRect();
+            if (sr.right <= 0) return false;
+            
+            if (sidebar.getAttribute('aria-expanded') === 'false') return false;
+            
+            const expandBtn = parentDoc.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (expandBtn) {
+                const er = expandBtn.getBoundingClientRect();
+                if (er.width > 0 && er.right > 0 && er.left < parentWin.innerWidth) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     function updateSpotlightAndPosition() {
         const overlay = parentDoc.getElementById('orca-product-tour-overlay');
         let spotlight = parentDoc.getElementById('orca-tour-spotlight');
@@ -1680,7 +1704,6 @@ def render_product_tour(force_open: bool = False) -> None:
         if (targetEl) {
             let measuredEl = targetEl;
             let rect = measuredEl.getBoundingClientRect();
-            // If the element has tiny dimensions or is a zero-size marker/label child, resolve to its widget container
             if (rect.width <= 10 && measuredEl.parentElement) {
                 measuredEl = measuredEl.closest('[data-testid="stSelectbox"]') || 
                              measuredEl.closest('.stSelectbox') || 
@@ -1689,18 +1712,15 @@ def render_product_tour(force_open: bool = False) -> None:
                 rect = measuredEl.getBoundingClientRect();
             }
 
-            if (rect.width > 0 && rect.right > 0) {
-                // Activate spotlight cutout directly over target (behind overlay)
+            if (isTargetActuallyVisible(rect, measuredEl, data)) {
                 spotlight.style.top = (rect.top - 6) + 'px';
                 spotlight.style.left = (rect.left - 8) + 'px';
                 spotlight.style.width = (rect.width + 16) + 'px';
                 spotlight.style.height = (rect.height + 12) + 'px';
                 spotlight.classList.add('active');
 
-                // Tell overlay that spotlight is active (makes overlay transparent so cutout is crystal daylight clear!)
                 if (overlay) overlay.classList.add('orca-has-spotlight');
 
-                // Position animated beacon strictly ABOVE the target element
                 if (data.beacon_text) {
                     beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
                     beacon.style.top = Math.max(8, rect.top - (isMobile ? 28 : 34)) + 'px';
@@ -1710,23 +1730,18 @@ def render_product_tour(force_open: bool = False) -> None:
                     beacon.classList.remove('active');
                 }
 
-                // GUARANTEED CLEARANCE CARD POSITIONING (NEVER OVERLAPS TARGET!):
                 if (card && overlay) {
                     if (data.target_type === 'chat') {
-                        // Chat target at bottom: card sits comfortably at the TOP of the screen, leaving 300px+ clearance!
                         overlay.style.alignItems = 'flex-start';
                         overlay.style.justifyContent = 'center';
                         card.style.marginLeft = '0px';
                         card.style.marginTop = isMobile ? '12px' : '36px';
                     } else if (data.target_type === 'language' && !isMobile) {
-                        // Desktop sidebar: card sits in the main panel to the right of sidebar
                         overlay.style.alignItems = 'flex-start';
                         overlay.style.justifyContent = 'flex-start';
                         card.style.marginLeft = Math.max(20, rect.right + 24) + 'px';
                         card.style.marginTop = Math.max(24, rect.top - 20) + 'px';
                     } else {
-                        // Top targets (Fisherman, Authority, Researcher, or mobile):
-                        // Card sits strictly below the spotlight box with guaranteed clearance!
                         overlay.style.alignItems = 'flex-start';
                         overlay.style.justifyContent = 'center';
                         card.style.marginLeft = '0px';
@@ -1738,7 +1753,6 @@ def render_product_tour(force_open: bool = False) -> None:
             }
         }
 
-        // Fallback: General overview (Steps 1 & 7, or target not found/off-screen)
         spotlight.classList.remove('active');
         beacon.classList.remove('active');
         if (overlay) {
@@ -1957,26 +1971,7 @@ def render_product_tour(force_open: bool = False) -> None:
     // Expose openTour on parent window for instant client-side trigger
     parentWin.__orcaOpenTour = openTour;
 
-    // Attach immediate client-side click listener to sidebar Tour Guide button
-    function bindSidebarTourButton() {
-        try {
-            const buttons = parentDoc.querySelectorAll('[data-testid="stSidebar"] button, section[data-testid="stSidebar"] button, button');
-            for (const btn of buttons) {
-                const txt = btn.textContent || '';
-                if (txt.includes('Tour Guide') || txt.includes('Help')) {
-                    if (!btn.__orcaBound) {
-                        btn.__orcaBound = true;
-                        btn.addEventListener('click', function(e) {
-                            setTimeout(openTour, 60);
-                        });
-                    }
-                }
-            }
-        } catch(e) {}
-    }
-    bindSidebarTourButton();
-    setTimeout(bindSidebarTourButton, 400);
-    setTimeout(bindSidebarTourButton, 1200);
+
 
     // Check localStorage flow:
     if (forceOpen) {
