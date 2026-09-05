@@ -551,6 +551,16 @@ div[data-testid="stCustomComponentV1"] iframe {
         padding: 10px !important;
     }
 
+    
+    /* Force top control bar columns to stack cleanly on mobile */
+    div[data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        min-width: 100% !important;
+    }
+
     /* Compact padding in main container */
     .block-container {
         padding-left: 0.75rem !important;
@@ -1083,7 +1093,7 @@ if "open_tour_modal" not in st.session_state:
 
 PRODUCT_TOUR_STEPS = [
     {
-        "step_label": "STEP 1 OF 6  •  SYSTEM OVERVIEW",
+        "step_label": "STEP 1 OF 7  •  SYSTEM OVERVIEW",
         "icon": "🌊",
         "icon_img": f"data:image/png;base64,{LOGO_B64}" if LOGO_B64 else None,
         "badge": "ISRO · SIH PROBLEM STATEMENT 26176",
@@ -1096,7 +1106,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": None
     },
     {
-        "step_label": "STEP 2 OF 6  •  ROLE 1 OF 3",
+        "step_label": "STEP 2 OF 7  •  ROLE 1 OF 3",
         "icon": "🎣",
         "badge": "COASTAL FISHING & SAFETY",
         "title": "Artisanal Fisherman Mode",
@@ -1108,7 +1118,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Role 1: Artisanal Fisherman"
     },
     {
-        "step_label": "STEP 3 OF 6  •  ROLE 2 OF 3",
+        "step_label": "STEP 3 OF 7  •  ROLE 2 OF 3",
         "icon": "🚨",
         "badge": "DISASTER MANAGEMENT & SURVEILLANCE",
         "title": "Coastal Authority Mode",
@@ -1120,7 +1130,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Role 2: Coastal Authority"
     },
     {
-        "step_label": "STEP 4 OF 6  •  ROLE 3 OF 3",
+        "step_label": "STEP 4 OF 7  •  ROLE 3 OF 3",
         "icon": "🔬",
         "badge": "SATELLITE OCEANOGRAPHY",
         "title": "Marine Researcher Mode",
@@ -1132,7 +1142,19 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Role 3: Marine Researcher"
     },
     {
-        "step_label": "STEP 5 OF 6  •  INTERACTIVE WORKFLOW",
+        "step_label": "STEP 5 OF 7  •  MULTILINGUAL AI",
+        "icon": "🌐",
+        "badge": "9 INDIAN LANGUAGES",
+        "title": "Ask in Your Native Language",
+        "body": "Ask in your own language! ORCA supports <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা, मराठी, and ગુજરાતી</strong> with automatic dialect detection and localized maritime terminology.",
+        "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
+        "tip": "Look at the glowing dropdown in the top header: you can pick your language here!",
+        "target_type": "language",
+        "location_label": "Top Control Bar ➔ 🌐 Advisory Language",
+        "beacon_text": "9 Languages Supported"
+    },
+    {
+        "step_label": "STEP 6 OF 7  •  INTERACTIVE WORKFLOW",
         "icon": "💬",
         "badge": "CHAT & INTERACTIVE GIS",
         "title": "Ask Anything Maritime",
@@ -1144,7 +1166,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Ask Queries Here"
     },
     {
-        "step_label": "STEP 6 OF 6  •  MISSION READY",
+        "step_label": "STEP 7 OF 7  •  MISSION READY",
         "icon": "🚀",
         "icon_img": None,
         "badge": "ALL SYSTEMS GO",
@@ -4037,39 +4059,6 @@ with st.sidebar:
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
-    if st.button("❓ Help / Tour Guide", use_container_width=True):
-        st.session_state.open_tour_modal = True
-        st.session_state.active_nav_view = "dashboard"
-        st.rerun()
-
-    st.markdown("<hr style='border-color:#1E3A52;margin:10px 0;'>", unsafe_allow_html=True)
-    # ── Advisory Language Selector ────────────────────────────────────────────
-    st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
-    lang_keys = list(LANG_DISPLAY.keys())
-    lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
-    curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
-    selected_lang_label = st.selectbox(
-        "🌐 Advisory Language (भाषा / மொழி)",
-        options=lang_labels,
-        index=curr_idx,
-        key="sb_lang_selector",
-        help="Language for AI synthesis, voice advisories, and status cards",
-    )
-    new_lang = lang_keys[lang_labels.index(selected_lang_label)]
-    if new_lang != st.session_state.orca_lang:
-        st.session_state.orca_lang = new_lang
-        for msg in st.session_state.messages:
-            if msg.get("role") == "assistant" and msg.get("orch_result"):
-                ores = msg["orch_result"]
-                from orchestrator import _localize_synthesis, LANG_CODE_TO_NAME
-                t_name = LANG_CODE_TO_NAME.get(new_lang, new_lang)
-                if ores.get("synthesis"):
-                    ores["synthesis"] = _localize_synthesis(ores["synthesis"], t_name, new_lang)
-                    ores["language_code"] = new_lang
-                    ores["language"] = t_name
-                    msg["content"] = ores["synthesis"]
-        st.rerun()
-
     st.markdown("<hr style='border-color:#1E3A52;margin:10px 0;'>", unsafe_allow_html=True)
 
     # ── Stakeholder Persona Context Badge ─────────────────────────────────────
@@ -4243,6 +4232,34 @@ else:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+
+# ── Top Control Bar ──
+st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+ctrl_col1, ctrl_col2, ctrl_col3 = st.columns([1.2, 1.5, 2.3])
+
+with ctrl_col1:
+    if st.button("❓ Help / Tour Guide", use_container_width=True):
+        st.session_state.open_tour_modal = True
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
+
+with ctrl_col2:
+    st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
+    lang_keys = list(LANG_DISPLAY.keys())
+    lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
+    curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
+    selected_lang_label = st.selectbox(
+        "Advisory Language",
+        options=lang_labels,
+        index=curr_idx,
+        label_visibility="collapsed",
+        help="Select language for safety verdicts and tool execution"
+    )
+    new_lang = lang_keys[lang_labels.index(selected_lang_label)]
+    if new_lang != st.session_state.orca_lang:
+        st.session_state.orca_lang = new_lang
+        st.rerun()
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
