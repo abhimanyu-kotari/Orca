@@ -29,6 +29,34 @@ from config import WEATHER_API_BASE, MARINE_API_BASE, DEFAULT_FORECAST_DAYS
 # Geocoding: location name → (lat, lon)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def format_clean_location(full_loc: str) -> str:
+    """
+    Shorten verbose Nominatim reverse-geocoded addresses into clean 'City, State' labels.
+    E.g. 'Kundapura, Railway Station Road, Kandhavara, Koni, Kundapura, Udupi, Karnataka, 576211, India'
+         -> 'Kundapura, Karnataka'
+    """
+    if not full_loc or not isinstance(full_loc, str):
+        return full_loc or ""
+    parts = [p.strip() for p in full_loc.split(",") if p.strip()]
+    if len(parts) <= 2:
+        return full_loc
+
+    primary = parts[0]
+    state_or_district = None
+    for p in reversed(parts):
+        lower = p.lower()
+        if lower in ("india", "bharat") or p.isnumeric() or (len(p) == 6 and p.isdigit()):
+            continue
+        if any(w in lower for w in ("railway", "station", "road", "street", "lane", "cross", "opp", "near", "taluk", "circle", "post")):
+            continue
+        state_or_district = p
+        break
+
+    if state_or_district and state_or_district.lower() != primary.lower():
+        return f"{primary}, {state_or_district}"
+    return primary
+
+
 def get_coordinates(location_name: str) -> dict:
     """
     Convert a human-readable place name to GPS coordinates using Nominatim.
@@ -47,6 +75,7 @@ def get_coordinates(location_name: str) -> dict:
             {
                 "success":  True,
                 "location": "Rameswaram, Ramanathapuram, Tamil Nadu, India",
+                "clean_location": "Rameswaram, Tamil Nadu",
                 "lat":      9.2876,
                 "lon":      79.3129
             }
@@ -92,10 +121,11 @@ def get_coordinates(location_name: str) -> dict:
             }
 
         return {
-            "success":  True,
-            "location": result.address,
-            "lat":      result.latitude,
-            "lon":      result.longitude,
+            "success":        True,
+            "location":       result.address,
+            "clean_location": format_clean_location(result.address),
+            "lat":            result.latitude,
+            "lon":            result.longitude,
         }
 
     except GeocoderTimedOut:

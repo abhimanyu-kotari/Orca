@@ -900,8 +900,36 @@ div.stButton > button {
 [data-testid="stChatMessage"] { border-radius: 12px !important; margin-bottom: 8px !important; }
 details summary { font-weight: 600 !important; color: #0B2638 !important; }
 hr { border-color: #E2E8F0 !important; }
-.stTabs [data-baseweb="tab"] { font-weight: 600 !important; font-size: 0.85rem !important; }
-.stTabs [data-baseweb="tab-list"] { background: #F8FAFC !important; border-radius: 8px !important; }
+.stTabs [data-baseweb="tab-list"] {
+    background: #F1F5F9 !important;
+    border-radius: 10px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+}
+.stTabs [data-baseweb="tab"] {
+    font-weight: 600 !important;
+    font-size: 0.86rem !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    color: #475569 !important;
+    border: none !important;
+    background: transparent !important;
+}
+.stTabs [aria-selected="true"] {
+    background: #FFFFFF !important;
+    color: #0B2638 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+.hotspot-quick-chip {
+    background: #F0FDF4;
+    border-left: 4px solid #16A34A;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 0.88rem;
+    color: #14532D;
+}
 [data-testid="stDataFrameContainer"] { border-radius: 10px !important; }
 
 /* ── Responsive ──────────────────────────────── */
@@ -980,14 +1008,14 @@ CARD_LOCALIZATION = {
         "updated": "Data updated",
         "clear": "Clear", "unsettled": "Unsettled", "stormy": "Stormy",
         "high": "High ⚡", "low": "Low", "active": "Active 🌀", "none": "None",
-        "map_title": "#### 🗺️ Maritime Zone Map",
+        "map_title": "Maritime Zone Map",
         "map_sub": "Click zone markers for details · Green = high potential · Red = hazard zone",
         "expander_zones": "📍 View Fishing Zones & Route Details",
-        "pfz_title": "##### 🐟 Recommended Potential Fishing Zones (PFZ)",
+        "pfz_title": "Recommended Potential Fishing Zones (PFZ)",
         "ref_port": "Reference port", "incois_telemetry": "INCOIS Satellite Telemetry",
         "col_zone": "Zone Name", "col_potential": "Potential", "col_dist": "Distance",
         "col_depth": "Depth", "col_sst": "SST", "col_chl": "Chlorophyll", "col_species": "Target Species",
-        "nav_title": "##### 🧭 Fuel-Optimal Navigation Summary",
+        "nav_title": "Fuel-Optimal Navigation Summary",
         "nav_rec_route": "Recommended Route", "nav_dist": "Distance", "nav_nm": "Nautical Miles",
         "nav_time": "Est. Time", "nav_savings": "Fuel Savings", "nav_risk": "Risk Level",
         "nav_low_risk": "🟢 Low Risk", "nav_detour": "🔴 Detour Active", "nav_suspended": "⚠ Suspended",
@@ -999,10 +1027,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 Skipper Tactical Advisory", "hud_leg": "Leg",
         "col_wp": "Waypoint", "col_coords": "Coordinates", "col_leg_dist": "Leg Distance",
         "col_bearing": "Bearing", "col_advisory": "Advisory",
-        "hazard_title": "##### ⛔ Areas to Avoid",
+        "hazard_title": "Areas to Avoid",
         "why_title": "🔬 Why ORCA recommends this · Evidence & confidence",
         "evidence_chain": "Evidence Chain", "confidence": "ORCA Confidence",
         "data_trust_src": "📡 Sources: Satellite · IMD Weather · INCOIS Oceanographic",
+                "tab_map": "🗺️ Maritime Map",
+        "tab_pfz": "🐟 Fishing Zones (PFZ)",
+        "tab_nav": "🧭 Route & Navigation",
+        "tab_safety": "🛡️ Safety & AI Insights",
     },
     "kn": {
         "SAFE": "🟢  ನಿರ್ಗಮನಕ್ಕೆ ಸುರಕ್ಷಿತ",
@@ -1019,14 +1051,14 @@ CARD_LOCALIZATION = {
         "updated": "ಡೇಟಾ ನವೀಕರಣ",
         "clear": "ಸ್ಪಷ್ಟ", "unsettled": "ಅಸ್ಥಿರ", "stormy": "ಬಿರುಗಾಳಿ",
         "high": "ಹೆಚ್ಚು ⚡", "low": "ಕಡಿಮೆ", "active": "ಸಕ್ರಿಯ 🌀", "none": "ಯಾವುದೂ ಇಲ್ಲ",
-        "map_title": "#### 🗺️ ಸಾಗರ ವಲಯ ನಕ್ಷೆ",
+        "map_title": "ಸಾಗರ ವಲಯ ನಕ್ಷೆ",
         "map_sub": "ವಿವರಗಳಿಗಾಗಿ ವಲಯ ಗುರುತುಗಳನ್ನು ಕ್ಲಿಕ್ ಮಾಡಿ · ಹಸಿರು = ಹೆಚ್ಚಿನ ಉತ್ಪಾದಕತೆ · ಕೆಂಪು = ಅಪಾಯಕಾರಿ ವಲಯ",
         "expander_zones": "📍 ಮೀನುಗಾರಿಕಾ ವಲಯಗಳು ಮತ್ತು ಮಾರ್ಗ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
-        "pfz_title": "##### 🐟 ಶಿಫಾರಸು ಮಾಡಲಾದ ಸಂಭಾವ್ಯ ಮೀನುಗಾರಿಕಾ ವಲಯಗಳು (PFZ)",
+        "pfz_title": "ಶಿಫಾರಸು ಮಾಡಲಾದ ಸಂಭಾವ್ಯ ಮೀನುಗಾರಿಕಾ ವಲಯಗಳು (PFZ)",
         "ref_port": "ಉಲ್ಲೇಖ ಬಂದರು", "incois_telemetry": "ಇನ್ಕೋಯಿಸ್ ಉಪಗ್ರಹ ಟೆಲಿಮೆಟ್ರಿ",
         "col_zone": "ವಲಯದ ಹೆಸರು", "col_potential": "ಉತ್ಪಾದಕತೆ", "col_dist": "ದೂರ",
         "col_depth": "ಆಳ", "col_sst": "ಸಮುದ್ರ ತಾಪಮಾನ", "col_chl": "ಕ್ಲೋರೊಫಿಲ್", "col_species": "ಗುರಿ ಜಾತಿಗಳು",
-        "nav_title": "##### 🧭 ಇಂಧನ-ಉಳಿತಾಯ ನ್ಯಾವಿಗೇಷನ್ ಸಾರಾಂಶ",
+        "nav_title": "ಇಂಧನ-ಉಳಿತಾಯ ನ್ಯಾವಿಗೇಷನ್ ಸಾರಾಂಶ",
         "nav_rec_route": "ಶಿಫಾರಸು ಮಾಡಿದ ಮಾರ್ಗ", "nav_dist": "ದೂರ", "nav_nm": "ನಾಟಿಕಲ್ ಮೈಲುಗಳು",
         "nav_time": "ಅಂದಾಜು ಸಮಯ", "nav_savings": "ಇಂಧನ ಉಳಿತಾಯ", "nav_risk": "ಅಪಾಯ ಮಟ್ಟ",
         "nav_low_risk": "🟢 ಕಡಿಮೆ ಅಪಾಯ", "nav_detour": "🔴 ಪರ್ಯಾಯ ಮಾರ್ಗ ಸಕ್ರಿಯ", "nav_suspended": "⚠ ಅಮಾನತುಗೊಂಡಿದೆ",
@@ -1038,10 +1070,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 ಸ್ಕಿಪ್ಪರ್ ಯುದ್ಧತಂತ್ರದ ಸಲಹೆ", "hud_leg": "ಹಂತ",
         "col_wp": "ವೇಪಾಯಿಂಟ್", "col_coords": "ನಿರ್ದೇಶಾಂಕಗಳು", "col_leg_dist": "ಹಂತದ ದೂರ",
         "col_bearing": "ದಿಕ್ಕು (ಬೇರಿಂಗ್)", "col_advisory": "ಸಲಹೆ",
-        "hazard_title": "##### ⛔ ತಪ್ಪಿಸಬೇಕಾದ ಪ್ರದೇಶಗಳು",
+        "hazard_title": "ತಪ್ಪಿಸಬೇಕಾದ ಪ್ರದೇಶಗಳು",
         "why_title": "🔬 ORCA ಇದನ್ನು ಏಕೆ ಶಿಫಾರಸು ಮಾಡುತ್ತದೆ · ಸಾಕ್ಷ್ಯ ಮತ್ತು ವಿಶ್ವಾಸಾರ್ಹತೆ",
         "evidence_chain": "ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", "confidence": "ORCA ವಿಶ್ವಾಸಾರ್ಹತೆ",
         "data_trust_src": "📡 ಮೂಲಗಳು: ಉಪಗ್ರಹ · IMD ಹವಾಮಾನ · INCOIS ಸಾಗರಶಾಸ್ತ್ರ",
+                "tab_map": "🗺️ ಸಾಗರ ನಕ್ಷೆ",
+        "tab_pfz": "🐟 ಮೀನುಗಾರಿಕಾ ವಲಯಗಳು (PFZ)",
+        "tab_nav": "🧭 ಮಾರ್ಗ ಮತ್ತು ನ್ಯಾವಿಗೇಷನ್",
+        "tab_safety": "🛡️ ಸುರಕ್ಷತೆ ಮತ್ತು ಒಳನೋಟಗಳು",
     },
     "hi": {
         "SAFE": "🟢  प्रस्थान के लिए सुरक्षित",
@@ -1058,14 +1094,14 @@ CARD_LOCALIZATION = {
         "updated": "डेटा अपडेट",
         "clear": "साफ", "unsettled": "अस्थिर", "stormy": "तूफानी",
         "high": "उच्च ⚡", "low": "कम", "active": "सक्रिय 🌀", "none": "कोई नहीं",
-        "map_title": "#### 🗺️ समुद्री क्षेत्र मानचित्र",
+        "map_title": "समुद्री क्षेत्र मानचित्र",
         "map_sub": "विवरण के लिए मार्करों पर क्लिक करें · हरा = उच्च संभावना · लाल = खतरा क्षेत्र",
         "expander_zones": "📍 मछली पकड़ने के क्षेत्र और मार्ग विवरण देखें",
-        "pfz_title": "##### 🐟 अनुशंसित संभावित मत्स्य पालन क्षेत्र (PFZ)",
+        "pfz_title": "अनुशंसित संभावित मत्स्य पालन क्षेत्र (PFZ)",
         "ref_port": "संदर्भ बंदरगाह", "incois_telemetry": "INCOIS उपग्रह टेलीमेट्री",
         "col_zone": "क्षेत्र का नाम", "col_potential": "संभावना", "col_dist": "दूरी",
         "col_depth": "गहराई", "col_sst": "समुद्र तापमान", "col_chl": "क्लोरोफिल", "col_species": "प्रमुख प्रजातियां",
-        "nav_title": "##### 🧭 ईंधन-कुशल नेविगेशन सारांश",
+        "nav_title": "ईंधन-कुशल नेविगेशन सारांश",
         "nav_rec_route": "अनुशंसित मार्ग", "nav_dist": "दूरी", "nav_nm": "नॉटिकल मील",
         "nav_time": "अनुमानित समय", "nav_savings": "ईंधन बचत", "nav_risk": "जोखिम स्तर",
         "nav_low_risk": "🟢 कम जोखिम", "nav_detour": "🔴 विचलन सक्रिय", "nav_suspended": "⚠ निलंबित",
@@ -1077,10 +1113,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 कप्तान सामरिक सलाह", "hud_leg": "चरण",
         "col_wp": "वेपॉइंट", "col_coords": "निर्देशांक", "col_leg_dist": "चरण दूरी",
         "col_bearing": "दिशा (बेयरिंग)", "col_advisory": "सलाह",
-        "hazard_title": "##### ⛔ परिहार्य क्षेत्र",
+        "hazard_title": "परिहार्य क्षेत्र",
         "why_title": "🔬 ORCA इसे क्यों अनुशंसित करता है · साक्ष्य और विश्वास",
         "evidence_chain": "साक्ष्य शृंखला", "confidence": "ORCA विश्वास स्तर",
         "data_trust_src": "📡 स्रोत: उपग्रह · IMD मौसम · INCOIS समुद्र विज्ञान",
+                "tab_map": "🗺️ समुद्री मानचित्र",
+        "tab_pfz": "🐟 मत्स्य पालन क्षेत्र (PFZ)",
+        "tab_nav": "🧭 मार्ग और नेविगेशन",
+        "tab_safety": "🛡️ सुरक्षा और अंतर्दृष्टि",
     },
     "ta": {
         "SAFE": "🟢  புறப்பட பாதுகாப்பானது",
@@ -1097,14 +1137,14 @@ CARD_LOCALIZATION = {
         "updated": "தரவு புதுப்பிப்பு",
         "clear": "தெளிவானது", "unsettled": "நிலையற்றது", "stormy": "புயல்",
         "high": "அதிகம் ⚡", "low": "குறைவு", "active": "செயலில் 🌀", "none": "இல்லை",
-        "map_title": "#### 🗺️ கடல் மண்டல வரைபடம்",
+        "map_title": "கடல் மண்டல வரைபடம்",
         "map_sub": "விவரங்களுக்கு மண்டலக் குறிகளை கிளிக் செய்க · பச்சை = அதிக பலன் · சிவப்பு = ஆபத்து",
         "expander_zones": "📍 மீன்பிடி மண்டலங்கள் மற்றும் வழி விவரங்களைக் காண்க",
-        "pfz_title": "##### 🐟 பரிந்துரைக்கப்பட்ட மீன்பிடி மண்டலங்கள் (PFZ)",
+        "pfz_title": "பரிந்துரைக்கப்பட்ட மீன்பிடி மண்டலங்கள் (PFZ)",
         "ref_port": "குறிப்பு துறைமுகம்", "incois_telemetry": "இன்கோயிஸ் செயற்கைக்கோள் தரவு",
         "col_zone": "மண்டலத்தின் பெயர்", "col_potential": "சாத்தியக்கூறு", "col_dist": "தூரம்",
         "col_depth": "ஆழம்", "col_sst": "கடல் வெப்பநிலை", "col_chl": "குளோரோபில்", "col_species": "இலக்கு மீன் வகைகள்",
-        "nav_title": "##### 🧭 எரிபொருள் சேமிப்பு வழிசெலுத்தல் சுருக்கம்",
+        "nav_title": "எரிபொருள் சேமிப்பு வழிசெலுத்தல் சுருக்கம்",
         "nav_rec_route": "பரிந்துரைக்கப்பட்ட வழி", "nav_dist": "தூரம்", "nav_nm": "நாட்டிக்கல் மைல்கள்",
         "nav_time": "மதிப்பிடப்பட்ட நேரம்", "nav_savings": "எரிபொருள் சேமிப்பு", "nav_risk": "ஆபத்து நிலை",
         "nav_low_risk": "🟢 குறைந்த ஆபத்து", "nav_detour": "🔴 மாற்றுப்பாதை செயலில்", "nav_suspended": "⚠ இடைநிறுத்தப்பட்டது",
@@ -1116,10 +1156,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 கேப்டன் தந்திரோபாய ஆலோசனை", "hud_leg": "கட்டம்",
         "col_wp": "வழிப்புள்ளி", "col_coords": "ஆயத்தொலைவுகள்", "col_leg_dist": "கட்ட தூரம்",
         "col_bearing": "திசை", "col_advisory": "அறிவுரை",
-        "hazard_title": "##### ⛔ தவிர்க்க வேண்டிய பகுதிகள்",
+        "hazard_title": "தவிர்க்க வேண்டிய பகுதிகள்",
         "why_title": "🔬 ORCA இதை ஏன் பரிந்துரைக்கிறது · சான்றுகள் மற்றும் நம்பிக்கை",
         "evidence_chain": "சான்றுகளின் தொடர்", "confidence": "ORCA நம்பிக்கை நிலை",
         "data_trust_src": "📡 ஆதாரங்கள்: செயற்கைக்கோள் · IMD வானிலை · INCOIS கடல்சார்வியல்",
+                "tab_map": "🗺️ கடல் வரைபடம்",
+        "tab_pfz": "🐟 மீன்பிடி மண்டலங்கள் (PFZ)",
+        "tab_nav": "🧭 வழி மற்றும் வழிகாட்டுதல்",
+        "tab_safety": "🛡️ பாதுகாப்பு & நுண்ணறிவு",
     },
     "te": {
         "SAFE": "🟢  ప్రయాణానికి సురక్షితం",
@@ -1136,14 +1180,14 @@ CARD_LOCALIZATION = {
         "updated": "డేటా అప్‌డేట్",
         "clear": "స్పష్టంగా ఉంది", "unsettled": "అస్థిరంగా ఉంది", "stormy": "తుఫాను",
         "high": "అధికం ⚡", "low": "తక్కువ", "active": "చురుకుగా ఉంది 🌀", "none": "ఏదీ లేదు",
-        "map_title": "#### 🗺️ సముద్ర మండల పటం",
+        "map_title": "సముద్ర మండల పటం",
         "map_sub": "వివరాల కోసం మార్కర్లపై క్లిక్ చేయండి · ఆకుపచ్చ = అధిక సంభావ్యత · ఎరుపు = ప్రమాద ప్రాంతం",
         "expander_zones": "📍 చేపల వేట ప్రాంతాలు మరియు మార్గ వివరాలను చూడండి",
-        "pfz_title": "##### 🐟 సిఫార్సు చేసిన సంభావ్య చేపల వేట ప్రాంతాలు (PFZ)",
+        "pfz_title": "సిఫార్సు చేసిన సంభావ్య చేపల వేట ప్రాంతాలు (PFZ)",
         "ref_port": "రిఫరెన్స్ పోర్ట్", "incois_telemetry": "INCOIS ఉపగ్రహ టెలిమెట్రీ",
         "col_zone": "ప్రాంతం పేరు", "col_potential": "సంభావ్యత", "col_dist": "దూరం",
         "col_depth": "లోతు", "col_sst": "సముద్ర ఉష్ణోగ్రత", "col_chl": "క్లోరోఫిల్", "col_species": "లక్ష్య జాతులు",
-        "nav_title": "##### 🧭 ఇంధన-పొదుపు నావిగేషన్ సారాంశం",
+        "nav_title": "ఇంధన-పొదుపు నావిగేషన్ సారాంశం",
         "nav_rec_route": "సిఫార్సు చేసిన మార్గం", "nav_dist": "దూరం", "nav_nm": "నాటికల్ మైళ్ళు",
         "nav_time": "అంచనా సమయం", "nav_savings": "ఇంధన ఆదా", "nav_risk": "ప్రమాద స్థాయి",
         "nav_low_risk": "🟢 తక్కువ ప్రమాదం", "nav_detour": "🔴 దారి మళ్లింపు సక్రియం", "nav_suspended": "⚠ నిలిపివేయబడింది",
@@ -1155,10 +1199,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 కెప్టెన్ వ్యూహాత్మక సలహా", "hud_leg": "దశ",
         "col_wp": "వేపాయింట్", "col_coords": "సమన్వయాలు", "col_leg_dist": "దశ దూరం",
         "col_bearing": "బేరింగ్", "col_advisory": "సలహా",
-        "hazard_title": "##### ⛔ నివారించవలసిన ప్రాంతాలు",
+        "hazard_title": "నివారించవలసిన ప్రాంతాలు",
         "why_title": "🔬 ORCA దీన్ని ఎందుకు సిఫార్సు చేస్తోంది · సాక్ష్యం మరియు విశ్వసనీయత",
         "evidence_chain": "సాక్ష్యాల శ్రేణి", "confidence": "ORCA విశ్వసనీయత",
         "data_trust_src": "📡 మూలాలు: ఉపగ్రహం · IMD వాతావరణం · INCOIS సముద్ర శాస్త్రం",
+                "tab_map": "🗺️ సముద్ర పటం",
+        "tab_pfz": "🐟 చేపల వేట ప్రాంతాలు (PFZ)",
+        "tab_nav": "🧭 మార్గం & నావిగేషన్",
+        "tab_safety": "🛡️ భద్రత & అంతర్దృష్టులు",
     },
     "ml": {
         "SAFE": "🟢  പുറപ്പെടാൻ സുരക്ഷിതം",
@@ -1175,14 +1223,14 @@ CARD_LOCALIZATION = {
         "updated": "ഡാറ്റ അപ്ഡേറ്റ്",
         "clear": "വ്യക്തം", "unsettled": "അസ്ഥിരം", "stormy": "ചുഴലിക്കാറ്റ്",
         "high": "ഉയർന്നത് ⚡", "low": "കുറഞ്ഞത്", "active": "സജീവം 🌀", "none": "ഇല്ല",
-        "map_title": "#### 🗺️ സമുദ്ര മേഖലാ മാപ്പ്",
+        "map_title": "സമുദ്ര മേഖലാ മാപ്പ്",
         "map_sub": "വിശദാംശങ്ങൾക്ക് മാർക്കറുകളിൽ ക്ലിക്ക് ചെയ്യുക · പച്ച = ഉയർന്ന സാധ്യത · ചുവപ്പ് = അപകട മേഖല",
         "expander_zones": "📍 മത്സ്യബന്ധന മേഖലകളും റൂട്ട് വിവരങ്ങളും കാണുക",
-        "pfz_title": "##### 🐟 നിർദ്ദേശിച്ച മത്സ്യബന്ധന മേഖലകൾ (PFZ)",
+        "pfz_title": "നിർദ്ദേശിച്ച മത്സ്യബന്ധന മേഖലകൾ (PFZ)",
         "ref_port": "റഫറൻസ് തുറമുഖം", "incois_telemetry": "ഇൻകോയിസ് ഉപഗ്രഹ ഡാറ്റ",
         "col_zone": "മേഖലയുടെ പേര്", "col_potential": "സാധ്യത", "col_dist": "ദൂരം",
         "col_depth": "ആഴം", "col_sst": "സമുദ്രോപരിതല താപനില", "col_chl": "ക്ലോറോഫിൽ", "col_species": "ലക്ഷ്യമിടുന്ന മത്സ്യങ്ങൾ",
-        "nav_title": "##### 🧭 ഇന്ധനക്ഷമതയുള്ള നാവിഗേഷൻ സംഗ്രഹം",
+        "nav_title": "ഇന്ധനക്ഷമതയുള്ള നാവിഗേഷൻ സംഗ്രഹം",
         "nav_rec_route": "ശുപാർശ ചെയ്ത റൂട്ട്", "nav_dist": "ദൂരം", "nav_nm": "നോട്ടിക്കൽ മൈലുകൾ",
         "nav_time": "പ്രതീക്ഷിക്കുന്ന സമയം", "nav_savings": "ഇന്ധന ലാഭം", "nav_risk": "അപകടസാധ്യത",
         "nav_low_risk": "🟢 കുറഞ്ഞ അപകടസാധ്യത", "nav_detour": "🔴 വഴിതിരിച്ചുവിടൽ സജീവം", "nav_suspended": "⚠ താൽക്കാലികമായി നിർത്തിവച്ചു",
@@ -1194,10 +1242,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 ക്യാപ്റ്റൻ ഉപദേശം", "hud_leg": "ഘട്ടം",
         "col_wp": "വേപോയിന്റ്", "col_coords": "സ്ഥാനനിർണ്ണയം", "col_leg_dist": "ഘട്ട ദൂരം",
         "col_bearing": "ദിശ", "col_advisory": "നിർദ്ദേശം",
-        "hazard_title": "##### ⛔ ഒഴിവാക്കേണ്ട മേഖലകൾ",
+        "hazard_title": "ഒഴിവാക്കേണ്ട മേഖലകൾ",
         "why_title": "🔬 എന്തുകൊണ്ട് ഓർക്ക ഇത് ശുപാർശ ചെയ്യുന്നു · തെളിവുകളും വിശ്വാസ്യതയും",
         "evidence_chain": "തെളിവ് ശൃംഖല", "confidence": "ഓർക്ക വിശ്വാസ്യത",
         "data_trust_src": "📡 ഉറവിടങ്ങൾ: ഉപഗ്രഹം · IMD കാലാവസ്ഥ · INCOIS ഓഷ്യാനോഗ്രാഫിക്",
+                "tab_map": "🗺️ സമുദ്ര ഭൂപടം",
+        "tab_pfz": "🐟 മത്സ്യബന്ധന മേഖലകൾ (PFZ)",
+        "tab_nav": "🧭 റൂട്ടും നാവിഗേഷനും",
+        "tab_safety": "🛡️ സുരക്ഷയും ഉൾക്കാഴ്ചകളും",
     },
     "bn": {
         "SAFE": "🟢  যাত্রার জন্য নিরাপদ",
@@ -1214,14 +1266,14 @@ CARD_LOCALIZATION = {
         "updated": "তথ্য আপডেট",
         "clear": "পরিষ্কার", "unsettled": "অস্থির", "stormy": "ঝড়ো",
         "high": "উচ্চ ⚡", "low": "কম", "active": "সক্রিয় 🌀", "none": "কিছুই নেই",
-        "map_title": "#### 🗺️ সামুদ্রিক অঞ্চল মানচিত্র",
+        "map_title": "সামুদ্রিক অঞ্চল মানচিত্র",
         "map_sub": "বিস্তারিত দেখতে মার্কারগুলিতে ক্লিক করুন · সবুজ = উচ্চ সম্ভাবনা · লাল = বিপদ অঞ্চল",
         "expander_zones": "📍 মাছ ধরার অঞ্চল এবং রুটের বিবরণ দেখুন",
-        "pfz_title": "##### 🐟 প্রস্তাবিত সম্ভাব্য মাছ ধরার অঞ্চল (PFZ)",
+        "pfz_title": "প্রস্তাবিত সম্ভাব্য মাছ ধরার অঞ্চল (PFZ)",
         "ref_port": "রেফারেন্স বন্দর", "incois_telemetry": "INCOIS উপগ্রহ টেলিমেট্রি",
         "col_zone": "অঞ্চলের নাম", "col_potential": "সম্ভাবনা", "col_dist": "দূরত্ব",
         "col_depth": "গভীরতা", "col_sst": "সমুদ্রের তাপমাত্রা", "col_chl": "ক্লোরোফিল", "col_species": "নির্দিষ্ট প্রজাতি",
-        "nav_title": "##### 🧭 জ্বালানি সাশ্রয়ী নেভিগেশন সারাংশ",
+        "nav_title": "জ্বালানি সাশ্রয়ী নেভিগেশন সারাংশ",
         "nav_rec_route": "প্রস্তাবিত রুট", "nav_dist": "দূরত্ব", "nav_nm": "নটিক্যাল মাইল",
         "nav_time": "আনুমানিক সময়", "nav_savings": "জ্বালানি সাশ্রয়", "nav_risk": "ঝুঁকির মাত্রা",
         "nav_low_risk": "🟢 কম ঝুঁকি", "nav_detour": "🔴 বিকল্প পথ সক্রিয়", "nav_suspended": "⚠ স্থগিত",
@@ -1233,10 +1285,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 অধিনায়কের পরামর্শ", "hud_leg": "ধাপ",
         "col_wp": "ওয়েপয়েন্ট", "col_coords": "স্থানাঙ্ক", "col_leg_dist": "ধাপের দূরত্ব",
         "col_bearing": "দিক", "col_advisory": "পরামর্শ",
-        "hazard_title": "##### ⛔ এড়িয়ে চলার অঞ্চল",
+        "hazard_title": "এড়িয়ে চলার অঞ্চল",
         "why_title": "🔬 কেন ORCA এটি সুপারিশ করছে · প্রমাণ ও নির্ভরযোগ্যতা",
         "evidence_chain": "প্রমাণ শৃঙ্খল", "confidence": "ORCA আত্মবিশ্বাস",
         "data_trust_src": "📡 উৎস: उपগ্রহ · IMD আবহাওয়া · INCOIS সমুদ্রবিজ্ঞান",
+                "tab_map": "🗺️ সামুদ্রিক মানচিত্র",
+        "tab_pfz": "🐟 মাছ ধরার অঞ্চল (PFZ)",
+        "tab_nav": "🧭 রুট ও নেভিগেশন",
+        "tab_safety": "🛡️ নিরাপত্তা ও অন্তর্দৃষ্টি",
     },
     "mr": {
         "SAFE": "🟢  प्रवासासाठी सुरक्षित",
@@ -1253,14 +1309,14 @@ CARD_LOCALIZATION = {
         "updated": "डेटा अपडेट",
         "clear": "स्वच्छ", "unsettled": "अस्थिर", "stormy": "वादळी",
         "high": "जास्त ⚡", "low": "कमी", "active": "सक्रिय 🌀", "none": "काही नाही",
-        "map_title": "#### 🗺️ सागरी क्षेत्र नकाशा",
+        "map_title": "सागरी क्षेत्र नकाशा",
         "map_sub": "तपशीलांसाठी मार्करवर क्लिक करा · हिरवा = जास्त उत्पादन क्षमता · लाल = धोका क्षेत्र",
         "expander_zones": "📍 मासेमारी क्षेत्रे आणि मार्ग तपशील पहा",
-        "pfz_title": "##### 🐟 शिफारस केलेली संभाव्य मासेमारी क्षेत्रे (PFZ)",
+        "pfz_title": "शिफारस केलेली संभाव्य मासेमारी क्षेत्रे (PFZ)",
         "ref_port": "संदर्भ बंदर", "incois_telemetry": "INCOIS उपग्रह टेलीमेट्री",
         "col_zone": "क्षेत्राचे नाव", "col_potential": "क्षमता", "col_dist": "अंतर",
         "col_depth": "खोली", "col_sst": "समुद्र तापमान", "col_chl": "क्लोरोफिल", "col_species": "लक्ष्यित मासे",
-        "nav_title": "##### 🧭 इंधन-बचत नेव्हिगेशन सारांश",
+        "nav_title": "इंधन-बचत नेव्हिगेशन सारांश",
         "nav_rec_route": "शिफारस केलेला मार्ग", "nav_dist": "अंतर", "nav_nm": "नॉटिकल मैल",
         "nav_time": "अंदाजे वेळ", "nav_savings": "इंधन बचत", "nav_risk": "धोका पातळी",
         "nav_low_risk": "🟢 कमी धोका", "nav_detour": "🔴 पर्यायी मार्ग सक्रिय", "nav_suspended": "⚠ निलंबित",
@@ -1272,10 +1328,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 कर्णधार सल्ला", "hud_leg": "टप्पा",
         "col_wp": "वेपॉइंट", "col_coords": "निर्देशांक", "col_leg_dist": "टप्प्याचे अंतर",
         "col_bearing": "दिशा", "col_advisory": "सल्ला",
-        "hazard_title": "##### ⛔ टाळण्याची क्षेत्रे",
+        "hazard_title": "टाळण्याची क्षेत्रे",
         "why_title": "🔬 ORCA याची शिफारस का करते · पुरावे आणि विश्वासार्हता",
         "evidence_chain": "पुरावा साखळी", "confidence": "ORCA विश्वासार्हता",
         "data_trust_src": "📡 स्रोत: उपग्रह · IMD हवामान · INCOIS समुद्र विज्ञान",
+                "tab_map": "🗺️ सागरी नकाशा",
+        "tab_pfz": "🐟 मासेमारी क्षेत्रे (PFZ)",
+        "tab_nav": "🧭 मार्ग आणि नेव्हिगेशन",
+        "tab_safety": "🛡️ सुरक्षा आणि अंतर्दृष्टी",
     },
     "gu": {
         "SAFE": "🟢  પ્રસ્થાન માટે સલામત",
@@ -1292,14 +1352,14 @@ CARD_LOCALIZATION = {
         "updated": "ડેટા અપડેટ",
         "clear": "ચોખ્ખું", "unsettled": "અસ્થિર", "stormy": "તોફાની",
         "high": "વધારે ⚡", "low": "ઓછું", "active": "સક્રિય 🌀", "none": "કંઈ નહીં",
-        "map_title": "#### 🗺️ દરિયાઈ ઝોન નકશો",
+        "map_title": "દરિયાઈ ઝોન નકશો",
         "map_sub": "વિગતો માટે માર્કર્સ પર ક્લિક કરો · લીલો = ઉચ્ચ ઉત્પાદકતા · લાલ = જોખમી વિસ્તાર",
         "expander_zones": "📍 માછીમારી વિસ્તારો અને માર્ગ વિગતો જુઓ",
-        "pfz_title": "##### 🐟 ભલામણ કરેલ સંભવિત માછીમારી વિસ્તારો (PFZ)",
+        "pfz_title": "ભલામણ કરેલ સંભવિત માછીમારી વિસ્તારો (PFZ)",
         "ref_port": "સંદર્ભ બંદર", "incois_telemetry": "INCOIS સેટેલાઇટ ટેલિમેટ્રી",
         "col_zone": "વિસ્તારનું નામ", "col_potential": "સંભાવના", "col_dist": "અંતર",
         "col_depth": "ઊંડાઈ", "col_sst": "દરિયાઈ તાપમાન", "col_chl": "ક્લોરોફિલ", "col_species": "મુખ્ય પ્રજાતિઓ",
-        "nav_title": "##### 🧭 ઇંધણ-કાર્યક્ષમ નેવિગેશન સારાંશ",
+        "nav_title": "ઇંધણ-કાર્યક્ષમ નેવિગેશન સારાંશ",
         "nav_rec_route": "ભલામણ કરેલ માર્ગ", "nav_dist": "અંતર", "nav_nm": "નોટિકલ માઇલ",
         "nav_time": "અંદાજિત સમય", "nav_savings": "ઇંધણ બચત", "nav_risk": "જોખમ સ્તર",
         "nav_low_risk": "🟢 ઓછું જોખમ", "nav_detour": "🔴 વૈકલ્પિક માર્ગ સક્રિય", "nav_suspended": "⚠ સ્થગિત",
@@ -1311,10 +1371,14 @@ CARD_LOCALIZATION = {
         "hud_advisory": "🧭 કપ્તાનની સલાહ", "hud_leg": "તબક્કો",
         "col_wp": "વેપોઇન્ટ", "col_coords": "સંકલન", "col_leg_dist": "તબક્કા અંતર",
         "col_bearing": "દિશા", "col_advisory": "સલાહ",
-        "hazard_title": "##### ⛔ ટાળવાના વિસ્તારો",
+        "hazard_title": "ટાળવાના વિસ્તારો",
         "why_title": "🔬 ORCA આની ભલામણ કેમ કરે છે · પુરાવા અને વિશ્વસનીયતા",
         "evidence_chain": "પુરાવા શૃંખલા", "confidence": "ORCA વિશ્વસનીયતા",
         "data_trust_src": "📡 સ્ત્રોતો: સેટેલાઇટ · IMD હવામાન · INCOIS સમુદ્ર વિજ્ઞાન",
+                "tab_map": "🗺️ દરિયાઈ નકશો",
+        "tab_pfz": "🐟 માછીમારી વિસ્તારો (PFZ)",
+        "tab_nav": "🧭 માર્ગ અને નેવિગેશન",
+        "tab_safety": "🛡️ સુરક્ષા અને આંતરદૃષ્ટિ",
     },
 }
 
@@ -1742,8 +1806,10 @@ def render_fisherman_response(
 
     # ── 1. Sea Safety Status Card (Default View) ─────────────────────────────
     now_str      = datetime.datetime.now().strftime("%d %b %Y • %H:%M IST")
-    location_str = (weather_res.get("location", "N/A") if weather_res
+    from tools.weather_tools import format_clean_location
+    raw_location = (weather_res.get("location", "N/A") if weather_res
                     else (pfz_res.get("location", "N/A") if pfz_res else "N/A"))
+    location_str = format_clean_location(raw_location)
 
     if verdict == "SAFE" and not is_suspended:
         card_cls    = "safety-card-safe"
@@ -1804,34 +1870,71 @@ def render_fisherman_response(
     if synthesis:
         ctx.markdown(synthesis)
 
-    # ── 3. Interactive Folium Map (Default View) ──────────────────────────────
-    if fmap is not None:
-        ctx.markdown(f"#### 🗺️ {loc.get('map_title', 'Maritime Zone Map')}")
-        ctx.caption(loc.get('map_sub', 'Click zone markers for details · Green = high potential · Red = hazard zone'))
-        st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
+    # ── 3. Tabbed Operational Workspace (Decluttered View) ───────────────────
+    from tools.weather_tools import format_clean_location
 
-    # ── 4. Progressive Disclosure Expander: Zones, Routes & Avoidance ─────────
-    has_pfz_data = bool(pfz_res and pfz_res.get("success") and pfz_res.get("zones"))
-    has_nav_data = bool(nav_res and nav_res.get("success"))
+    has_pfz_data     = bool(pfz_res and pfz_res.get("success") and pfz_res.get("zones"))
+    has_nav_data     = bool(nav_res and nav_res.get("success"))
+    has_weather_data = bool(weather_res and weather_res.get("success"))
 
     hazards = []
     if nav_res and nav_res.get("imbl_warning_active"):
-        hazards.append(("🛑","Maritime Boundary",f"{nav_res.get('imbl_min_distance_nm',0):.1f} NM","Maintain 5 NM seaward clearance","critical"))
+        hazards.append(("🛑", "Maritime Boundary", f"{nav_res.get('imbl_min_distance_nm',0):.1f} NM", "Maintain 5 NM seaward clearance", "critical"))
     if verdict == "DANGER":
-        hazards.append(("🌊","High Wave / Storm Region","Active in sector","Do not depart","critical"))
+        hazards.append(("🌊", "High Wave / Storm Region", "Active in sector", "Do not depart", "critical"))
     elif verdict == "CAUTION":
-        hazards.append(("⚠","Elevated Wave Region","In forecast window","Exercise caution","warning"))
+        hazards.append(("⚠", "Elevated Wave Region", "In forecast window", "Exercise caution", "warning"))
     if m_wx.get("lightning_hazard"):
-        hazards.append(("⚡","Convective Storm Zone","CAPE above threshold","Avoid open sea","critical"))
+        hazards.append(("⚡", "Convective Storm Zone", "CAPE above threshold", "Avoid open sea", "critical"))
 
-    if has_pfz_data or has_nav_data or hazards:
-        with ctx.expander(loc.get("expander_zones", "📍 View Fishing Zones & Route Details"), expanded=False):
-            # A. Recommended Fishing Zones Table
-            if has_pfz_data:
+    tabs_to_show = []
+    tab_keys = []
+
+    if fmap is not None:
+        tabs_to_show.append(loc.get("tab_map", "🗺️ Maritime Map"))
+        tab_keys.append("map")
+    if has_pfz_data:
+        tabs_to_show.append(loc.get("tab_pfz", "🐟 Fishing Zones (PFZ)"))
+        tab_keys.append("pfz")
+    if has_nav_data or hazards:
+        tabs_to_show.append(loc.get("tab_nav", "🧭 Route & Navigation"))
+        tab_keys.append("nav")
+    if has_weather_data:
+        tabs_to_show.append(loc.get("tab_safety", "🛡️ Safety & AI Insights"))
+        tab_keys.append("safety")
+
+    if tabs_to_show:
+        tab_objs = ctx.tabs(tabs_to_show)
+        tab_map = dict(zip(tab_keys, tab_objs))
+
+        # ── TAB: Maritime Map ────────────────────────────────────────────────
+        if "map" in tab_map:
+            with tab_map["map"]:
+                st_folium(fmap, width=None, height=340, returned_objects=[], use_container_width=True)
+                tab_map["map"].caption(loc.get("map_sub", "Click zone markers for details · Green = high potential · Red = hazard zone"))
+                if has_pfz_data:
+                    best_z = pfz_res.get("best_zone") or pfz_res.get("zones", [{}])[0]
+                    sp_list = best_z.get("species", [])
+                    sp_str = ", ".join(sp_list) if isinstance(sp_list, list) else str(sp_list)
+                    dist_km_str = f"{best_z.get('distance_to_user_km', '—')} km"
+                    tab_map["map"].markdown(f"""
+<div class="hotspot-quick-chip">
+  🎯 <b>Top Target:</b> <b>{best_z.get('name', 'Identified Zone')}</b> 
+  ({dist_km_str} · Depth: {best_z.get('depth_m', '—')} m) 
+  &nbsp;·&nbsp; <i>Species: {sp_str}</i>
+</div>
+""", unsafe_allow_html=True)
+
+        # ── TAB: Fishing Zones (PFZ) ─────────────────────────────────────────
+        if "pfz" in tab_map:
+            with tab_map["pfz"]:
+                t_ctx = tab_map["pfz"]
                 zones = pfz_res.get("zones", [])
                 planning_tag = " *(Pre-voyage planning only — navigation suspended)*" if is_suspended else ""
-                ctx.markdown(f"##### 🐟 {loc.get('pfz_title', 'Recommended Potential Fishing Zones (PFZ)')}{planning_tag}")
-                ctx.caption(f"📍 {loc.get('ref_port', 'Reference port')}: **{pfz_res.get('location','N/A')}** · {loc.get('incois_telemetry', 'INCOIS Satellite Telemetry')}")
+                clean_ref_port = format_clean_location(pfz_res.get('location', 'N/A'))
+                t_ctx.markdown(f"#### 🐟 {loc.get('pfz_title', 'Recommended Potential Fishing Zones (PFZ)')}{planning_tag}")
+                t_ctx.caption(f"📍 {loc.get('ref_port', 'Reference port')}: **{clean_ref_port}** · {loc.get('incois_telemetry', 'INCOIS Satellite Telemetry')}")
+                
                 zone_rows = []
                 for i, z in enumerate(zones[:6]):
                     status    = (z.get("quality") or z.get("status", "MEDIUM")).upper()
@@ -1852,28 +1955,30 @@ def render_fisherman_response(
                         loc.get("col_depth", "Depth"): depth_val,
                         loc.get("col_sst", "SST"): sst_val,
                         loc.get("col_chl", "Chlorophyll"): chla_val,
-                        loc.get("col_species", "Target Species"): species[:35],
+                        loc.get("col_species", "Target Species"): species[:45],
                     })
                 if zone_rows:
-                    ctx.dataframe(pd.DataFrame(zone_rows), use_container_width=True, hide_index=True)
+                    t_ctx.dataframe(pd.DataFrame(zone_rows), use_container_width=True, hide_index=True)
 
-            # B. Fuel-Optimal Navigation Summary
-            if has_nav_data:
-                imbl_warn  = nav_res.get("imbl_warning_active", False)
-                total_nm   = nav_res.get("total_distance_nm", 0.0)
-                total_km   = nav_res.get("total_distance_km", 0.0)
-                econ       = nav_res.get("fuel_economy", {})
-                cost_saved = econ.get("cost_saved_inr", 0)
-                transit    = econ.get("transit_time_str", "—")
-                start_lbl  = nav_res.get("start_label", "Port")
-                end_lbl    = nav_res.get("end_label", "Target Zone")
-                detour     = nav_res.get("hazard_avoidance_active", False)
-                risk_label = f"⚠️ {loc.get('nav_suspended', 'Suspended')}" if is_suspended else (f"🔴 {loc.get('nav_detour', 'Detour Active')}" if detour else f"🟢 {loc.get('nav_low_risk', 'Low Risk')}")
-                susp_note  = "<br><small style='color:#94A3B8;'>⚠ Navigation suspended — shown for pre-voyage planning</small>" if is_suspended else ""
+        # ── TAB: Route & Navigation ─────────────────────────────────────────
+        if "nav" in tab_map:
+            with tab_map["nav"]:
+                t_ctx = tab_map["nav"]
+                if has_nav_data:
+                    imbl_warn  = nav_res.get("imbl_warning_active", False)
+                    total_nm   = nav_res.get("total_distance_nm", 0.0)
+                    total_km   = nav_res.get("total_distance_km", 0.0)
+                    econ       = nav_res.get("fuel_economy", {})
+                    cost_saved = econ.get("cost_saved_inr", 0)
+                    transit    = econ.get("transit_time_str", "—")
+                    start_lbl  = format_clean_location(nav_res.get("start_label", "Port"))
+                    end_lbl    = nav_res.get("end_label", "Target Zone")
+                    detour     = nav_res.get("hazard_avoidance_active", False)
+                    risk_label = f"⚠️ {loc.get('nav_suspended', 'Suspended')}" if is_suspended else (f"🔴 {loc.get('nav_detour', 'Detour Active')}" if detour else f"🟢 {loc.get('nav_low_risk', 'Low Risk')}")
 
-                if imbl_warn:
-                    imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
-                    ctx.markdown(f"""
+                    if imbl_warn:
+                        imbl_dist = nav_res.get("imbl_min_distance_nm", 0.0)
+                        t_ctx.markdown(f"""
 <div class="hazard-chip critical" style="margin-top:10px;">
   <span class="hazard-icon">🛑</span>
   <div class="hazard-content">
@@ -1884,8 +1989,8 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-                ctx.markdown(f"##### 🧭 {loc.get('nav_title', 'Fuel-Optimal Navigation Summary')}")
-                ctx.markdown(f"""
+                    t_ctx.markdown(f"#### 🧭 {loc.get('nav_title', 'Fuel-Optimal Navigation Summary')}")
+                    t_ctx.markdown(f"""
 <div class="route-card" style="margin-bottom:12px;">
   <p class="route-label">{loc.get('nav_rec_route', 'Recommended Route')}</p>
   <p class="route-title">⛵ {start_lbl} → {end_lbl}</p>
@@ -1899,81 +2004,81 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-                waypoints = nav_res.get("waypoints", [])
-                nav_key = f"{abs(hash(str(start_lbl) + str(end_lbl) + str(total_km))) % 100000}"
-                is_nav_active = st.session_state.get(f"nav_active_{nav_key}", False)
-                curr_wp_idx = st.session_state.get(f"nav_wp_idx_{nav_key}", 0)
+                    waypoints = nav_res.get("waypoints", [])
+                    nav_key = f"{abs(hash(str(start_lbl) + str(end_lbl) + str(total_km))) % 100000}"
+                    is_nav_active = st.session_state.get(f"nav_active_{nav_key}", False)
+                    curr_wp_idx = st.session_state.get(f"nav_wp_idx_{nav_key}", 0)
 
-                if is_suspended:
-                    ctx.warning("⚠️ **Navigation Suspended:** Severe sea state or lightning hazard active. Route and waypoints provided for pre-voyage planning only once weather clears.")
-                else:
-                    col_nav_act, col_gpx_act, col_map_act = ctx.columns([2, 1.2, 1.2])
-                    if not is_nav_active:
-                        if col_nav_act.button(loc.get("btn_start_nav", "▶ Start Navigation Mode"), key=f"btn_start_nav_{nav_key}", type="primary", use_container_width=True):
-                            st.session_state[f"nav_active_{nav_key}"] = True
-                            st.session_state[f"nav_wp_idx_{nav_key}"] = 0
-                            st.rerun()
+                    if is_suspended:
+                        t_ctx.warning("⚠️ **Navigation Suspended:** Severe sea state or lightning hazard active. Route and waypoints provided for pre-voyage planning only once weather clears.")
                     else:
-                        if col_nav_act.button(loc.get("btn_stop_nav", "⏹ Stop Navigation"), key=f"btn_stop_nav_{nav_key}", use_container_width=True):
-                            st.session_state[f"nav_active_{nav_key}"] = False
-                            st.rerun()
+                        col_nav_act, col_gpx_act, col_map_act = t_ctx.columns([2, 1.2, 1.2])
+                        if not is_nav_active:
+                            if col_nav_act.button(loc.get("btn_start_nav", "▶ Start Navigation Mode"), key=f"btn_start_nav_{nav_key}", type="primary", use_container_width=True):
+                                st.session_state[f"nav_active_{nav_key}"] = True
+                                st.session_state[f"nav_wp_idx_{nav_key}"] = 0
+                                st.rerun()
+                        else:
+                            if col_nav_act.button(loc.get("btn_stop_nav", "⏹ Stop Navigation"), key=f"btn_stop_nav_{nav_key}", use_container_width=True):
+                                st.session_state[f"nav_active_{nav_key}"] = False
+                                st.rerun()
 
-                    if waypoints:
-                        gpx_data = _generate_gpx_content(waypoints, route_title=f"{start_lbl} to {end_lbl}")
-                        clean_fn = f"orca_route_{str(start_lbl)[:8].strip()}_{str(end_lbl)[:8].strip()}.gpx".replace(" ", "_").replace(",", "")
-                        col_gpx_act.download_button(
-                            label=loc.get("btn_export_gpx", "📥 Export GPX"),
-                            data=gpx_data,
-                            file_name=clean_fn,
-                            mime="application/gpx+xml",
-                            key=f"dl_gpx_{nav_key}",
-                            use_container_width=True,
-                            help="Import into handheld marine GPS plotters, Navionics, or mobile maps",
-                        )
-                        dest_wp = waypoints[-1]
-                        maps_url = f"https://www.google.com/maps/dir/?api=1&destination={dest_wp['lat']},{dest_wp['lon']}"
-                        col_map_act.link_button(loc.get("btn_open_maps", "🗺️ Open Maps"), url=maps_url, use_container_width=True)
+                        if waypoints:
+                            gpx_data = _generate_gpx_content(waypoints, route_title=f"{start_lbl} to {end_lbl}")
+                            clean_fn = f"orca_route_{str(start_lbl)[:8].strip()}_{str(end_lbl)[:8].strip()}.gpx".replace(" ", "_").replace(",", "")
+                            col_gpx_act.download_button(
+                                label=loc.get("btn_export_gpx", "📥 Export GPX"),
+                                data=gpx_data,
+                                file_name=clean_fn,
+                                mime="application/gpx+xml",
+                                key=f"dl_gpx_{nav_key}",
+                                use_container_width=True,
+                                help="Import into handheld marine GPS plotters, Navionics, or mobile maps",
+                            )
+                            dest_wp = waypoints[-1]
+                            maps_url = f"https://www.google.com/maps/dir/?api=1&destination={dest_wp['lat']},{dest_wp['lon']}"
+                            col_map_act.link_button(loc.get("btn_open_maps", "🗺️ Open Maps"), url=maps_url, use_container_width=True)
 
-                # ── Live Passage Steering Cockpit (HUD) ────────────────────────
-                if is_nav_active and waypoints and not is_suspended:
-                    total_wps = len(waypoints)
-                    curr_wp_idx = max(0, min(curr_wp_idx, total_wps - 1))
-                    curr_wp = waypoints[curr_wp_idx]
-                    is_first = (curr_wp_idx == 0)
-                    is_last = (curr_wp_idx == total_wps - 1)
+                    # ── Live Passage Steering Cockpit (HUD) ────────────────────
+                    if is_nav_active and waypoints and not is_suspended:
+                        total_wps = len(waypoints)
+                        curr_wp_idx = max(0, min(curr_wp_idx, total_wps - 1))
+                        curr_wp = waypoints[curr_wp_idx]
+                        is_first = (curr_wp_idx == 0)
+                        is_last = (curr_wp_idx == total_wps - 1)
 
-                    wp_name = curr_wp.get("name", f"Waypoint {curr_wp_idx + 1}")
-                    wp_lat = curr_wp.get("lat", 0.0)
-                    wp_lon = curr_wp.get("lon", 0.0)
-                    leg_dist = curr_wp.get("leg_distance_nm", 0.0)
-                    leg_dist_str = f"{leg_dist:.1f} NM ({leg_dist * 1.852:.1f} km)" if leg_dist else "Departure (0 NM)"
-                    bearing = curr_wp.get("leg_bearing") or ("Departure" if is_first else "Direct Course")
-                    notes = curr_wp.get("notes", "")
+                        wp_name = curr_wp.get("name", f"Waypoint {curr_wp_idx + 1}")
+                        wp_lat = curr_wp.get("lat", 0.0)
+                        wp_lon = curr_wp.get("lon", 0.0)
+                        leg_dist = curr_wp.get("leg_distance_nm", 0.0)
+                        leg_dist_str = f"{leg_dist:.1f} NM ({leg_dist * 1.852:.1f} km)" if leg_dist else "Departure (0 NM)"
+                        bearing = curr_wp.get("leg_bearing") or ("Departure" if is_first else "Direct Course")
+                        notes = curr_wp.get("notes", "")
 
-                    if is_first:
-                        hud_title = f"⚓ Departure Port / Anchorage: {start_lbl}"
-                        advisory_text = (
-                            f"Pre-departure checks complete. VHF Channel 16 active. "
-                            f"Weigh anchor from {start_lbl} and steer towards first seaward waypoint."
-                        )
-                        badge_color = "#38BDF8"
-                    elif is_last:
-                        hud_title = f"🎯 Arrived at Target PFZ: {end_lbl}"
-                        best_z = pfz_res.get("best_zone", {}) if pfz_res else {}
-                        sp_list = ", ".join(best_z.get("species", ["Pelagic / Demersal species"]))
-                        depth_val = best_z.get("depth_m", 35)
-                        advisory_text = (
-                            f"You have arrived at the Potential Fishing Zone! "
-                            f"Target species: <b>{sp_list}</b>. Sea depth: <b>{depth_val}m</b>. "
-                            f"Commence fishing operations. Monitor drift and sea state."
-                        )
-                        badge_color = "#22c55e"
-                    else:
-                        hud_title = f"🧭 Waypoint {curr_wp_idx + 1} of {total_wps}: {wp_name}"
-                        advisory_text = notes if notes else f"Maintain steering course on bearing {bearing}. Maintain lookout for small craft."
-                        badge_color = "#22D3EE"
+                        if is_first:
+                            hud_title = f"⚓ Departure Port / Anchorage: {start_lbl}"
+                            advisory_text = (
+                                f"Pre-departure checks complete. VHF Channel 16 active. "
+                                f"Weigh anchor from {start_lbl} and steer towards first seaward waypoint."
+                            )
+                            badge_color = "#38BDF8"
+                        elif is_last:
+                            hud_title = f"🎯 Arrived at Target PFZ: {end_lbl}"
+                            best_z = pfz_res.get("best_zone", {}) if pfz_res else {}
+                            sp_list = ", ".join(best_z.get("species", ["Pelagic / Demersal species"]))
+                            depth_val = best_z.get("depth_m", 35)
+                            advisory_text = (
+                                f"You have arrived at the Potential Fishing Zone! "
+                                f"Target species: <b>{sp_list}</b>. Sea depth: <b>{depth_val}m</b>. "
+                                f"Commence fishing operations. Monitor drift and sea state."
+                            )
+                            badge_color = "#22c55e"
+                        else:
+                            hud_title = f"🧭 Waypoint {curr_wp_idx + 1} of {total_wps}: {wp_name}"
+                            advisory_text = notes if notes else f"Maintain steering course on bearing {bearing}. Maintain lookout for small craft."
+                            badge_color = "#22D3EE"
 
-                    ctx.markdown(f"""
+                        t_ctx.markdown(f"""
 <div style="background: linear-gradient(135deg, #071E2D 0%, #0B2B40 100%); border: 2px solid {badge_color}; border-radius: 12px; padding: 18px 22px; margin: 12px 0 16px 0; color: #F8FAFC; box-shadow: 0 4px 20px rgba(14, 165, 168, 0.2);">
   <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #1E3A52; padding-bottom: 10px; margin-bottom: 14px;">
     <div>
@@ -2014,51 +2119,51 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-                    c_prev, c_txt, c_next = ctx.columns([1.2, 2, 1.2])
-                    if not is_first:
-                        if c_prev.button("⏮ Previous Leg", key=f"btn_prev_wp_{nav_key}", use_container_width=True):
-                            st.session_state[f"nav_wp_idx_{nav_key}"] = max(0, curr_wp_idx - 1)
-                            st.rerun()
-                    else:
-                        c_prev.caption("⚓ Port Origin")
+                        c_prev, c_txt, c_next = t_ctx.columns([1.2, 2, 1.2])
+                        if not is_first:
+                            if c_prev.button("⏮ Previous Leg", key=f"btn_prev_wp_{nav_key}", use_container_width=True):
+                                st.session_state[f"nav_wp_idx_{nav_key}"] = max(0, curr_wp_idx - 1)
+                                st.rerun()
+                        else:
+                            c_prev.caption("⚓ Port Origin")
 
-                    c_txt.markdown(
-                        f"<p style='text-align:center; font-size:0.8rem; color:#94A3B8; margin-top:6px;'>"
-                        f"Navigate through passage waypoints · Follow compass headings"
-                        f"</p>",
-                        unsafe_allow_html=True,
-                    )
+                        c_txt.markdown(
+                            f"<p style='text-align:center; font-size:0.8rem; color:#94A3B8; margin-top:6px;'>"
+                            f"Navigate through passage waypoints · Follow compass headings"
+                            f"</p>",
+                            unsafe_allow_html=True,
+                        )
 
-                    if not is_last:
-                        if c_next.button(loc.get("btn_next_wp", "Next Waypoint ⏭"), key=f"btn_next_wp_{nav_key}", type="primary", use_container_width=True):
-                            st.session_state[f"nav_wp_idx_{nav_key}"] = min(total_wps - 1, curr_wp_idx + 1)
-                            st.rerun()
-                    else:
-                        if c_next.button(loc.get("btn_restart_route", "🔄 Restart Route"), key=f"btn_restart_wp_{nav_key}", use_container_width=True):
-                            st.session_state[f"nav_wp_idx_{nav_key}"] = 0
-                            st.rerun()
+                        if not is_last:
+                            if c_next.button(loc.get("btn_next_wp", "Next Waypoint ⏭"), key=f"btn_next_wp_{nav_key}", type="primary", use_container_width=True):
+                                st.session_state[f"nav_wp_idx_{nav_key}"] = min(total_wps - 1, curr_wp_idx + 1)
+                                st.rerun()
+                        else:
+                            if c_next.button(loc.get("btn_restart_route", "🔄 Restart Route"), key=f"btn_restart_wp_{nav_key}", use_container_width=True):
+                                st.session_state[f"nav_wp_idx_{nav_key}"] = 0
+                                st.rerun()
 
-                # Full Waypoint Table
-                if waypoints:
-                    wp_rows = ""
-                    for i, wp in enumerate(waypoints):
-                        leg_dist = f"{wp.get('leg_distance_nm',0.0):.1f} NM" if wp.get("leg_distance_nm") else "Start"
-                        bearing  = wp.get("leg_bearing") or "Departure"
-                        active_marker = "👉 **ACTIVE** " if (is_nav_active and i == curr_wp_idx) else ""
-                        wp_rows += f"| {active_marker}{wp['name']} | `{wp['lat']:.4f}°N, {wp['lon']:.4f}°E` | {leg_dist} | {bearing} | {wp.get('notes','')} |\n"
-                    c_wp = loc.get('col_wp', 'Waypoint')
-                    c_coords = loc.get('col_coords', 'Coordinates')
-                    c_ldist = loc.get('col_leg_dist', 'Leg Distance')
-                    c_brg = loc.get('col_bearing', 'Bearing')
-                    c_adv = loc.get('col_advisory', 'Advisory')
-                    ctx.markdown(f"| {c_wp} | {c_coords} | {c_ldist} | {c_brg} | {c_adv} |\n|---|---|---|---|---|\n" + wp_rows)
+                    # Full Waypoint Table
+                    if waypoints:
+                        wp_rows = ""
+                        for i, wp in enumerate(waypoints):
+                            leg_dist = f"{wp.get('leg_distance_nm',0.0):.1f} NM" if wp.get("leg_distance_nm") else "Start"
+                            bearing  = wp.get("leg_bearing") or "Departure"
+                            active_marker = "👉 **ACTIVE** " if (is_nav_active and i == curr_wp_idx) else ""
+                            wp_rows += f"| {active_marker}{wp['name']} | `{wp['lat']:.4f}°N, {wp['lon']:.4f}°E` | {leg_dist} | {bearing} | {wp.get('notes','')} |\n"
+                        c_wp = loc.get('col_wp', 'Waypoint')
+                        c_coords = loc.get('col_coords', 'Coordinates')
+                        c_ldist = loc.get('col_leg_dist', 'Leg Distance')
+                        c_brg = loc.get('col_bearing', 'Bearing')
+                        c_adv = loc.get('col_advisory', 'Advisory')
+                        t_ctx.markdown(f"| {c_wp} | {c_coords} | {c_ldist} | {c_brg} | {c_adv} |\n|---|---|---|---|---|\n" + wp_rows)
 
-            # C. Areas to Avoid (hazard cards)
-            if hazards:
-                ctx.markdown(f"##### ⛔ {loc.get('hazard_title', 'Areas to Avoid')}")
-                for icon, title, dist_h, action, kind in hazards:
-                    chip_cls = "hazard-chip critical" if kind == "critical" else "hazard-chip"
-                    ctx.markdown(f"""
+                # Areas to Avoid (hazard cards)
+                if hazards:
+                    t_ctx.markdown(f"#### ⛔ {loc.get('hazard_title', 'Areas to Avoid')}")
+                    for icon, title, dist_h, action, kind in hazards:
+                        chip_cls = "hazard-chip critical" if kind == "critical" else "hazard-chip"
+                        t_ctx.markdown(f"""
 <div class="{chip_cls}">
   <span class="hazard-icon">{icon}</span>
   <div class="hazard-content">
@@ -2069,15 +2174,17 @@ def render_fisherman_response(
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 5. Why ORCA Recommends This (Evidence & Confidence Expander) ──────────
-    if weather_res and weather_res.get("success"):
-        confidence = {"SAFE": 87, "CAUTION": 72, "DANGER": 94}.get(verdict or "SAFE", 80)
-        reasoning  = weather_res.get("reasoning", "Conditions assessed against IMD/INCOIS guidelines.")
-        storm_str  = "Yes ⚡" if m_wx.get("thunderstorm_likely") else "No"
+        # ── TAB: Safety & AI Insights ───────────────────────────────────────
+        if "safety" in tab_map:
+            with tab_map["safety"]:
+                t_ctx = tab_map["safety"]
+                confidence = {"SAFE": 87, "CAUTION": 72, "DANGER": 94}.get(verdict or "SAFE", 80)
+                reasoning  = weather_res.get("reasoning", "Conditions assessed against IMD/INCOIS guidelines.")
+                storm_str  = "Yes ⚡" if m_wx.get("thunderstorm_likely") else "No"
+                has_pfz = pfz_res is not None
 
-        with ctx.expander(loc.get("why_title", "🔬 Why ORCA recommends this · Evidence & confidence"), expanded=False):
-            has_pfz = pfz_res is not None
-            ctx.markdown(f"""<div class="orca-card">
+                t_ctx.markdown(f"#### 🔬 {loc.get('why_title', 'Why ORCA recommends this · Evidence & confidence')}")
+                t_ctx.markdown(f"""<div class="orca-card">
 <p style="font-weight:700;margin:0 0 8px 0;color:#0B2638;">{loc.get('evidence_chain', 'Evidence Chain')}</p>
 <div class="evidence-row"><span class="evidence-check">✅</span><span class="evidence-label">Satellite Observation</span><span class="evidence-source">ISRO Oceansat-3 · Sentinel-3</span></div>
 <div class="evidence-row"><span class="evidence-check">✅</span><span class="evidence-label">Weather Forecast</span><span class="evidence-source">Open-Meteo 48H model</span></div>
@@ -2092,7 +2199,8 @@ def render_fisherman_response(
 <div class="flow-step">⚖️ <b>SAFETY ASSESSMENT</b> — IMD/INCOIS thresholds applied → verdict: {verdict or "N/A"} <span class="flow-arrow">↓</span></div>
 <div class="flow-step">✅ <b>RECOMMENDATION</b> — {verdict_txt}</div>
 """, unsafe_allow_html=True)
-            ctx.markdown(f"""
+
+                t_ctx.markdown(f"""
 **📊 Peak Marine Conditions**
 
 | Metric | Value | Threshold |
@@ -2184,10 +2292,12 @@ def render_authority_response(
     level_label, level_dot, banner_type = _AUTHORITY_LEVEL_META.get(
         verdict or "SAFE", ("Level-0 / Benign", "🟢", "success")
     )
-    location_str = (
+    from tools.weather_tools import format_clean_location
+    raw_auth_loc = (
         weather_res.get("location", "N/A") if weather_res else
         pfz_res.get("location", "N/A") if pfz_res else "N/A"
     )
+    location_str = format_clean_location(raw_auth_loc)
     now_str = datetime.datetime.now().strftime("%d %b %Y · %H:%M IST")
 
     # ── 1. Disaster Classification Alert Banner (Default View) ────────────────

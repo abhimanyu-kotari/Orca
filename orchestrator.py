@@ -52,7 +52,7 @@ from agents.hazard_agent import run as hazard_agent_run
 from tools.navigation_tools import calculate_optimal_route
 from tools.map_tools import _generate_coastal_geofence_coords
 from tools.eo_tools import generate_eo_grid
-from tools.weather_tools import get_coordinates
+from tools.weather_tools import get_coordinates, format_clean_location
 
 _GEMINI_TIMEOUT_S = 30
 _gemini = None
@@ -472,8 +472,9 @@ def _execute_orchestration(inputs: dict) -> dict:
                     )
                     agents_invoked.append("navigation_tools")
 
+            clean_loc = format_clean_location(location)
             synthesis = (
-                f"🚨 **DANGER Alert for {location}:** Severe weather or high sea state detected.\n\n"
+                f"🚨 **DANGER Alert for {clean_loc}:** Severe weather or high sea state detected.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
                 f"⚠️ **Navigation Suspended: Sea state / Lightning hazard active. "
                 f"Showing direct displacement metrics for planning purposes only once weather clears.**\n\n"
@@ -528,8 +529,9 @@ def _execute_orchestration(inputs: dict) -> dict:
                     )
                     agents_invoked.append("navigation_tools")
 
+            clean_loc = format_clean_location(location)
             synthesis = (
-                f"⚠️ **CAUTION Advisory for {location}:** Sea conditions require heightened care.\n\n"
+                f"⚠️ **CAUTION Advisory for {clean_loc}:** Sea conditions require heightened care.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
                 f"🐟 **PFZ Available with Caution:** Nearest hotspot is **{best_name}**.\n\n"
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
@@ -577,8 +579,9 @@ def _execute_orchestration(inputs: dict) -> dict:
                     )
                     agents_invoked.append("navigation_tools")
 
+            clean_loc = format_clean_location(location)
             synthesis = (
-                f"✅ **Favorable Conditions for {location}:** Weather and sea conditions are SAFE for operations.\n\n"
+                f"✅ **Favorable Conditions for {clean_loc}:** Weather and sea conditions are SAFE for operations.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
                 f"🐟 **Top Recommended Fishing Zone:** **{best_name}**.\n\n"
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"

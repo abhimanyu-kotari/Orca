@@ -208,29 +208,29 @@ def get_eo_legend_html() -> str:
     <style>
     .eo-legend-box {
         position: fixed;
-        bottom: 20px;
-        left: 15px;
+        bottom: 15px;
+        left: 12px;
         z-index: 9999;
-        background: rgba(255, 255, 255, 0.94);
-        padding: 8px 12px;
-        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.90);
+        padding: 6px 10px;
+        border-radius: 6px;
         border: 1px solid #CBD5E1;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.14);
         font-family: Arial, sans-serif;
-        font-size: 11px;
-        line-height: 1.35;
-        max-width: 240px;
+        font-size: 10px;
+        line-height: 1.3;
+        max-width: 205px;
     }
     @media (max-width: 600px) {
         .eo-legend-box {
-            max-width: 175px !important;
-            padding: 5px 7px !important;
-            font-size: 9px !important;
-            bottom: 8px !important;
-            left: 8px !important;
+            max-width: 155px !important;
+            padding: 4px 6px !important;
+            font-size: 8.5px !important;
+            bottom: 6px !important;
+            left: 6px !important;
         }
-        .eo-legend-title { font-size: 9.5px !important; }
-        .eo-legend-box span { font-size: 8px !important; }
+        .eo-legend-title { font-size: 9px !important; }
+        .eo-legend-box span { font-size: 7.5px !important; }
     }
     </style>
     <div class="eo-legend-box">

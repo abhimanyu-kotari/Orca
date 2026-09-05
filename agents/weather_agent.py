@@ -450,7 +450,7 @@ def run(inputs: dict) -> dict:
 
         lat               = geo["lat"]
         lon               = geo["lon"]
-        resolved_location = geo["location"]
+        resolved_location = geo.get("clean_location") or geo["location"]
 
     # ── Step 2: Parse time context ───────────────────────────────────────────
     time_context            = inputs.get("time_context", "today")

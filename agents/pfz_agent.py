@@ -203,7 +203,7 @@ def run(inputs: dict) -> dict:
             return {"success": False, "error": geo.get("error", "Geocoding failed.")}
         lat           = geo["lat"]
         lon           = geo["lon"]
-        resolved_name = geo["location"]          # Full resolved address
+        resolved_name = geo.get("clean_location") or geo["location"]
     else:
         lat           = float(lat)
         lon           = float(lon)
