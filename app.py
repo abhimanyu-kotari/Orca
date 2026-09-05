@@ -1113,7 +1113,7 @@ PRODUCT_TOUR_STEPS = [
     {
         "step_label": "STEP 7 OF 7  •  MISSION READY",
         "icon": "🚀",
-        "icon_img": f"data:image/png;base64,{LOGO_B64}" if LOGO_B64 else None,
+        "icon_img": None,
         "badge": "ALL SYSTEMS GO",
         "title": "You're Ready to Explore!",
         "body": "You're all set to use Project ORCA. Choose your role, type a query, and explore intelligent ocean analytics. Relaunch this guide anytime using <strong>❓ Help / Tour Guide</strong> in the sidebar.",
@@ -1155,11 +1155,14 @@ def render_product_tour(force_open: bool = False) -> None:
     const parentWin = window.parent || window;
     const parentDoc = parentWin.document || document;
 
-    // Inject styles into parent document head if not already present
-    if (!parentDoc.getElementById('orca-tour-injected-styles')) {
-        const style = parentDoc.createElement('style');
+    // Always inject or update styles into parent document head
+    let style = parentDoc.getElementById('orca-tour-injected-styles');
+    if (!style) {
+        style = parentDoc.createElement('style');
         style.id = 'orca-tour-injected-styles';
-        style.textContent = `
+        parentDoc.head.appendChild(style);
+    }
+    style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             
             /* Spotlight Cutout Box — MUST BE BEHIND OVERLAY (z-index: 999980) so its 9999px shadow NEVER dims the card! */
@@ -1251,8 +1254,9 @@ def render_product_tour(force_open: bool = False) -> None:
                 box-shadow: 0 25px 60px -12px rgba(11, 38, 56, 0.5), 0 0 0 1px rgba(14, 165, 168, 0.2) !important;
                 max-width: 560px !important;
                 width: 100% !important;
+                max-height: 88vh !important;
+                overflow-y: auto !important;
                 position: relative !important;
-                overflow: hidden !important;
                 padding: 22px 28px 18px 28px !important;
                 color: #1E293B !important;
                 box-sizing: border-box !important;
@@ -1334,12 +1338,17 @@ def render_product_tour(force_open: bool = False) -> None:
                 margin-bottom: 4px !important;
             }
             .orca-tour-logo-img {
-                width: 52px !important;
-                height: 52px !important;
-                object-fit: contain !important;
-                border-radius: 12px !important;
-                box-shadow: 0 4px 14px rgba(11, 38, 56, 0.15) !important;
-                margin-bottom: 6px !important;
+                width: 46px !important;
+                height: 46px !important;
+                min-width: 46px !important;
+                min-height: 46px !important;
+                max-width: 46px !important;
+                max-height: 46px !important;
+                object-fit: cover !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 12px rgba(11, 38, 56, 0.18) !important;
+                border: 1.5px solid rgba(14, 165, 168, 0.25) !important;
+                margin: 2px 0 6px 0 !important;
                 display: block !important;
             }
             .orca-tour-title {
@@ -1463,10 +1472,20 @@ def render_product_tour(force_open: bool = False) -> None:
                 .orca-tour-modal-card {
                     max-width: 100% !important;
                     width: calc(100vw - 20px) !important;
+                    max-height: 92vh !important;
+                    overflow-y: auto !important;
                     padding: 16px 16px 14px 16px !important;
                     border-radius: 16px !important;
                     margin-left: 0 !important;
                     margin-right: 0 !important;
+                }
+                .orca-tour-logo-img {
+                    width: 40px !important;
+                    height: 40px !important;
+                    min-width: 40px !important;
+                    min-height: 40px !important;
+                    max-width: 40px !important;
+                    max-height: 40px !important;
                 }
                 .orca-tour-title {
                     font-size: 1.15rem !important;
@@ -1723,7 +1742,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 <button class="orca-tour-close-x" id="orca-tour-btn-x" title="Close Tour">✕</button>
                 ${locationHtml}
                 <div class="orca-tour-step-label">${data.step_label}</div>
-                ${data.icon_img ? `<img src="${data.icon_img}" class="orca-tour-logo-img" alt="ORCA Logo">` : `<span class="orca-tour-icon">${data.icon}</span>`}
+                ${data.icon_img ? `<img src="${data.icon_img}" class="orca-tour-logo-img" alt="ORCA Logo" width="46" height="46" style="width:46px !important;height:46px !important;min-width:46px !important;min-height:46px !important;max-width:46px !important;max-height:46px !important;object-fit:cover !important;border-radius:10px !important;border:1.5px solid rgba(14,165,168,0.25) !important;box-shadow:0 4px 12px rgba(11,38,56,0.18) !important;margin:2px 0 6px 0 !important;display:block !important;">` : `<span class="orca-tour-icon">${data.icon}</span>`}
                 <div class="orca-tour-badge">${data.badge}</div>
                 <div class="orca-tour-title">${data.title}</div>
                 <div class="orca-tour-body">${data.body}</div>
