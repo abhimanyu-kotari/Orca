@@ -1150,7 +1150,7 @@ PRODUCT_TOUR_STEPS = [
         "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
         "tip": "Look at the glowing dropdown in the top header: you can pick your language here!",
         "target_type": "language",
-        "location_label": "Top Control Bar ➔ 🌐 Advisory Language",
+        "location_label": "Top Header ➔ 🌐 Advisory Language",
         "beacon_text": "9 Languages Supported"
     },
     {
@@ -1278,16 +1278,12 @@ def render_product_tour(force_open: bool = False) -> None:
                 backdrop-filter: blur(4px) !important;
                 -webkit-backdrop-filter: blur(4px) !important;
                 z-index: 999990 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 0 16px !important;
+                display: block !important;
                 box-sizing: border-box !important;
                 opacity: 0;
                 transition: opacity 0.25s ease-out, background 0.25s ease !important;
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch !important;
+                overflow: hidden !important;
                 pointer-events: auto !important;
             }
             #orca-product-tour-overlay.orca-tour-active {
@@ -1307,17 +1303,18 @@ def render_product_tour(force_open: bool = False) -> None:
                 border: 1px solid #E2E8F0 !important;
                 border-top: 5px solid #0EA5A8 !important;
                 box-shadow: 0 25px 60px -12px rgba(11, 38, 56, 0.5), 0 0 0 1px rgba(14, 165, 168, 0.2) !important;
-                max-width: 560px !important;
+                max-width: 520px !important;
                 width: 100% !important;
                 max-height: 88vh !important;
                 overflow-y: auto !important;
-                position: relative !important;
+                position: fixed !important;
                 padding: 22px 28px 18px 28px !important;
                 color: #1E293B !important;
                 box-sizing: border-box !important;
                 transform: scale(0.96);
-                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.3s ease, margin-left 0.3s ease !important;
+                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1), left 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
                 z-index: 999995 !important;
+                margin: 0 !important;
             }
             #orca-product-tour-overlay.orca-tour-active .orca-tour-modal-card {
                 transform: scale(1) !important;
@@ -1520,67 +1517,60 @@ def render_product_tour(force_open: bool = False) -> None:
             /* ── MOBILE RESPONSIVENESS (< 768px) ── */
             @media (max-width: 768px) {
                 #orca-product-tour-overlay {
-                    padding: 8px !important;
-                    align-items: flex-start !important;
-                    justify-content: center !important;
+                    padding: 0 !important;
                 }
-                /* Shrink the main popover card */
                 .orca-tour-modal-card {
-                    width: 85vw !important;
-                    max-width: 280px !important; /* User requested 280px */
-                    min-width: 250px !important;
+                    max-width: 320px !important;
+                    min-width: 260px !important;
                     max-height: 85vh !important;
                     overflow-y: auto !important;
-                    padding: 10px !important;
+                    padding: 10px 14px !important;
                     border-radius: 12px !important;
-                    margin: 0 auto !important;
+                    margin: 0 !important;
                 }
-                /* Shrink all text inside the popover to save space */
                 .orca-tour-title {
-                    font-size: 1rem !important;
-                    margin-bottom: 5px !important;
+                    font-size: 0.98rem !important;
+                    margin-bottom: 4px !important;
                     line-height: 1.2 !important;
                 }
                 .orca-tour-body {
-                    font-size: 0.85rem !important;
-                    line-height: 1.3 !important;
+                    font-size: 0.82rem !important;
+                    line-height: 1.35 !important;
                     margin-bottom: 6px !important;
                 }
                 .orca-tour-location-banner {
-                    font-size: 10px !important;
-                    padding: 3px 6px !important;
-                    margin-bottom: 5px !important;
-                }
-                .orca-tour-step {
-                    font-size: 9px !important;
-                    margin-bottom: 4px !important;
-                }
-                .orca-tour-tip {
-                    font-size: 0.75rem !important;
-                    margin: 4px 0 !important;
-                    padding: 6px 10px !important;
-                }
-                .orca-tour-pills span {
                     font-size: 9.5px !important;
                     padding: 3px 6px !important;
+                    margin-bottom: 4px !important;
+                }
+                .orca-tour-step-label {
+                    font-size: 8.5px !important;
+                    margin-bottom: 3px !important;
+                }
+                .orca-tour-tip {
+                    font-size: 0.72rem !important;
+                    margin: 4px 0 !important;
+                    padding: 5px 8px !important;
+                }
+                .orca-tour-pills span, .orca-tour-pill {
+                    font-size: 9px !important;
+                    padding: 2px 6px !important;
                 }
                 .orca-tour-logo-img {
-                    width: 32px !important;
-                    height: 32px !important;
-                    min-width: 32px !important;
-                    min-height: 32px !important;
-                    max-width: 32px !important;
-                    max-height: 32px !important;
+                    width: 30px !important;
+                    height: 30px !important;
+                    min-width: 30px !important;
+                    min-height: 30px !important;
+                    max-width: 30px !important;
+                    max-height: 30px !important;
                 }
-                /* Make the buttons smaller */
                 .orca-tour-btn-next, .orca-tour-btn-back {
                     padding: 5px 10px !important;
-                    font-size: 0.8rem !important;
+                    font-size: 0.78rem !important;
                     min-height: auto !important;
                 }
-                /* Reduce margins on internal elements */
                 .orca-tour-modal-card hr.orca-tour-divider {
-                    margin: 8px 0 !important;
+                    margin: 6px 0 !important;
                 }
                 .orca-tour-dots {
                     gap: 3px !important;
@@ -1588,13 +1578,13 @@ def render_product_tour(force_open: bool = False) -> None:
                 .orca-tour-close-x {
                     width: 24px !important;
                     height: 24px !important;
-                    top: 8px !important;
-                    right: 8px !important;
+                    top: 6px !important;
+                    right: 6px !important;
                     font-size: 11px !important;
                 }
                 #orca-tour-beacon {
                     font-size: 9px !important;
-                    padding: 4px 8px !important;
+                    padding: 3px 7px !important;
                 }
             }
         `;
@@ -1617,29 +1607,11 @@ def render_product_tour(force_open: bool = False) -> None:
     }
 
     function ensureSidebarOpen() {
-        try {
-            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"], section[data-testid="stSidebar"], .stSidebar');
-            const expandBtn = parentDoc.querySelector('[data-testid="stExpandSidebarButton"], [data-testid="stSidebarCollapsedControl"] button, [data-testid="stSidebarCollapsedControl"], button[aria-label*="sidebar" i], button[aria-label*="expand" i]');
-            let isCollapsed = false;
-            if (expandBtn && (expandBtn.offsetParent !== null || expandBtn.offsetWidth > 0)) {
-                isCollapsed = true;
-            } else if (sidebar) {
-                const r = sidebar.getBoundingClientRect();
-                if (r.width < 50 || r.right <= 10 || sidebar.getAttribute('aria-expanded') === 'false') {
-                    isCollapsed = true;
-                }
-            }
-            if (isCollapsed && expandBtn) {
-                expandBtn.click();
-            }
-        } catch (e) {
-            console.warn('ensureSidebarOpen error:', e);
-        }
+        // No-op: language selector moved to top header
     }
 
     function findLanguageElement() {
         try {
-            // Priority 0: Explicit marker placed right above the selectbox in Python
             const marker = parentDoc.getElementById('orca-tour-lang-marker');
             if (marker) {
                 const container = marker.closest('[data-testid="stElementContainer"], .element-container') || marker.parentElement;
@@ -1650,59 +1622,20 @@ def render_product_tour(force_open: bool = False) -> None:
                                    (next.getAttribute && next.getAttribute('data-testid') === 'stSelectbox' ? next : null);
                         if (sb) return sb;
                         const txt = (next.textContent || '').toLowerCase();
-                        if (txt.includes('language') || txt.includes('advisory')) return next;
+                        if (txt.includes('language') || txt.includes('advisory') || txt.includes('english')) return next;
                         next = next.nextElementSibling;
                     }
                 }
             }
-
-            // Priority 1: Label search across parentDoc (just like findRadioByText!)
-            const labels = parentDoc.querySelectorAll('[data-testid="stSidebar"] label, [data-testid="stSidebar"] [data-testid="stWidgetLabel"], label, [data-testid="stWidgetLabel"]');
-            for (const l of labels) {
-                const txt = (l.textContent || '').toLowerCase();
-                if (txt.includes('advisory language') || (txt.includes('language') && (txt.includes('advisory') || txt.includes('भाषा') || txt.includes('மொழி')))) {
-                    const widget = l.closest('[data-testid="stSelectbox"]') || l.closest('.stSelectbox') || l.closest('[data-baseweb="select"]') || l.parentElement;
-                    if (widget) return widget;
-                    return l;
+            const allSelectboxes = parentDoc.querySelectorAll('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"]');
+            for (const sb of allSelectboxes) {
+                if (sb.closest('[data-testid="stSidebar"], .stSidebar')) continue;
+                const txt = (sb.textContent || '').toLowerCase();
+                if (txt.includes('english') || txt.includes('language') || txt.includes('advisory')) {
+                    return sb;
                 }
             }
-
-            // Priority 2: Text matching on any element inside the sidebar
-            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"], section[data-testid="stSidebar"], .stSidebar');
-            if (sidebar) {
-                const ariaEl = sidebar.querySelector('[aria-label*="Language"], [aria-label*="भाषा"], [aria-label*="மொழி"], [aria-label*="Advisory"]');
-                if (ariaEl) {
-                    const widget = ariaEl.closest('[data-testid="stSelectbox"]') || ariaEl.closest('.stSelectbox') || ariaEl;
-                    if (widget) return widget;
-                }
-
-                const sideSelectboxes = sidebar.querySelectorAll('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"]');
-                for (const sb of sideSelectboxes) {
-                    const txt = (sb.textContent || '').toLowerCase();
-                    if (txt.includes('language') || txt.includes('advisory') || txt.includes('english') || txt.includes('भाषा') || txt.includes('மொழி')) {
-                        return sb;
-                    }
-                }
-
-                if (sideSelectboxes.length > 0) {
-                    return sideSelectboxes[0];
-                }
-            }
-
-            // Priority 3: Any combobox or selectbox in document with 'language'
-            const allCombos = parentDoc.querySelectorAll('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"], [role="combobox"]');
-            for (const cb of allCombos) {
-                const txt = (cb.textContent || '').toLowerCase();
-                const aria = (cb.getAttribute('aria-label') || '').toLowerCase();
-                if (txt.includes('language') || txt.includes('advisory') || txt.includes('english') || aria.includes('language')) {
-                    const widget = cb.closest('[data-testid="stSelectbox"]') || cb.closest('.stSelectbox') || cb;
-                    return widget;
-                }
-            }
-
-            // Priority 4: Fallback to the first selectbox anywhere on the page
-            const fallbackSb = parentDoc.querySelector('[data-testid="stSelectbox"], .stSelectbox, [data-baseweb="select"]');
-            if (fallbackSb) return fallbackSb;
+            if (allSelectboxes.length > 0) return allSelectboxes[0];
         } catch (e) {
             console.warn('findLanguageElement error:', e);
         }
@@ -1769,9 +1702,22 @@ def render_product_tour(force_open: bool = False) -> None:
             parentDoc.body.appendChild(beacon);
         }
 
-        const isMobile = parentWin.innerWidth < 768;
+        const winWidth = parentWin.innerWidth;
+        const winHeight = parentWin.innerHeight;
+        const isMobile = winWidth < 768;
         const data = steps[parentWin.__orcaTourStep];
         const targetEl = findTargetElement(data.target_type);
+
+        if (!card) return;
+
+        // Adaptive card width
+        const cardWidth = isMobile ? Math.min(310, winWidth - 24) : Math.min(500, winWidth - 48);
+        card.style.width = cardWidth + 'px';
+        card.style.maxWidth = cardWidth + 'px';
+        card.style.margin = '0px';
+
+        // Measure current card height
+        const cardHeight = card.offsetHeight || (isMobile ? 260 : 340);
 
         if (targetEl) {
             let measuredEl = targetEl;
@@ -1785,6 +1731,7 @@ def render_product_tour(force_open: bool = False) -> None:
             }
 
             if (isTargetActuallyVisible(rect, measuredEl, data)) {
+                // 1. Position Spotlight
                 spotlight.style.top = (rect.top - 6) + 'px';
                 spotlight.style.left = (rect.left - 8) + 'px';
                 spotlight.style.width = (rect.width + 16) + 'px';
@@ -1793,49 +1740,83 @@ def render_product_tour(force_open: bool = False) -> None:
 
                 if (overlay) overlay.classList.add('orca-has-spotlight');
 
+                // 2. Position Beacon
                 if (data.beacon_text) {
                     beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
-                    beacon.style.top = Math.max(8, rect.top - (isMobile ? 28 : 34)) + 'px';
-                    beacon.style.left = Math.max(8, rect.left + (isMobile ? 4 : 8)) + 'px';
+                    beacon.style.top = Math.max(6, rect.top - (isMobile ? 26 : 32)) + 'px';
+                    beacon.style.left = Math.max(6, rect.left + 4) + 'px';
                     beacon.classList.add('active');
                 } else {
                     beacon.classList.remove('active');
                 }
 
-                if (card && overlay) {
-                    if (data.target_type === 'chat') {
-                        overlay.style.alignItems = 'flex-start';
-                        overlay.style.justifyContent = 'center';
-                        card.style.marginLeft = '0px';
-                        card.style.marginTop = isMobile ? '12px' : '36px';
-                    } else if (data.target_type === 'language' && !isMobile) {
-                        overlay.style.alignItems = 'flex-start';
-                        overlay.style.justifyContent = 'flex-start';
-                        card.style.marginLeft = Math.max(20, rect.right + 24) + 'px';
-                        card.style.marginTop = Math.max(24, rect.top - 20) + 'px';
+                // 3. Intelligent Card Positioning (Guaranteed zero-overlap, guaranteed within viewport)
+                let cardTop = 0;
+                let cardLeft = 0;
+
+                const spaceAbove = rect.top;
+                const spaceBelow = winHeight - rect.bottom;
+
+                // Vertical Placement: NEVER overlap the target
+                if (data.target_type === 'chat') {
+                    // Chat bar is at bottom of screen -> place card ABOVE it
+                    cardTop = rect.top - cardHeight - (isMobile ? 12 : 18);
+                } else if (spaceBelow >= cardHeight + 16) {
+                    // Fits comfortably BELOW the target
+                    cardTop = rect.bottom + (isMobile ? 12 : 18);
+                } else if (spaceAbove >= cardHeight + 16) {
+                    // Fits comfortably ABOVE the target
+                    cardTop = rect.top - cardHeight - (isMobile ? 12 : 18);
+                } else {
+                    // Screen is tight: place on whichever side has more room
+                    if (spaceBelow >= spaceAbove) {
+                        cardTop = rect.bottom + 8;
+                        card.style.maxHeight = Math.max(160, winHeight - cardTop - 12) + 'px';
                     } else {
-                        overlay.style.alignItems = 'flex-start';
-                        overlay.style.justifyContent = 'center';
-                        card.style.marginLeft = '0px';
-                        const safeTop = Math.max(20, rect.bottom + (isMobile ? 14 : 22));
-                        card.style.marginTop = safeTop + 'px';
+                        cardTop = Math.max(10, rect.top - cardHeight - 8);
+                        card.style.maxHeight = Math.max(160, rect.top - 16) + 'px';
                     }
                 }
+
+                // Horizontal Placement
+                if (isMobile) {
+                    // On mobile, center horizontally across the screen
+                    cardLeft = (winWidth - cardWidth) / 2;
+                } else {
+                    if (data.target_type === 'language') {
+                        // Right-align directly under the top-header language selector
+                        cardLeft = rect.right - cardWidth;
+                    } else if (data.target_type === 'fisherman' || data.target_type === 'authority' || data.target_type === 'researcher') {
+                        // Center relative to the target role button
+                        const targetCenterX = rect.left + (rect.width / 2);
+                        cardLeft = targetCenterX - (cardWidth / 2);
+                    } else {
+                        // Default: center horizontally
+                        cardLeft = (winWidth - cardWidth) / 2;
+                    }
+                }
+
+                // Absolute Viewport Clamping (MATHEMATICALLY IMPOSSIBLE TO GO OFF-SCREEN)
+                cardLeft = Math.max(12, Math.min(cardLeft, winWidth - cardWidth - 12));
+                cardTop = Math.max(12, Math.min(cardTop, winHeight - cardHeight - 12));
+
+                card.style.top = cardTop + 'px';
+                card.style.left = cardLeft + 'px';
                 return;
             }
         }
 
+        // Target not visible or target is 'none' (Step 1, Step 7, fallback)
         spotlight.classList.remove('active');
         beacon.classList.remove('active');
-        if (overlay) {
-            overlay.classList.remove('orca-has-spotlight');
-            overlay.style.alignItems = 'center';
-            overlay.style.justifyContent = 'center';
-        }
-        if (card) {
-            card.style.marginTop = '0px';
-            card.style.marginLeft = '0px';
-        }
+        if (overlay) overlay.classList.remove('orca-has-spotlight');
+
+        // Center card perfectly in the viewport
+        const centerTop = Math.max(12, (winHeight - cardHeight) / 2);
+        const centerLeft = Math.max(12, (winWidth - cardWidth) / 2);
+        card.style.top = centerTop + 'px';
+        card.style.left = centerLeft + 'px';
+        card.style.maxHeight = (winHeight - 24) + 'px';
     }
 
     function fireConfettiBurst() {
@@ -1948,11 +1929,18 @@ def render_product_tour(force_open: bool = False) -> None:
             </div>
         `;
 
-        if (data.target_type === 'language') {
-            ensureSidebarOpen();
-        }
+// ensureSidebarOpen removed — language is in top header
 
         // Update spotlight and card positioning with multi-frame synchronization
+        
+        // Auto scroll target into view if present so it is never off-screen
+        try {
+            const targetElForScroll = findTargetElement(data.target_type);
+            if (targetElForScroll && typeof targetElForScroll.scrollIntoView === 'function') {
+                targetElForScroll.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
+        } catch(e) {}
+
         updateSpotlightAndPosition();
         setTimeout(updateSpotlightAndPosition, 50);
         setTimeout(updateSpotlightAndPosition, 120);
