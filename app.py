@@ -4213,38 +4213,39 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Brand header (fully responsive flexbox — side-by-side on desktop & mobile)
-if LOGO_B64:
-    st.markdown(f"""
-    <div class="orca-hero-header">
-        <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
-        <div class="orca-hero-text">
-            <h1 class="orca-hero-title">ORCA</h1>
-            <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176</p>
+# We place the Logo/Title, Tour Guide, and Language Selector in a single responsive row.
+# Injecting align-items: center specifically for the very first HorizontalBlock on the page
+st.markdown("<style>div[data-testid='stVerticalBlock'] > div:first-child > div[data-testid='stHorizontalBlock'] { align-items: center !important; }</style>", unsafe_allow_html=True)
+hero_col1, hero_col2, hero_col3 = st.columns([5, 1.8, 2.2])
+
+with hero_col1:
+    if LOGO_B64:
+        st.markdown(f"""
+        <div class="orca-hero-header" style="margin: 0 !important;">
+            <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
+            <div class="orca-hero-text">
+                <h1 class="orca-hero-title">ORCA</h1>
+                <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans — ISRO SIH Problem Statement 26176</p>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-    <div class="orca-hero-header">
-        <div class="orca-hero-text">
-            <h1 class="orca-hero-title">🌊 ORCA</h1>
-            <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans · ISRO SIH Problem Statement 26176</p>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="orca-hero-header" style="margin: 0 !important;">
+            <div class="orca-hero-text">
+                <h1 class="orca-hero-title">🌊 ORCA</h1>
+                <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans — ISRO SIH Problem Statement 26176</p>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-
-# ── Top Control Bar ──
-st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-ctrl_col1, ctrl_col2, ctrl_col3 = st.columns([1.2, 1.5, 2.3])
-
-with ctrl_col1:
+with hero_col2:
     if st.button("❓ Help / Tour Guide", use_container_width=True):
         st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
-with ctrl_col2:
+with hero_col3:
     st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
     lang_keys = list(LANG_DISPLAY.keys())
     lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
