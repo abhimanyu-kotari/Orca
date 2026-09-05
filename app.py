@@ -777,93 +777,71 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.65rem !important;
     }
 
-    /* Header Row: Guaranteed Single-Line, Zero-Overflow on ALL screen sizes */
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type,
+    /* Header Row: Clean, proportional single-line layout on both mobile and desktop */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
-        display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 6px !important;
         align-items: center !important;
+        gap: 6px !important;
         width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
     }
 
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"],
+    /* Keep all 3 columns side-by-side using the exact same proportional ratios on mobile */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"] {
         min-width: 0 !important;
-        display: flex !important;
-        align-items: center !important;
     }
-
-    /* Column 1: Logo & Title (never expands to push others off screen) */
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1),
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
-        flex: 1 1 auto !important;
-        max-width: 48% !important;
+        flex: 3.2 1 0px !important;
         overflow: hidden !important;
     }
-
-    /* Column 2: Tour Guide button */
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2) {
-        flex: 0 0 auto !important;
-        min-width: 80px !important;
-        max-width: 110px !important;
+        flex: 1.8 1 0px !important;
     }
-
-    /* Column 3: Language selector */
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3),
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
-        flex: 0 0 auto !important;
-        min-width: 95px !important;
-        max-width: 125px !important;
+        flex: 2.4 1 0px !important;
     }
 
-    /* Compact button styling */
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type button,
+    /* Align heights and prevent button/selectbox clipping */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button {
-        height: 34px !important;
-        min-height: 34px !important;
-        padding: 3px 8px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 2px 6px !important;
         font-size: 0.76rem !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         width: 100% !important;
     }
 
-    /* Compact selectbox styling */
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
-    .block-container div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div,
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"],
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div {
-        height: 34px !important;
-        min-height: 34px !important;
-        font-size: 0.76rem !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        padding-left: 4px !important;
-        padding-right: 4px !important;
-        border-radius: 6px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        border-radius: 8px !important;
         width: 100% !important;
     }
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div {
+        font-size: 0.78rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
 
-    /* Mobile specific tweaks */
+    /* On mobile, hide the long subtitle sentence so Logo + Title fit cleanly in Column 1 */
     .orca-hero-subtitle {
         display: none !important;
     }
     .orca-hero-logo {
-        width: 26px !important;
-        height: 26px !important;
-        min-width: 26px !important;
-        min-height: 26px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        border-radius: 6px !important;
     }
     .orca-hero-title {
-        font-size: 1.05rem !important;
+        font-size: 1.1rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
     }
 
     /* Tighten Divider */
@@ -4048,7 +4026,7 @@ with st.sidebar:
 # We place the Logo/Title, Tour Guide, and Language Selector in a single responsive row.
 # Injecting align-items: center specifically for the very first HorizontalBlock on the page
 # Custom vertical alignment handled by st.columns natively
-hero_col1, hero_col2, hero_col3 = st.columns([2.4, 1.2, 1.6], vertical_alignment="center")
+hero_col1, hero_col2, hero_col3 = st.columns([3.2, 1.8, 2.4], vertical_alignment="center")
 
 with hero_col1:
     if LOGO_B64:
