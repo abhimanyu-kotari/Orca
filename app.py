@@ -141,6 +141,30 @@ html, body, [data-testid="stAppViewContainer"] {
     border-right: none !important;
 }
 [data-testid="stSidebar"] * { color: #CBD5E1 !important; }
+
+/* ── Sidebar High-Contrast Selectbox Fix ── */
+[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
+    color: #F8FAFC !important;
+    font-weight: 600 !important;
+}
+[data-testid="stSidebar"] div[data-baseweb="select"] {
+    background-color: #FFFFFF !important;
+    border-radius: 6px !important;
+}
+[data-testid="stSidebar"] div[data-baseweb="select"] * {
+    color: #1E293B !important; /* Force dark text for high contrast on white background */
+}
+/* Ensure dropdown menu items are readable */
+ul[data-baseweb="menu"] {
+    background-color: #FFFFFF !important;
+}
+ul[data-baseweb="menu"] li {
+    color: #1E293B !important;
+}
+ul[data-baseweb="menu"] li:hover {
+    background-color: #F1F5F9 !important;
+}
+
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 { color: #F8FAFC !important; }
