@@ -1134,21 +1134,21 @@ TOUR_STEPS = [
 
 def render_tour_guide() -> None:
     """
-    Render the ORCA interactive onboarding tour guide overlay.
+    Render the ORCA onboarding tour guide.
 
-    Displays a dark-themed, fixed-position modal over the page using CSS injected
-    via st.markdown and rich HTML via st.components.v1.html. Navigation (Prev / Skip /
-    Next) uses Streamlit native buttons that write to st.session_state.orca_tour_step
-    and call st.rerun(), keeping everything frontend-only with no backend changes.
+    Strategy (Streamlit-compatible):
+      - Render the tour card as a styled div via st.markdown (NOT components.html,
+        which creates an iframe in the normal DOM flow that can't be overlaid).
+      - Inject full-page dark background CSS to visually mask the rest of the page.
+      - Render Streamlit native buttons (Prev / Skip / Next) directly below the card.
+      - Call st.stop() to prevent the rest of the page from rendering while on tour.
 
-    Call once, right after the brand hero header in the main panel. Self-terminates
-    when orca_tour_step == 0 (tour dismissed).
+    This gives a clean full-page takeover that looks like a proper modal.
+    The sidebar still renders (it is processed before render_tour_guide() is called).
     """
     step = st.session_state.get("orca_tour_step", 0)
     if step == 0:
         return  # Tour already done / dismissed
-
-    import streamlit.components.v1 as components
 
     step_idx = step - 1  # 0-based index into TOUR_STEPS
     if step_idx < 0 or step_idx >= len(TOUR_STEPS):
@@ -1158,123 +1158,139 @@ def render_tour_guide() -> None:
     data = TOUR_STEPS[step_idx]
     total = len(TOUR_STEPS)
 
-    # Build dot pagination HTML
+    # ── Build inner HTML pieces ───────────────────────────────────────────────
+
     dots_html = "".join(
-        f'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;'
-        f'background:{"#0EA5A8" if i == step_idx else "#1E3A52"};margin:0 3px;"></span>'
+        f'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;'
+        f'background:{"#0EA5A8" if i == step_idx else "#1E3A52"};'
+        f'box-shadow:{"0 0 6px #0EA5A8" if i == step_idx else "none"};'
+        f'margin:0 4px;transition:all 0.2s;"></span>'
         for i in range(total)
     )
 
-    # Build tag pills
     tags_html = "".join(
-        f'<span style="display:inline-block;background:#0B2638;border:1px solid #0EA5A8;'
-        f'color:#22D3EE;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin:3px 4px;">'
-        f'{t}</span>'
+        f'<span style="display:inline-block;background:rgba(14,165,168,0.1);'
+        f'border:1px solid rgba(14,165,168,0.5);color:#22D3EE;'
+        f'border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;'
+        f'letter-spacing:0.03em;margin:4px 4px 0 0;">{t}</span>'
         for t in data["tags"]
     )
 
-    highlight_html = ""
+    highlight_block = ""
     if data.get("highlight"):
-        highlight_html = (
-            '<div style="background:#082032;border-left:3px solid #0EA5A8;border-radius:0 8px 8px 0;'
-            'padding:8px 12px;margin-top:12px;font-size:12px;color:#94A3B8;line-height:1.5;">'
-            f'💡 {data["highlight"]}</div>'
+        highlight_block = (
+            '<div style="background:#071f30;border-left:3px solid #0EA5A8;'
+            'border-radius:0 10px 10px 0;padding:10px 14px;margin-top:16px;'
+            'font-size:12.5px;color:#94A3B8;line-height:1.6;">'
+            f'<span style="color:#0EA5A8;font-weight:700;">💡 Tip: </span>{data["highlight"]}</div>'
         )
 
-    tour_html = f"""<!DOCTYPE html>
-<html>
-<head>
+    # ── Inject page-level CSS: darken background, center the tour card ─────────
+    st.markdown(f"""
 <style>
-* {{ box-sizing: border-box; margin: 0; padding: 0; }}
-body {{ background: transparent; font-family: 'Inter', 'Segoe UI', sans-serif; }}
-.tour-card {{
-  background: linear-gradient(145deg, #061826 0%, #0B2638 60%, #0A3040 100%);
-  border: 1px solid #1E4A6E;
-  border-radius: 20px;
-  padding: 28px 32px 22px 32px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(14,165,168,0.15);
-  color: #F8FAFC;
+/* Tour: force dark full-page background */
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+section[data-testid="stMain"] > div {{
+    background-color: #040A14 !important;
 }}
-.tour-subtitle {{
-  font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
-  text-transform: uppercase; color: #0EA5A8; margin-bottom: 10px;
+/* Hide scrollbar during tour */
+body {{ overflow: hidden !important; }}
+/* Center the tour container */
+.orca-tour-wrap {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 78vh;
+    padding: 24px 16px 8px 16px;
 }}
-.tour-badge {{
-  display: inline-block;
-  background: rgba(14,165,168,0.15); border: 1px solid rgba(14,165,168,0.4);
-  color: #22D3EE; border-radius: 20px; padding: 2px 10px;
-  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 14px;
+.orca-tour-card {{
+    background: linear-gradient(145deg, #071a26 0%, #0B2638 55%, #0D3248 100%);
+    border: 1px solid #1E4A6E;
+    border-radius: 22px;
+    padding: 34px 38px 28px 38px;
+    max-width: 620px;
+    width: 100%;
+    box-shadow: 0 32px 100px rgba(0,0,0,0.7),
+                0 0 0 1px rgba(14,165,168,0.12),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+    color: #F8FAFC;
+    position: relative;
 }}
-.tour-icon {{ font-size: 2.2rem; margin-bottom: 10px; display: block; }}
-.tour-title {{ font-size: 1.4rem; font-weight: 800; color: #F8FAFC; margin-bottom: 12px; line-height: 1.2; letter-spacing: -0.02em; }}
-.tour-body {{ font-size: 0.84rem; line-height: 1.65; color: #94A3B8; margin-bottom: 14px; }}
-.tour-body strong {{ color: #E2E8F0; }}
-.tour-tags {{ margin-bottom: 4px; }}
-.tour-dots {{ text-align: center; margin-top: 16px; }}
-.tour-divider {{ border: none; border-top: 1px solid #1E3A52; margin: 16px 0 0 0; }}
+.orca-tour-subtitle {{
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #0EA5A8; margin-bottom: 12px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}}
+.orca-tour-icon {{
+    font-size: 2.6rem; margin-bottom: 8px; display: block; line-height: 1;
+}}
+.orca-tour-badge {{
+    display: inline-block;
+    background: rgba(14,165,168,0.12); border: 1px solid rgba(14,165,168,0.35);
+    color: #22D3EE; border-radius: 20px; padding: 3px 12px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 16px;
+    font-family: 'Inter', monospace;
+}}
+.orca-tour-title {{
+    font-size: 1.55rem; font-weight: 800; color: #F8FAFC;
+    margin-bottom: 14px; line-height: 1.2; letter-spacing: -0.02em;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}}
+.orca-tour-body {{
+    font-size: 0.88rem; line-height: 1.7; color: #94A3B8; margin-bottom: 16px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}}
+.orca-tour-body strong {{ color: #E2E8F0; font-weight: 600; }}
+.orca-tour-divider {{ border: none; border-top: 1px solid #1E3A52; margin: 20px 0 0 0; }}
+.orca-tour-dots {{ text-align: center; padding: 14px 0 4px 0; }}
 </style>
-</head>
-<body>
-<div class="tour-card">
-  <div class="tour-subtitle">{data["subtitle"]}</div>
-  <span class="tour-icon">{data["icon"]}</span>
-  <div class="tour-badge">{data["badge"]}</div>
-  <div class="tour-title">{data["title"]}</div>
-  <div class="tour-body">{data["body"]}</div>
-  <div class="tour-tags">{tags_html}</div>
-  {highlight_html}
-  <hr class="tour-divider">
-  <div class="tour-dots">{dots_html}</div>
-</div>
-</body>
-</html>"""
 
-    # Inject full-screen dark overlay backdrop and fixed positioning via st.markdown
-    st.markdown("""
-<style>
-.orca-tour-backdrop {
-    position: fixed !important;
-    top: 0 !important; left: 0 !important;
-    width: 100vw !important; height: 100vh !important;
-    background: rgba(4, 10, 20, 0.90) !important;
-    z-index: 9990 !important;
-    backdrop-filter: blur(3px) !important;
-    -webkit-backdrop-filter: blur(3px) !important;
-    pointer-events: none !important;
-}
-/* Lift the tour iframe and buttons above the backdrop */
-section[data-testid="stMain"] iframe,
-section[data-testid="stMain"] [data-testid="column"] .stButton > button {
-    position: relative !important;
-    z-index: 9996 !important;
-}
-</style>
-<div class="orca-tour-backdrop"></div>
+<div class="orca-tour-wrap">
+  <div class="orca-tour-card">
+    <div class="orca-tour-subtitle">{data["subtitle"]}</div>
+    <span class="orca-tour-icon">{data["icon"]}</span>
+    <div class="orca-tour-badge">{data["badge"]}</div>
+    <div class="orca-tour-title">{data["title"]}</div>
+    <div class="orca-tour-body">{data["body"]}</div>
+    <div style="margin-bottom:4px;">{tags_html}</div>
+    {highlight_block}
+    <hr class="orca-tour-divider">
+    <div class="orca-tour-dots">{dots_html}</div>
+  </div>
+</div>
 """, unsafe_allow_html=True)
 
-    # Render the tour card HTML (via iframe-sandboxed components.html)
-    components.html(tour_html, height=410, scrolling=False)
+    # ── Native Streamlit navigation buttons ──────────────────────────────────
+    # Using st.columns to layout Prev / Skip / Next in a row beneath the card
+    _gap_l, col_prev, col_skip, col_next, _gap_r = st.columns([1.5, 1, 1.4, 1, 1.5])
 
-    # Navigation button row: Back | Skip | Next/Finish
-    col_prev, col_skip, col_next = st.columns([1, 1.2, 1])
     with col_prev:
         if step > 1:
             if st.button("← Back", key="tour_prev_btn", use_container_width=True):
                 st.session_state.orca_tour_step -= 1
                 st.rerun()
+
     with col_skip:
         if step < total:
-            if st.button("✕  Skip Tour", key="tour_skip_btn", use_container_width=True):
+            if st.button("✕ Skip", key="tour_skip_btn", use_container_width=True):
                 st.session_state.orca_tour_step = 0
                 st.rerun()
+
     with col_next:
-        next_label = "Next Step →" if step < total else "🚀  Start ORCA!"
+        next_label = "Next Step →" if step < total else "🚀 Start ORCA!"
         if st.button(next_label, key="tour_next_btn", type="primary", use_container_width=True):
             if step < total:
                 st.session_state.orca_tour_step += 1
             else:
                 st.session_state.orca_tour_step = 0
             st.rerun()
+
+    # KEY: Stop rendering the rest of the page while tour is active.
+    # The sidebar has already been rendered above this call, so it still shows.
+    st.stop()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
