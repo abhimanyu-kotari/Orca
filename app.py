@@ -1033,7 +1033,7 @@ if "open_tour_modal" not in st.session_state:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ORCA ProductTour Component — Spotlight Cutout, Beacons, Tab Sync & Confetti
+# ORCA ProductTour Component — Spotlight Cutout, Beacons & Interactive Walkthrough
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRODUCT_TOUR_STEPS = [
@@ -1044,8 +1044,7 @@ PRODUCT_TOUR_STEPS = [
         "title": "Welcome to Project ORCA",
         "body": "ORCA (<strong>Ocean Research & Coastal Analytics</strong>) is a <strong>collaborative multi-agent AI platform</strong> built for India's maritime stakeholders. It fuses real-time ISRO satellite data, IMD weather feeds, and INCOIS PFZ advisories into actionable ocean intelligence.",
         "pills": ["Multi-Agent AI", "ISRO Satellite Data", "IMD Weather", "INCOIS PFZ"],
-        "tip": "Take a quick guided walkthrough to see exactly where each feature lives in the application.",
-        "tab": None,
+        "tip": "Take a 1-minute guided walkthrough to see exactly where each feature lives in the application.",
         "target_type": "none",
         "location_label": "Top Dashboard Header • ISRO SIH 26176",
         "beacon_text": None
@@ -1057,8 +1056,7 @@ PRODUCT_TOUR_STEPS = [
         "title": "Artisanal Fisherman Mode",
         "body": "Designed for traditional coastal fishermen. Delivers instant <strong>SAFE / CAUTION / DANGER</strong> weather verdicts, recommended <strong>Potential Fishing Zones (PFZ)</strong> with depth and target species, and GPS navigation routes away from hazard zones.",
         "pills": ["Safety Verdicts", "PFZ Hotspots", "Navigation Tracks"],
-        "tip": "Look at the illuminated button above: that is the Fisherman mode selector!",
-        "tab": "fisherman",
+        "tip": "Look at the glowing button spotlighted above: that is the Fisherman mode selector!",
         "target_type": "fisherman",
         "location_label": "Top Role Selector ➔ 🎣 Artisanal Fisherman",
         "beacon_text": "Role 1: Artisanal Fisherman"
@@ -1070,8 +1068,7 @@ PRODUCT_TOUR_STEPS = [
         "title": "Coastal Authority Mode",
         "body": "Built for Coast Guard and disaster management authorities. Features real-time <strong>cyclone & storm surge geofences</strong>, vessel exclusion alerts, and simulated emergency broadcasts (VHF Ch 16, NAVTEX, SMS gateway).",
         "pills": ["Cyclone Geofences", "Exclusion Alerts", "Emergency Broadcasts"],
-        "tip": "Look at the illuminated button above: that is the Coastal Authority mode selector!",
-        "tab": "authority",
+        "tip": "Look at the glowing button spotlighted above: that is the Coastal Authority mode selector!",
         "target_type": "authority",
         "location_label": "Top Role Selector ➔ 🚨 Coastal Authority",
         "beacon_text": "Role 2: Coastal Authority"
@@ -1083,8 +1080,7 @@ PRODUCT_TOUR_STEPS = [
         "title": "Marine Researcher Mode",
         "body": "Tailored for oceanographers and researchers. Inspect <strong>Sea Surface Temperature (SST)</strong> heatmaps, Chlorophyll-a density, thermocline depth, and multi-agent oceanographic reasoning chains.",
         "pills": ["SST Heatmaps", "Chlorophyll-a", "Thermocline Analysis"],
-        "tip": "Look at the illuminated button above: that is the Marine Researcher mode selector!",
-        "tab": "researcher",
+        "tip": "Look at the glowing button spotlighted above: that is the Marine Researcher mode selector!",
         "target_type": "researcher",
         "location_label": "Top Role Selector ➔ 🔬 Marine Researcher",
         "beacon_text": "Role 3: Marine Researcher"
@@ -1096,8 +1092,7 @@ PRODUCT_TOUR_STEPS = [
         "title": "Ask in Your Native Language",
         "body": "Ask in your own language! ORCA supports <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা, मराठी, and ગુજરાતી</strong> with automatic dialect detection and localized maritime terminology.",
         "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
-        "tip": "Look at the illuminated dropdown in the left sidebar: you can pick your language here!",
-        "tab": "language",
+        "tip": "Look at the glowing dropdown in the left sidebar: you can pick your language here!",
         "target_type": "language",
         "location_label": "Left Sidebar ➔ 🌐 Advisory Language (भाषा / மொழி)",
         "beacon_text": "9 Languages Supported"
@@ -1109,8 +1104,7 @@ PRODUCT_TOUR_STEPS = [
         "title": "Ask Anything Maritime",
         "body": "Type in the chat bar at the bottom or use the ⚡ <strong>Contextual Query Tools</strong> in the sidebar. Every response synthesizes a 4-tab card with safety decisions, interactive Folium maps, and ocean data.",
         "pills": ["Decision Cards", "Interactive Folium Maps", "Contextual Query Tools"],
-        "tip": "Look at the illuminated chat bar below: type any maritime query here!",
-        "tab": "chat",
+        "tip": "Look at the glowing chat bar below: type any maritime question here!",
         "target_type": "chat",
         "location_label": "Bottom Screen ➔ 💬 Chat Input Bar",
         "beacon_text": "Ask Queries Here"
@@ -1123,7 +1117,6 @@ PRODUCT_TOUR_STEPS = [
         "body": "You're all set to use Project ORCA. Choose your role, type a query, and explore intelligent ocean analytics. Relaunch this guide anytime using <strong>❓ Help / Tour Guide</strong> in the sidebar.",
         "pills": ["ISRO Oceansat-3", "IMD Real-Time", "Ready to Explore"],
         "tip": "Click Finish to celebrate and begin exploring!",
-        "tab": "fisherman",
         "target_type": "none",
         "location_label": "Whole Dashboard • All 3 Stakeholder Modes Active",
         "beacon_text": None
@@ -1134,7 +1127,7 @@ PRODUCT_TOUR_STEPS = [
 def render_product_tour(force_open: bool = False) -> None:
     """
     Renders the ProductTour with crystal-clear spotlight cutout, pointing beacons,
-    guaranteed clearance positioning (never overlaps target), and tab sync.
+    bulletproof event handlers (never freezes on Next Step), and zero server rerun lag.
     """
     import json
     import streamlit.components.v1 as cv1
@@ -1156,7 +1149,8 @@ def render_product_tour(force_open: bool = False) -> None:
 (function() {
     const steps = __STEPS_JSON__;
     const forceOpen = __FORCE_OPEN__;
-    const parentDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+    const parentWin = window.parent || window;
+    const parentDoc = parentWin.document || document;
 
     // Inject styles into parent document head if not already present
     if (!parentDoc.getElementById('orca-tour-injected-styles')) {
@@ -1189,7 +1183,7 @@ def render_product_tour(force_open: bool = False) -> None:
             #orca-product-tour-overlay.orca-tour-active {
                 opacity: 1 !important;
             }
-            /* When spotlight is active, overlay background turns transparent so the cutout is 100% daylight clear! */
+            /* When spotlight is active, overlay background is transparent so the cutout is 100% crystal daylight clear! */
             #orca-product-tour-overlay.orca-has-spotlight {
                 background: transparent !important;
                 backdrop-filter: none !important;
@@ -1282,6 +1276,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 justify-content: center !important;
                 transition: all 0.15s ease !important;
                 line-height: 1 !important;
+                z-index: 10 !important;
             }
             .orca-tour-close-x:hover {
                 background: #E2E8F0 !important;
@@ -1447,23 +1442,29 @@ def render_product_tour(force_open: bool = False) -> None:
         parentDoc.head.appendChild(style);
     }
 
-    let currentStep = 0;
+    // Persist tour step on parent window so state is immune to any iframe reloads
+    if (typeof parentWin.__orcaTourStep === 'undefined') {
+        parentWin.__orcaTourStep = 0;
+    }
+
+    function findRadioByText(text) {
+        try {
+            const radios = parentDoc.querySelectorAll('div[data-testid="stRadio"] label, label[data-baseweb="radio"]');
+            for (const r of radios) {
+                if (r.textContent && r.textContent.toLowerCase().includes(text.toLowerCase())) {
+                    return r;
+                }
+            }
+        } catch (e) {}
+        return null;
+    }
 
     function findTargetElement(targetType) {
         if (!targetType || targetType === 'none') return null;
         try {
-            if (targetType === 'hero') {
-                return parentDoc.querySelector('.orca-hero-header') || parentDoc.querySelector('h1');
-            }
-            if (targetType === 'fisherman' || targetType === 'authority' || targetType === 'researcher') {
-                const labels = parentDoc.querySelectorAll('div[data-testid="stRadio"] label');
-                for (const lbl of labels) {
-                    const text = (lbl.innerText || "").toLowerCase();
-                    if (targetType === 'fisherman' && text.includes('fisherman')) return lbl;
-                    if (targetType === 'authority' && text.includes('authority')) return lbl;
-                    if (targetType === 'researcher' && text.includes('researcher')) return lbl;
-                }
-            }
+            if (targetType === 'fisherman') return findRadioByText('Fisherman');
+            if (targetType === 'authority') return findRadioByText('Authority');
+            if (targetType === 'researcher') return findRadioByText('Researcher');
             if (targetType === 'language') {
                 return parentDoc.querySelector('[data-testid="stSidebar"] [data-testid="stSelectbox"]') || parentDoc.querySelector('[data-testid="stSidebar"]');
             }
@@ -1474,28 +1475,6 @@ def render_product_tour(force_open: bool = False) -> None:
             console.warn('Target element query error:', e);
         }
         return null;
-    }
-
-    function onNavigateTab(tabKey) {
-        if (!tabKey) return;
-        try {
-            const labels = parentDoc.querySelectorAll('label[data-baseweb="radio"], div[data-testid="stRadio"] label');
-            for (const lbl of labels) {
-                const text = (lbl.innerText || "").toLowerCase();
-                if (tabKey === 'fisherman' && text.includes('fisherman')) {
-                    lbl.click();
-                    break;
-                } else if (tabKey === 'authority' && text.includes('authority')) {
-                    lbl.click();
-                    break;
-                } else if (tabKey === 'researcher' && text.includes('researcher')) {
-                    lbl.click();
-                    break;
-                }
-            }
-        } catch (e) {
-            console.warn('Tab navigation warning:', e);
-        }
     }
 
     function updateSpotlightAndPosition() {
@@ -1515,7 +1494,7 @@ def render_product_tour(force_open: bool = False) -> None:
             parentDoc.body.appendChild(beacon);
         }
 
-        const data = steps[currentStep];
+        const data = steps[parentWin.__orcaTourStep];
         const targetEl = findTargetElement(data.target_type);
 
         if (targetEl) {
@@ -1535,7 +1514,7 @@ def render_product_tour(force_open: bool = False) -> None:
             if (data.beacon_text) {
                 beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
                 beacon.style.top = Math.max(8, rect.top - 36) + 'px';
-                beacon.style.left = Math.max(10, rect.left + 10) + 'px';
+                beacon.style.left = Math.max(10, rect.left + 8) + 'px';
                 beacon.classList.add('active');
             } else {
                 beacon.classList.remove('active');
@@ -1544,24 +1523,21 @@ def render_product_tour(force_open: bool = False) -> None:
             // GUARANTEED CLEARANCE CARD POSITIONING (NEVER OVERLAPS TARGET!):
             if (card && overlay) {
                 if (data.target_type === 'language') {
-                    // Sidebar target: card sits in the main panel to the right of sidebar
                     overlay.style.alignItems = 'flex-start';
                     overlay.style.justifyContent = 'flex-start';
                     card.style.marginLeft = Math.max(20, rect.right + 28) + 'px';
                     card.style.marginTop = Math.max(30, rect.top - 20) + 'px';
                 } else if (data.target_type === 'chat') {
-                    // Chat target at bottom: card sits safely above the chat bar
                     overlay.style.alignItems = 'flex-start';
                     overlay.style.justifyContent = 'center';
                     card.style.marginLeft = '0px';
                     card.style.marginTop = Math.max(20, rect.top - 410) + 'px';
                 } else {
-                    // Top targets (Fisherman, Authority, Researcher, Hero):
-                    // Card sits STRICTLY BELOW the spotlight box with a guaranteed 24px clearance!
+                    // Top targets (Fisherman, Authority, Researcher):
+                    // Card sits STRICTLY BELOW the spotlight box with guaranteed clearance:
                     overlay.style.alignItems = 'flex-start';
                     overlay.style.justifyContent = 'center';
                     card.style.marginLeft = '0px';
-                    // rect.bottom is the bottom of the button; add 24px gap:
                     const safeTop = Math.max(40, rect.bottom + 24);
                     card.style.marginTop = safeTop + 'px';
                 }
@@ -1645,8 +1621,9 @@ def render_product_tour(force_open: bool = False) -> None:
         const overlay = parentDoc.getElementById('orca-product-tour-overlay');
         if (!overlay) return;
 
-        const data = steps[currentStep];
-        const isLast = (currentStep === steps.length - 1);
+        const cur = parentWin.__orcaTourStep;
+        const data = steps[cur];
+        const isLast = (cur === steps.length - 1);
 
         const locationHtml = data.location_label ? `
             <div class="orca-tour-location-banner">
@@ -1666,7 +1643,7 @@ def render_product_tour(force_open: bool = False) -> None:
         ` : '';
 
         const dotsHtml = steps.map((_, i) => `
-            <div class="orca-tour-dot ${i === currentStep ? 'active' : ''}" data-step="${i}"></div>
+            <div class="orca-tour-dot ${i === cur ? 'active' : ''}" data-step="${i}"></div>
         `).join('');
 
         overlay.innerHTML = `
@@ -1684,29 +1661,32 @@ def render_product_tour(force_open: bool = False) -> None:
                 <div class="orca-tour-footer">
                     <div class="orca-tour-dots" id="orca-tour-dots-wrap">${dotsHtml}</div>
                     <div class="orca-tour-btns">
-                        ${currentStep > 0 ? '<button class="orca-tour-btn-back" id="orca-tour-btn-back">← Back</button>' : ''}
+                        ${cur > 0 ? '<button class="orca-tour-btn-back" id="orca-tour-btn-back">← Back</button>' : ''}
                         <button class="orca-tour-btn-next" id="orca-tour-btn-next">${isLast ? '🚀 Finish' : 'Next Step →'}</button>
                     </div>
                 </div>
             </div>
         `;
 
-        // Update spotlight and card positioning with guaranteed clearance
-        setTimeout(updateSpotlightAndPosition, 40);
+        // Update spotlight and card positioning
+        setTimeout(updateSpotlightAndPosition, 30);
 
-        // Wire event listeners
+        // BULLETPROOF EVENT ATTACHMENT WITH STOP PROPAGATION (IMMUNE TO ANY STREAMLIT BUBBLING)
         const btnX = parentDoc.getElementById('orca-tour-btn-x');
-        if (btnX) btnX.onclick = () => closeTour(false);
+        if (btnX) {
+            btnX.onclick = function(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                closeTour(false);
+            };
+        }
 
         const btnNext = parentDoc.getElementById('orca-tour-btn-next');
         if (btnNext) {
-            btnNext.onclick = () => {
-                if (currentStep < steps.length - 1) {
-                    currentStep++;
+            btnNext.onclick = function(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                if (parentWin.__orcaTourStep < steps.length - 1) {
+                    parentWin.__orcaTourStep++;
                     renderModalContent();
-                    if (steps[currentStep].tab) {
-                        onNavigateTab(steps[currentStep].tab);
-                    }
                 } else {
                     closeTour(true);
                 }
@@ -1715,13 +1695,11 @@ def render_product_tour(force_open: bool = False) -> None:
 
         const btnBack = parentDoc.getElementById('orca-tour-btn-back');
         if (btnBack) {
-            btnBack.onclick = () => {
-                if (currentStep > 0) {
-                    currentStep--;
+            btnBack.onclick = function(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                if (parentWin.__orcaTourStep > 0) {
+                    parentWin.__orcaTourStep--;
                     renderModalContent();
-                    if (steps[currentStep].tab) {
-                        onNavigateTab(steps[currentStep].tab);
-                    }
                 }
             };
         }
@@ -1729,36 +1707,38 @@ def render_product_tour(force_open: bool = False) -> None:
         const dotsWrap = parentDoc.getElementById('orca-tour-dots-wrap');
         if (dotsWrap) {
             dotsWrap.querySelectorAll('.orca-tour-dot').forEach(d => {
-                d.onclick = () => {
+                d.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
                     const s = parseInt(d.getAttribute('data-step') || '0', 10);
-                    currentStep = s;
+                    parentWin.__orcaTourStep = s;
                     renderModalContent();
-                    if (steps[currentStep].tab) {
-                        onNavigateTab(steps[currentStep].tab);
-                    }
                 };
             });
         }
     }
 
     function openTour() {
+        // Clean up any stale elements
+        const oldSpotlight = parentDoc.getElementById('orca-tour-spotlight');
+        if (oldSpotlight) oldSpotlight.remove();
+        const oldBeacon = parentDoc.getElementById('orca-tour-beacon');
+        if (oldBeacon) oldBeacon.remove();
+
         let overlay = parentDoc.getElementById('orca-product-tour-overlay');
         if (!overlay) {
             overlay = parentDoc.createElement('div');
             overlay.id = 'orca-product-tour-overlay';
             parentDoc.body.appendChild(overlay);
         }
-        currentStep = 0;
+        parentWin.__orcaTourStep = 0;
         renderModalContent();
-        if (steps[0].tab) {
-            onNavigateTab(steps[0].tab);
-        }
         requestAnimationFrame(() => {
             overlay.classList.add('orca-tour-active');
         });
 
-        // Re-align on window resize
-        window.parent.addEventListener('resize', updateSpotlightAndPosition);
+        // Re-align on window resize or scroll
+        parentWin.removeEventListener('resize', updateSpotlightAndPosition);
+        parentWin.addEventListener('resize', updateSpotlightAndPosition);
     }
 
     // Check localStorage flow:
