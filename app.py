@@ -1543,46 +1543,82 @@ def render_product_tour(force_open: bool = False) -> None:
         return null;
     }
 
+    function findLanguageElement() {
+        try {
+            // Strategy 1: Look for .stSelectbox or [data-testid="stSelectbox"] inside sidebar
+            const sbList = parentDoc.querySelectorAll('[data-testid="stSidebar"] .stSelectbox, [data-testid="stSidebar"] [data-testid="stSelectbox"], section .stSelectbox, section [data-testid="stSelectbox"], .stSelectbox, [data-testid="stSelectbox"]');
+            for (const sb of sbList) {
+                const r = sb.getBoundingClientRect();
+                if (r.width > 50 && r.height > 20) {
+                    const txt = sb.textContent || '';
+                    if (txt.includes('Advisory Language') || txt.includes('Language') || txt.includes('English') || txt.includes('भाषा') || txt.includes('மொழி')) {
+                        return sb;
+                    }
+                }
+            }
+
+            // Strategy 2: Text scan across all p, span, label, div for exact text
+            const allCandidates = parentDoc.querySelectorAll('p, span, label, div');
+            for (const el of allCandidates) {
+                const txt = el.textContent || '';
+                if ((txt.includes('Advisory Language') || (txt.includes('भाषा') && txt.includes('மொழி')) || (txt.includes('English') && txt.includes('GB'))) && el.children.length === 0) {
+                    // Ascend to selectbox container
+                    let curr = el;
+                    while (curr && curr !== parentDoc.body) {
+                        if (curr.classList && (curr.classList.contains('stSelectbox') || curr.getAttribute('data-testid') === 'stSelectbox')) {
+                            const r = curr.getBoundingClientRect();
+                            if (r.width > 50) return curr;
+                        }
+                        if (curr.querySelector && (curr.querySelector('[role="combobox"]') || curr.querySelector('input') || curr.querySelector('button'))) {
+                            const r = curr.getBoundingClientRect();
+                            if (r.width > 80 && r.height >= 30) return curr;
+                        }
+                        curr = curr.parentElement;
+                    }
+                    if (el.parentElement) {
+                        const r = el.parentElement.getBoundingClientRect();
+                        if (r.width > 50) return el.parentElement;
+                    }
+                }
+            }
+
+            // Strategy 3: Find any selectbox or combobox inside the sidebar
+            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]') || 
+                            parentDoc.querySelector('section[data-testid="stSidebar"]') || 
+                            parentDoc.querySelector('.stSidebar') ||
+                            parentDoc.querySelector('section');
+            if (sidebar) {
+                const combo = sidebar.querySelector('.stSelectbox') || 
+                              sidebar.querySelector('[data-testid="stSelectbox"]') || 
+                              sidebar.querySelector('[role="combobox"]') || 
+                              sidebar.querySelector('div[data-baseweb="select"]');
+                if (combo) {
+                    const widget = combo.closest('.stSelectbox') || combo.closest('[data-testid="stSelectbox"]') || combo;
+                    if (widget.getBoundingClientRect().width > 50) return widget;
+                }
+            }
+
+            // Strategy 4: Fallback to first selectbox on page
+            const anySb = parentDoc.querySelector('.stSelectbox') || parentDoc.querySelector('[data-testid="stSelectbox"]');
+            if (anySb && anySb.getBoundingClientRect().width > 50) return anySb;
+        } catch (e) {
+            console.warn('findLanguageElement error:', e);
+        }
+        return null;
+    }
+
     function findTargetElement(targetType) {
         if (!targetType || targetType === 'none') return null;
         try {
             if (targetType === 'fisherman') return findRadioByText('Fisherman');
             if (targetType === 'authority') return findRadioByText('Authority');
             if (targetType === 'researcher') return findRadioByText('Researcher');
-            if (targetType === 'language') {
-                // Strategy 1: Find by label text in sidebar or anywhere
-                const allLabels = parentDoc.querySelectorAll('[data-testid="stSidebar"] label, [data-testid="stSidebar"] [data-testid="stWidgetLabel"], label, [data-testid="stWidgetLabel"]');
-                for (const lbl of allLabels) {
-                    const txt = lbl.textContent || '';
-                    if (txt.includes('Advisory Language') || txt.includes('Language') || txt.includes('भाषा') || txt.includes('மொழி')) {
-                        const widget = lbl.closest('[data-testid="stSelectbox"]') || 
-                                       lbl.closest('div[data-baseweb="select"]') || 
-                                       lbl.parentElement;
-                        if (widget && widget.getBoundingClientRect().width > 0) {
-                            return widget;
-                        }
-                    }
-                }
-
-                // Strategy 2: Direct selectbox in sidebar
-                const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]') || 
-                                parentDoc.querySelector('section[data-testid="stSidebar"]') || 
-                                parentDoc.querySelector('.stSidebar');
-                if (sidebar) {
-                    const sb = sidebar.querySelector('[data-testid="stSelectbox"]') || 
-                               sidebar.querySelector('div[data-baseweb="select"]');
-                    if (sb && sb.getBoundingClientRect().width > 0) return sb;
-                }
-
-                // Strategy 3: Any selectbox in document
-                const anySb = parentDoc.querySelector('[data-testid="stSelectbox"]') || 
-                              parentDoc.querySelector('div[data-baseweb="select"]');
-                if (anySb && anySb.getBoundingClientRect().width > 0) return anySb;
-
-                return null;
-            }
+            if (targetType === 'language') return findLanguageElement();
             if (targetType === 'chat') {
-                return parentDoc.querySelector('[data-testid="stChatInput"]') || parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
+                return parentDoc.querySelector('[data-testid="stChatInput"]') || 
+                       parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]') ||
+                       parentDoc.querySelector('.stChatInput') ||
+                       parentDoc.querySelector('textarea');
             }
         } catch (e) {
             console.warn('Target element query error:', e);
@@ -1784,8 +1820,11 @@ def render_product_tour(force_open: bool = False) -> None:
             </div>
         `;
 
-        // Update spotlight and card positioning
-        setTimeout(updateSpotlightAndPosition, 30);
+        // Update spotlight and card positioning with multi-frame synchronization
+        updateSpotlightAndPosition();
+        setTimeout(updateSpotlightAndPosition, 40);
+        setTimeout(updateSpotlightAndPosition, 120);
+        setTimeout(updateSpotlightAndPosition, 300);
 
         // BULLETPROOF EVENT ATTACHMENT WITH STOP PROPAGATION
         const btnX = parentDoc.getElementById('orca-tour-btn-x');
@@ -1852,9 +1891,19 @@ def render_product_tour(force_open: bool = False) -> None:
             overlay.classList.add('orca-tour-active');
         });
 
-        // Re-align on window resize or orientation change
+        // Re-align on window resize, orientation change, or scroll
         parentWin.removeEventListener('resize', updateSpotlightAndPosition);
         parentWin.addEventListener('resize', updateSpotlightAndPosition);
+        parentWin.removeEventListener('scroll', updateSpotlightAndPosition);
+        parentWin.addEventListener('scroll', updateSpotlightAndPosition);
+
+        try {
+            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]') || parentDoc.querySelector('.stSidebar');
+            if (sidebar) {
+                sidebar.removeEventListener('scroll', updateSpotlightAndPosition);
+                sidebar.addEventListener('scroll', updateSpotlightAndPosition);
+            }
+        } catch (e) {}
     }
 
     // Expose openTour on parent window for instant client-side trigger
