@@ -124,7 +124,7 @@ LANG_CODE_TO_NAME: dict[str, str] = {
 # ─────────────────────────────────────────────────────────────────────────────
 KNOWN_COASTAL_LOCATIONS = [
     "kochi", "cochin", "chennai", "madras", "mumbai", "bombay", "visakhapatnam", "vizag",
-    "rameswaram", "rameshwaram", "mangalore", "mangaluru", "goa", "panaji", "karwar",
+    "rameswaram", "rameshwaram", "mangalore", "manglore", "mangaluru", "goa", "panaji", "karwar",
     "veraval", "porbandar", "paradip", "paradeep", "puri", "digha", "haldia",
     "kannur", "kozhikode", "calicut", "alappuzha", "alleppey", "thiruvananthapuram", "trivandrum",
     "tuticorin", "thoothukudi", "kanyakumari", "nagapattinam", "cuddalore", "pondicherry", "puducherry",
@@ -145,6 +145,7 @@ CANONICAL_LOCATION_NAMES = {
     "vizag": "Visakhapatnam",
     "rameshwaram": "Rameswaram",
     "mangaluru": "Mangalore",
+    "manglore": "Mangalore",
     "panaji": "Goa",
     "calicut": "Kozhikode",
     "alleppey": "Alappuzha",
@@ -172,7 +173,7 @@ NON_LOCATION_WORDS = {
     "help", "please", "could", "would", "should", "off", "into", "onto", "from",
     "with", "have", "some", "good", "best", "very", "high", "much", "many",
     "indian", "india", "bay", "coast", "coastal", "waters", "port", "harbour", "harbor",
-    "catch", "fish", "spot", "spots", "place", "places", "ground", "grounds", "area", "areas",
+    "catch", "fish", "fishes", "mre", "more", "spot", "spots", "place", "places", "ground", "grounds", "area", "areas",
     "shoal", "shoals", "boat", "trawler", "vessel", "trip", "go", "going", "gone", "can",
     "may", "want", "neare", "ner", "neer", "naer", "clos", "close", "arround", "arund",
     "hello", "hi", "hey", "greetings", "good", "afternoon", "evening", "thanks", "thank",
@@ -371,22 +372,31 @@ def _classify_intent_from_text(text: str) -> str:
         return "ecosystem_query"
 
     # 5. Potential Fishing Zone (PFZ) / Natural language fishing queries
+    norm_q = q.replace("mre ", "more ").replace("fishes", "fish").replace("ner ", "near ").replace("neare ", "near ")
+
+    has_fish_kw = bool(re.search(r'\b(?:fish|fishes|fishing|shoal|shoals|catch|catches|catching|pfz|mackerel|sardine|tuna|pomfret|prawns?|shrimps?|squids?|seer\s*fish|bombay\s*duck)\b', norm_q))
+    has_seeking = bool(re.search(r'\b(?:where|find|finding|locate|locating|hunt|hunting|get|getting|more|good|best|spot|spots|zone|zones|ground|grounds|area|areas|place|places|near|around|off|in|at|shoal|shoals|tuna|catch)\b', norm_q))
+
+    if has_fish_kw and (has_seeking or _extract_location_from_text(text)):
+        return "pfz_location"
+
     pfz_phrases = [
         "where can i fish", "where can we fish", "where to fish", "where do i fish", "where should i fish",
         "fish near", "fishing near", "fishing zone", "fishing zones", "fishing ground", "fishing grounds",
         "fishing spot", "fishing spots", "pfz", "find fish", "catch fish", "good place to fish",
         "best place to fish", "fish shoal", "fish shoals", "fish aggregation",
-        "catch tuna", "find tuna", "catch sardine", "look for fish", "looking for fish"
+        "catch tuna", "find tuna", "catch sardine", "look for fish", "looking for fish",
+        "more fish", "find more fish", "where to find fish", "where are fish", "fishing today"
     ]
-    if any(p in q for p in pfz_phrases):
+    if any(p in norm_q for p in pfz_phrases):
         return "pfz_location"
-    if re.search(r'\bfish\s+(?:near|neare|ner|around|off|in|at)\b', q):
+    if re.search(r'\b(?:fish|fishes|fishing)\s+(?:near|neare|ner|around|off|in|at)\b', norm_q):
         return "pfz_location"
-    if re.search(r'\b(?:find|catch|locate|hunt)\s+fish\b', q):
+    if re.search(r'\b(?:find|catch|locate|hunt|get)\s+(?:more\s+)?(?:fish|fishes)\b', norm_q):
         return "pfz_location"
-    if re.search(r'\bwhere\s+(?:can\s+i|to|do\s+we|should\s+i)\s+fish\b', q):
+    if re.search(r'\bwhere\s+(?:can\s+i|to|do\s+we|should\s+i)\s+(?:find\s+)?(?:fish|fishes)\b', norm_q):
         return "pfz_location"
-    if re.search(r'\bfishing\s+(?:spot|spots|zone|zones|ground|grounds|area|areas|place|places)\b', q):
+    if re.search(r'\bfishing\s+(?:spot|spots|zone|zones|ground|grounds|area|areas|place|places)\b', norm_q):
         return "pfz_location"
 
     # 6. Weather Check
@@ -574,14 +584,21 @@ def run(inputs: dict) -> dict:
     q_lower = query.lower()
     is_safety_or_hazard = any(w in q_lower for w in ["safe", "danger", "cyclone", "surge", "hazard", "warning", "can i go", "should i go"])
 
+    norm_post = q_lower.replace("mre ", "more ").replace("fishes", "fish").replace("ner ", "near ").replace("neare ", "near ")
+    has_fish_kw_post = bool(re.search(r'\b(?:fish|fishes|fishing|shoal|shoals|catch|catches|catching|pfz|mackerel|sardine|tuna|pomfret|prawns?|shrimps?|squids?|seer\s*fish|bombay\s*duck)\b', norm_post))
+    has_seeking_post = bool(re.search(r'\b(?:where|find|finding|locate|locating|hunt|hunting|get|getting|more|good|best|spot|spots|zone|zones|ground|grounds|area|areas|place|places|near|around|off|in|at)\b', norm_post))
+
     strict_pfz_triggers = [
         "where can i fish", "where can we fish", "where to fish", "where do i fish", "where should i fish",
         "fish near", "fishing near", "fishing zone", "fishing zones", "fishing ground", "fishing grounds",
         "fishing spot", "fishing spots", "find fish", "catch fish", "good place to fish",
+        "more fish", "find more fish", "where to find fish", "where are fish"
     ]
     if not is_safety_or_hazard and (
-        any(t in q_lower for t in strict_pfz_triggers)
-        or re.search(r'\bfish\s+(?:near|neare|ner|around|off|in|at)\b', q_lower)
+        any(t in norm_post for t in strict_pfz_triggers)
+        or (has_fish_kw_post and (has_seeking_post or _extract_location_from_text(query)))
+        or re.search(r'\b(?:fish|fishes|fishing)\s+(?:near|neare|ner|around|off|in|at)\b', norm_post)
+        or re.search(r'\b(?:find|catch|locate|hunt|get)\s+(?:more\s+)?(?:fish|fishes)\b', norm_post)
     ):
         intent = "pfz_location"
 
