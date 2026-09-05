@@ -812,13 +812,48 @@ hr { border-color: #E2E8F0 !important; }
     .orca-hero-text {
         display: none !important;
     }
+    .orca-hero-header {
+        position: relative !important;
+        top: 16px !important;
+        overflow: visible !important;
+    }
     .orca-hero-logo {
         width: 36px !important;
         height: 36px !important;
         min-width: 36px !important;
         min-height: 36px !important;
-        position: relative !important;
-        top: 16px !important;
+        position: static !important;
+    }
+
+    /* Remove empty product-tour space and tighten the navbar divider. */
+    div[data-testid="stElementContainer"]:has(> iframe) {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .orca-nav-divider {
+        margin: 4px 0 !important;
+    }
+
+    /* Keep the mobile controls available while the chat scrolls. */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
+        position: static !important;
+    }
+    div[data-testid="stLayoutWrapper"]:has(.orca-hero-header) {
+        position: sticky !important;
+        top: 44px !important;
+        z-index: 20 !important;
+        background: #F8FAFC !important;
+        padding: 0 !important;
+    }
+    div[data-testid="stLayoutWrapper"]:has(.st-key-sticky_persona_container) {
+        position: sticky !important;
+        top: 100px !important;
+        z-index: 19 !important;
+        background: #F8FAFC !important;
+        padding: 8px 0 !important;
     }
 
     /* 3. Keep all three navbar cells on one mobile row. */
@@ -862,8 +897,281 @@ hr { border-color: #E2E8F0 !important; }
     div[role="radiogroup"],
     div[data-testid="stRadioGroup"] {
         display: flex !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         justify-content: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+    div.st-key-sticky_persona_container,
+    div.st-key-sticky_persona_container > div[data-testid="stElementContainer"],
+    div[data-testid="stRadio"],
+    div[data-testid="stRadioGroup"],
+    div[role="radiogroup"] {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        align-self: stretch !important;
+    }
+
+    div[role="radiogroup"] > label[data-testid="stRadioOption"],
+    div[data-testid="stRadioGroup"] > label[data-testid="stRadioOption"] {
+        flex: 1 1 0 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        padding: 10px 4px !important;
+        min-height: 48px !important;
+        overflow: hidden !important;
+    }
+
+    div[role="radiogroup"] > label[data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+    div[data-testid="stRadioGroup"] > label[data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
+        font-size: 0.72rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    div[role="radiogroup"] > label[data-testid="stRadioOption"] > div,
+    div[data-testid="stRadioGroup"] > label[data-testid="stRadioOption"] > div {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    div[role="radiogroup"] > label[data-testid="stRadioOption"] > div > div,
+    div[data-testid="stRadioGroup"] > label[data-testid="stRadioOption"] > div > div {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    div[role="radiogroup"] > label[data-testid="stRadioOption"] [data-testid="stMarkdownContainer"],
+    div[data-testid="stRadioGroup"] > label[data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    div[role="radiogroup"] > label[data-testid="stRadioOption"] div:has(> input[type="radio"]),
+    div[data-testid="stRadioGroup"] > label[data-testid="stRadioOption"] div:has(> input[type="radio"]) {
+        margin-right: 4px !important;
+        transform: scale(0.8) !important;
+    }
+
+    /* Keep four telemetry metrics compact: two columns by two rows. */
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) > div[data-testid="stColumn"] {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: none !important;
+    }
+}
+
+/* ── Modern ORCA UI refinement ───────────────────────────── */
+:root {
+    --orca-ink: #102A43;
+    --orca-muted: #627D98;
+    --orca-line: #D9E2EC;
+    --orca-surface: #FFFFFF;
+    --orca-canvas: #F5F8FA;
+    --orca-teal: #0B9C9F;
+    --orca-teal-dark: #087F83;
+    --orca-shadow: 0 8px 24px rgba(16, 42, 67, 0.07);
+}
+
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    background: var(--orca-canvas) !important;
+    color: var(--orca-ink) !important;
+}
+
+[data-testid="stMainBlockContainer"] {
+    padding-top: 2rem !important;
+    padding-bottom: 5rem !important;
+}
+
+[data-testid="stSidebar"] {
+    background: #092033 !important;
+    box-shadow: 8px 0 24px rgba(6, 24, 38, 0.12) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border-color: #1D4056 !important;
+    background: rgba(255, 255, 255, 0.025) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    border-color: #24516A !important;
+}
+
+h1, h2, h3, h4, p, label, button, input, textarea {
+    letter-spacing: normal !important;
+}
+
+h1, h2, h3, h4 {
+    color: var(--orca-ink) !important;
+}
+
+.orca-hero-header {
+    min-height: 40px !important;
+}
+
+.orca-hero-logo {
+    border: 1px solid rgba(11, 156, 159, 0.22) !important;
+    box-shadow: 0 4px 12px rgba(16, 42, 67, 0.12) !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) .stButton > button,
+div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] {
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(16, 42, 67, 0.04) !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] {
+    background: #FFFFFF !important;
+    border-color: var(--orca-line) !important;
+}
+
+div[data-testid="stButton"] > button,
+div.stButton > button {
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--orca-line) !important;
+    box-shadow: 0 2px 8px rgba(16, 42, 67, 0.04) !important;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease !important;
+}
+
+div.stButton > button:hover {
+    border-color: var(--orca-teal) !important;
+    box-shadow: 0 6px 16px rgba(11, 156, 159, 0.14) !important;
+    transform: translateY(-1px) !important;
+}
+
+div.stButton > button[kind="primary"] {
+    background: var(--orca-teal) !important;
+    border-color: var(--orca-teal) !important;
+}
+
+div[data-baseweb="select"],
+div[data-baseweb="input"],
+textarea,
+input {
+    border-radius: 10px !important;
+}
+
+div[data-baseweb="select"] {
+    border-color: var(--orca-line) !important;
+    box-shadow: 0 2px 8px rgba(16, 42, 67, 0.035) !important;
+}
+
+div[data-baseweb="select"]:focus-within,
+textarea:focus,
+input:focus {
+    border-color: var(--orca-teal) !important;
+    box-shadow: 0 0 0 3px rgba(11, 156, 159, 0.14) !important;
+}
+
+[data-testid="stMetric"] {
+    background: var(--orca-surface) !important;
+    border: 1px solid var(--orca-line) !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    box-shadow: var(--orca-shadow) !important;
+}
+
+[data-testid="stMetricLabel"],
+[data-testid="stMetricLabel"] p {
+    color: var(--orca-muted) !important;
+}
+
+[data-testid="stMetricValue"],
+[data-testid="stMetricValue"] div {
+    color: var(--orca-ink) !important;
+}
+
+[data-testid="stChatMessage"] {
+    background: var(--orca-surface) !important;
+    border: 1px solid var(--orca-line) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 5px 18px rgba(16, 42, 67, 0.045) !important;
+}
+
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] li,
+[data-testid="stChatMessage"] strong,
+[data-testid="stChatMessage"] em {
+    color: var(--orca-ink) !important;
+}
+
+[data-testid="stChatInput"] {
+    background: rgba(245, 248, 250, 0.92) !important;
+    border-top: 1px solid var(--orca-line) !important;
+    padding-top: 10px !important;
+}
+
+[data-testid="stChatInput"] > div {
+    border: 1px solid var(--orca-line) !important;
+    border-radius: 14px !important;
+    background: #FFFFFF !important;
+    box-shadow: 0 8px 22px rgba(16, 42, 67, 0.10) !important;
+}
+
+[data-testid="stChatInput"] textarea {
+    background: transparent !important;
+    color: var(--orca-ink) !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: var(--orca-muted) !important;
+    opacity: 1 !important;
+}
+
+details {
+    border-color: var(--orca-line) !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+}
+
+details summary {
+    color: var(--orca-ink) !important;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    border: 1px solid var(--orca-line) !important;
+    background: #EAF0F4 !important;
+    border-radius: 11px !important;
+}
+
+.stTabs [aria-selected="true"] {
+    color: var(--orca-teal-dark) !important;
+    border: 1px solid rgba(11, 156, 159, 0.18) !important;
+}
+
+@media (max-width: 768px) {
+    [data-testid="stMainBlockContainer"] {
+        padding-top: 1rem !important;
+        padding-bottom: 4.5rem !important;
+    }
+
+    [data-testid="stMetric"] {
+        padding: 10px !important;
+        border-radius: 10px !important;
+    }
+
+    [data-testid="stChatMessage"] {
+        border-radius: 11px !important;
+        box-shadow: 0 3px 12px rgba(16, 42, 67, 0.04) !important;
     }
 }
 </style>
@@ -1326,13 +1634,14 @@ def render_product_tour(force_open: bool = False) -> None:
                 }
                 /* Ultra-compact modal card on mobile */
                 .orca-tour-modal-card {
-                    max-width: 250px !important;
-                    min-width: 220px !important;
-                    max-height: 82vh !important;
+                    width: calc(100vw - 48px) !important;
+                    max-width: 300px !important;
+                    min-width: 0 !important;
+                    max-height: 60vh !important;
                     overflow-y: auto !important;
-                    padding: 8px 12px 10px 12px !important;
-                    border-radius: 12px !important;
-                    border-top: 3.5px solid #0EA5A8 !important;
+                    padding: 9px 11px 8px 11px !important;
+                    border-radius: 14px !important;
+                    border-top: 3px solid #0EA5A8 !important;
                     margin: 0 !important;
                     box-shadow: 0 16px 36px -8px rgba(11, 38, 56, 0.45) !important;
                 }
@@ -1341,51 +1650,51 @@ def render_product_tour(force_open: bool = False) -> None:
                     display: none !important;
                 }
                 .orca-tour-title {
-                    font-size: 0.88rem !important;
-                    margin-bottom: 2px !important;
+                    font-size: 0.92rem !important;
+                    margin-bottom: 3px !important;
                     line-height: 1.15 !important;
                 }
                 .orca-tour-body {
-                    font-size: 0.74rem !important;
+                    font-size: 0.76rem !important;
                     line-height: 1.3 !important;
                     margin-bottom: 4px !important;
                 }
                 .orca-tour-location-banner {
-                    font-size: 8.5px !important;
-                    padding: 2px 5px !important;
-                    margin-bottom: 3px !important;
+                    font-size: 9px !important;
+                    padding: 3px 6px !important;
+                    margin-bottom: 4px !important;
                     border-radius: 6px !important;
                 }
                 .orca-tour-step-label {
                     font-size: 7.5px !important;
-                    margin-bottom: 2px !important;
+                    margin-bottom: 3px !important;
                 }
                 .orca-tour-badge {
-                    font-size: 7.5px !important;
-                    padding: 1px 6px !important;
-                    margin-bottom: 2px !important;
+                    font-size: 8px !important;
+                    padding: 1px 7px !important;
+                    margin-bottom: 3px !important;
                 }
                 .orca-tour-tip {
                     font-size: 0.68rem !important;
-                    margin: 3px 0 !important;
-                    padding: 4px 6px !important;
+                    margin: 4px 0 !important;
+                    padding: 5px 7px !important;
                     line-height: 1.25 !important;
                     border-left-width: 2.5px !important;
                 }
                 .orca-tour-logo-img {
-                    width: 24px !important;
-                    height: 24px !important;
-                    min-width: 24px !important;
-                    min-height: 24px !important;
-                    max-width: 24px !important;
-                    max-height: 24px !important;
-                    border-radius: 6px !important;
-                    margin: 1px 0 3px 0 !important;
+                    width: 28px !important;
+                    height: 28px !important;
+                    min-width: 28px !important;
+                    min-height: 28px !important;
+                    max-width: 28px !important;
+                    max-height: 28px !important;
+                    border-radius: 7px !important;
+                    margin: 1px 0 4px 0 !important;
                 }
                 .orca-tour-btn-next, .orca-tour-btn-back {
-                    padding: 4px 8px !important;
+                    padding: 5px 8px !important;
                     font-size: 0.72rem !important;
-                    min-height: 28px !important;
+                    min-height: 29px !important;
                     border-radius: 6px !important;
                 }
                 .orca-tour-modal-card hr.orca-tour-divider {
