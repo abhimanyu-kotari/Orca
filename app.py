@@ -1083,7 +1083,7 @@ if "open_tour_modal" not in st.session_state:
 
 PRODUCT_TOUR_STEPS = [
     {
-        "step_label": "STEP 1 OF 7  •  SYSTEM OVERVIEW",
+        "step_label": "STEP 1 OF 6  •  SYSTEM OVERVIEW",
         "icon": "🌊",
         "icon_img": f"data:image/png;base64,{LOGO_B64}" if LOGO_B64 else None,
         "badge": "ISRO · SIH PROBLEM STATEMENT 26176",
@@ -1096,7 +1096,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": None
     },
     {
-        "step_label": "STEP 2 OF 7  •  ROLE 1 OF 3",
+        "step_label": "STEP 2 OF 6  •  ROLE 1 OF 3",
         "icon": "🎣",
         "badge": "COASTAL FISHING & SAFETY",
         "title": "Artisanal Fisherman Mode",
@@ -1108,7 +1108,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Role 1: Artisanal Fisherman"
     },
     {
-        "step_label": "STEP 3 OF 7  •  ROLE 2 OF 3",
+        "step_label": "STEP 3 OF 6  •  ROLE 2 OF 3",
         "icon": "🚨",
         "badge": "DISASTER MANAGEMENT & SURVEILLANCE",
         "title": "Coastal Authority Mode",
@@ -1120,7 +1120,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Role 2: Coastal Authority"
     },
     {
-        "step_label": "STEP 4 OF 7  •  ROLE 3 OF 3",
+        "step_label": "STEP 4 OF 6  •  ROLE 3 OF 3",
         "icon": "🔬",
         "badge": "SATELLITE OCEANOGRAPHY",
         "title": "Marine Researcher Mode",
@@ -1132,19 +1132,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Role 3: Marine Researcher"
     },
     {
-        "step_label": "STEP 5 OF 7  •  MULTILINGUAL AI",
-        "icon": "🌐",
-        "badge": "9 INDIAN LANGUAGES",
-        "title": "Ask in Your Native Language",
-        "body": "Ask in your own language! ORCA supports <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা, मराठी, and ગુજરાતી</strong> with automatic dialect detection and localized maritime terminology.",
-        "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
-        "tip": "Look at the glowing dropdown in the left sidebar: you can pick your language here!",
-        "target_type": "language",
-        "location_label": "Left Sidebar ➔ 🌐 Advisory Language (भाषा / மொழி)",
-        "beacon_text": "9 Languages Supported"
-    },
-    {
-        "step_label": "STEP 6 OF 7  •  INTERACTIVE WORKFLOW",
+        "step_label": "STEP 5 OF 6  •  INTERACTIVE WORKFLOW",
         "icon": "💬",
         "badge": "CHAT & INTERACTIVE GIS",
         "title": "Ask Anything Maritime",
@@ -1156,7 +1144,7 @@ PRODUCT_TOUR_STEPS = [
         "beacon_text": "Ask Queries Here"
     },
     {
-        "step_label": "STEP 7 OF 7  •  MISSION READY",
+        "step_label": "STEP 6 OF 6  •  MISSION READY",
         "icon": "🚀",
         "icon_img": None,
         "badge": "ALL SYSTEMS GO",
