@@ -796,35 +796,35 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
 
-    /* 2. ENABLE WRAPPING — let columns flow onto a second row */
+    /* 1. FORCE HORIZONTAL WRAPPING — override Streamlit's flex-direction:column */
     div[data-testid="stHorizontalBlock"]:first-of-type {
         display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
+        flex-direction: row !important;    /* override Streamlit's column stacking */
+        flex-wrap: wrap !important;        /* let items drop to next row */
         width: 100% !important;
         gap: 6px !important;
         box-sizing: border-box !important;
+        overflow: visible !important;      /* do NOT clip the logo */
     }
 
-    /* 3. LOGO ON TOP — force Col 1 to claim the full width, pushing others down */
+    /* 2. LOGO ROW — col 1 takes full width, forcing others to next row */
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
         flex: 0 0 100% !important;
         width: 100% !important;
         min-width: 0 !important;
         box-sizing: border-box !important;
+        margin-top: 10px !important;      /* prevent logo from being cut off at top */
+        overflow: visible !important;
     }
 
-    /* 4. SIDE-BY-SIDE CONTROLS — Tour Guide and Language share the row below */
+    /* 3. BUTTON ROW — Tour Guide and Language share the row below at 50/50 */
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
-        flex: 1 1 45% !important;
+        flex: 1 1 48% !important;
+        width: 48% !important;
         min-width: 0 !important;
         box-sizing: border-box !important;
-    }
-
-    /* 5. Ensure Tour Guide button is fully visible */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
-        display: block !important;
+        display: block !important;         /* ensure Tour Guide is never hidden */
     }
 
     /* Center persona radio tabs when they wrap */
