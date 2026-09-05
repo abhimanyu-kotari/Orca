@@ -118,6 +118,7 @@ st.set_page_config(
     page_title="ORCA — Satellite Intelligence for Safer Oceans",
     page_icon=LOGO_PATH if LOGO_EXISTS else "🌊",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 
@@ -1543,6 +1544,27 @@ def render_product_tour(force_open: bool = False) -> None:
         return null;
     }
 
+    function ensureSidebarOpen() {
+        try {
+            const sidebar = parentDoc.querySelector('[data-testid="stSidebar"], section[data-testid="stSidebar"], .stSidebar');
+            const expandBtn = parentDoc.querySelector('[data-testid="stExpandSidebarButton"], [data-testid="stSidebarCollapsedControl"] button, [data-testid="stSidebarCollapsedControl"], button[aria-label*="sidebar" i], button[aria-label*="expand" i]');
+            let isCollapsed = false;
+            if (expandBtn && (expandBtn.offsetParent !== null || expandBtn.offsetWidth > 0)) {
+                isCollapsed = true;
+            } else if (sidebar) {
+                const r = sidebar.getBoundingClientRect();
+                if (r.width < 50 || r.right <= 10 || sidebar.getAttribute('aria-expanded') === 'false') {
+                    isCollapsed = true;
+                }
+            }
+            if (isCollapsed && expandBtn) {
+                expandBtn.click();
+            }
+        } catch (e) {
+            console.warn('ensureSidebarOpen error:', e);
+        }
+    }
+
     function findLanguageElement() {
         try {
             // Priority 0: Explicit marker placed right above the selectbox in Python
@@ -1840,12 +1862,17 @@ def render_product_tour(force_open: bool = False) -> None:
             </div>
         `;
 
+        if (data.target_type === 'language') {
+            ensureSidebarOpen();
+        }
+
         // Update spotlight and card positioning with multi-frame synchronization
         updateSpotlightAndPosition();
-        setTimeout(updateSpotlightAndPosition, 40);
+        setTimeout(updateSpotlightAndPosition, 50);
         setTimeout(updateSpotlightAndPosition, 120);
-        setTimeout(updateSpotlightAndPosition, 300);
-        setTimeout(updateSpotlightAndPosition, 600);
+        setTimeout(updateSpotlightAndPosition, 250);
+        setTimeout(updateSpotlightAndPosition, 400);
+        setTimeout(updateSpotlightAndPosition, 650);
 
         // BULLETPROOF EVENT ATTACHMENT WITH STOP PROPAGATION
         const btnX = parentDoc.getElementById('orca-tour-btn-x');
