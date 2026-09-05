@@ -243,7 +243,39 @@ h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !
     gap: 8px !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
+}
+.orca-hero-logo {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    border-radius: 6px !important;
+    flex-shrink: 0 !important;
+    object-fit: cover !important;
+}
+.orca-hero-text {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+.orca-hero-title {
+    font-size: 1.18rem !important;
+    font-weight: 800 !important;
+    color: #0B2638 !important;
+    line-height: 1 !important;
+    margin: 0 !important;
     white-space: nowrap !important;
+}
+.orca-hero-subtitle {
+    font-size: 0.63rem !important;
+    color: #64748B !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 220px !important;
 }
     .orca-hero-logo {
         width: 32px !important;
@@ -745,96 +777,93 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.65rem !important;
     }
 
-    /* Mobile Header: STRICT SINGLE ROW (Logo + Title + Tour Button + Language Dropdown in ONE LINE) */
+    /* Header Row: Guaranteed Single-Line, Zero-Overflow on ALL screen sizes */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type,
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 4px !important;
+        gap: 6px !important;
         align-items: center !important;
-        justify-content: space-between !important;
         width: 100% !important;
-        margin-bottom: 2px !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
-    /* All 3 columns inside the header remain inline without wrapping */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"],
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"] {
-        width: auto !important;
         min-width: 0 !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
         display: flex !important;
         align-items: center !important;
     }
 
-    /* Column 1: Logo & ORCA title */
+    /* Column 1: Logo & Title (never expands to push others off screen) */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1),
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 auto !important;
+        flex: 1 1 auto !important;
+        max-width: 48% !important;
+        overflow: hidden !important;
     }
 
     /* Column 2: Tour Guide button */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2) {
         flex: 0 0 auto !important;
+        min-width: 80px !important;
+        max-width: 110px !important;
     }
 
     /* Column 3: Language selector */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3),
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
-        flex: 1 1 auto !important;
-        min-width: 90px !important;
-        max-width: 120px !important;
+        flex: 0 0 auto !important;
+        min-width: 95px !important;
+        max-width: 125px !important;
     }
 
-    /* Compact button styling on mobile to fit on the single line */
+    /* Compact button styling */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type button,
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button {
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 2px 6px !important;
-        font-size: 0.72rem !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 3px 8px !important;
+        font-size: 0.76rem !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         border-radius: 6px !important;
+        width: 100% !important;
     }
 
-    /* Compact selectbox styling on mobile to fit on the single line */
+    /* Compact selectbox styling */
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
     .block-container div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div,
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"],
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div {
-        height: 32px !important;
-        min-height: 32px !important;
-        font-size: 0.74rem !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.76rem !important;
         padding-top: 0 !important;
         padding-bottom: 0 !important;
         padding-left: 4px !important;
         padding-right: 4px !important;
         border-radius: 6px !important;
+        width: 100% !important;
     }
 
-    /* On mobile, hide the long subtitle sentence so the header remains 100% single-line */
+    /* Mobile specific tweaks */
     .orca-hero-subtitle {
         display: none !important;
-    }
-    .orca-hero-header {
-        gap: 6px !important;
-        margin: 0 !important;
     }
     .orca-hero-logo {
         width: 26px !important;
         height: 26px !important;
         min-width: 26px !important;
         min-height: 26px !important;
-        border-radius: 5px !important;
     }
     .orca-hero-title {
         font-size: 1.05rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
     }
 
     /* Tighten Divider */
@@ -4019,7 +4048,7 @@ with st.sidebar:
 # We place the Logo/Title, Tour Guide, and Language Selector in a single responsive row.
 # Injecting align-items: center specifically for the very first HorizontalBlock on the page
 # Custom vertical alignment handled by st.columns natively
-hero_col1, hero_col2, hero_col3 = st.columns([3.5, 1.4, 2.0], vertical_alignment="center")
+hero_col1, hero_col2, hero_col3 = st.columns([2.4, 1.2, 1.6], vertical_alignment="center")
 
 with hero_col1:
     if LOGO_B64:
@@ -4027,8 +4056,8 @@ with hero_col1:
         <div class="orca-hero-header" style="margin: 0 !important;">
             <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
             <div class="orca-hero-text">
-                <h1 class="orca-hero-title">ORCA</h1>
-                <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans — ISRO SIH Problem Statement 26176</p>
+                <span class="orca-hero-title">ORCA</span>
+                <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -4036,14 +4065,14 @@ with hero_col1:
         st.markdown("""
         <div class="orca-hero-header" style="margin: 0 !important;">
             <div class="orca-hero-text">
-                <h1 class="orca-hero-title">🌊 ORCA</h1>
-                <p class="orca-hero-subtitle">Satellite Intelligence for Safer Oceans — ISRO SIH Problem Statement 26176</p>
+                <span class="orca-hero-title">🌊 ORCA</span>
+                <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
 with hero_col2:
-    if st.button("❓ Help / Tour Guide", use_container_width=True):
+    if st.button("❓ Tour Guide", use_container_width=True):
         st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
