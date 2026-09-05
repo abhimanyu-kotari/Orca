@@ -800,32 +800,62 @@ hr { border-color: #E2E8F0 !important; }
     /* FIXED: Using :has(.orca-hero-header) instead of :first-of-type to avoid targeting the sidebar */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
         display: flex !important;
-        flex-direction: row !important;    
-        flex-wrap: wrap !important;        
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         width: 100% !important;
         gap: 6px !important;
         box-sizing: border-box !important;
-        overflow: visible !important;      
-    }
-
-    /* 2. LOGO ROW — col 1 takes full width, forcing others to next row */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 100% !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-        margin-top: 5px !important;      
         overflow: visible !important;
     }
 
-    /* 3. BUTTON ROW — Tour Guide and Language share the row below at 50/50 */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2),
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
-        flex: 1 1 48% !important;
-        width: 48% !important;
+    /* 2. Keep the logo, but hide the wordmark on narrow screens. */
+    .orca-hero-text {
+        display: none !important;
+    }
+    .orca-hero-logo {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        position: relative !important;
+        top: 16px !important;
+    }
+
+    /* 3. Keep all three navbar cells on one mobile row. */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stColumn"]:nth-child(1) {
+        flex: 0 0 16% !important;
+        width: 16% !important;
+        max-width: 16% !important;
         min-width: 0 !important;
         box-sizing: border-box !important;
-        display: block !important;         
+        height: 42px !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* Tour Guide and language use the remaining space. */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stColumn"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stColumn"]:nth-child(3) {
+        flex: 0 0 calc((84% - 6px) / 2) !important;
+        width: calc((84% - 6px) / 2) !important;
+        max-width: calc((84% - 6px) / 2) !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        display: block !important;
+        overflow: visible !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stColumn"]:nth-child(2) .stButton > button,
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stColumn"]:nth-child(3) div[data-baseweb="select"] {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-testid="stColumn"]:nth-child(2) .stButton > button {
+        background: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        color: #0B2638 !important;
     }
 
     /* Center persona radio tabs when they wrap */
