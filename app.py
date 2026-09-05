@@ -1033,7 +1033,7 @@ if "open_tour_modal" not in st.session_state:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ORCA ProductTour Component — Modal Overlay, LocalStorage, Confetti & Tab Sync
+# ORCA ProductTour Component — Spotlight Cutout, Beacons, Tab Sync & Confetti
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRODUCT_TOUR_STEPS = [
@@ -1044,38 +1044,50 @@ PRODUCT_TOUR_STEPS = [
         "title": "Welcome to Project ORCA",
         "body": "ORCA (<strong>Ocean Research & Coastal Analytics</strong>) is a <strong>collaborative multi-agent AI platform</strong> built for India's maritime stakeholders. It fuses real-time ISRO satellite data, IMD weather feeds, and INCOIS PFZ advisories into actionable ocean intelligence.",
         "pills": ["Multi-Agent AI", "ISRO Satellite Data", "IMD Weather", "INCOIS PFZ"],
-        "tip": "Take a 1-minute guided tour to see how ORCA empowers fishermen, disaster authorities, and researchers.",
-        "tab": None
+        "tip": "Take a quick guided walkthrough to see exactly where each feature lives in the application.",
+        "tab": None,
+        "target_type": "hero",
+        "location_label": "Top Dashboard Header • ISRO SIH 26176",
+        "beacon_text": "Project Overview"
     },
     {
-        "step_label": "STEP 2 OF 7  •  PERSONA 1 OF 3",
+        "step_label": "STEP 2 OF 7  •  ROLE 1 OF 3",
         "icon": "🎣",
         "badge": "COASTAL FISHING & SAFETY",
         "title": "Artisanal Fisherman Mode",
         "body": "Designed for traditional coastal fishermen. Delivers instant <strong>SAFE / CAUTION / DANGER</strong> weather verdicts, recommended <strong>Potential Fishing Zones (PFZ)</strong> with depth and target species, and GPS navigation routes away from hazard zones.",
         "pills": ["Safety Verdicts", "PFZ Hotspots", "Navigation Tracks"],
-        "tip": "Notice how the background view switches to Fisherman mode!",
-        "tab": "fisherman"
+        "tip": "Look at the glowing spotlight above: that is the Fisherman mode selector!",
+        "tab": "fisherman",
+        "target_type": "fisherman",
+        "location_label": "Top Role Selector ➔ 🎣 Artisanal Fisherman",
+        "beacon_text": "Role 1: Artisanal Fisherman"
     },
     {
-        "step_label": "STEP 3 OF 7  •  PERSONA 2 OF 3",
+        "step_label": "STEP 3 OF 7  •  ROLE 2 OF 3",
         "icon": "🚨",
         "badge": "DISASTER MANAGEMENT & SURVEILLANCE",
         "title": "Coastal Authority Mode",
         "body": "Built for Coast Guard and disaster management authorities. Features real-time <strong>cyclone & storm surge geofences</strong>, vessel exclusion alerts, and simulated emergency broadcasts (VHF Ch 16, NAVTEX, SMS gateway).",
         "pills": ["Cyclone Geofences", "Exclusion Alerts", "Emergency Broadcasts"],
-        "tip": "Switched under the hood to Coastal Authority mode so you can see the hazard telemetry!",
-        "tab": "authority"
+        "tip": "Look at the glowing spotlight above: that is the Coastal Authority mode selector!",
+        "tab": "authority",
+        "target_type": "authority",
+        "location_label": "Top Role Selector ➔ 🚨 Coastal Authority",
+        "beacon_text": "Role 2: Coastal Authority"
     },
     {
-        "step_label": "STEP 4 OF 7  •  PERSONA 3 OF 3",
+        "step_label": "STEP 4 OF 7  •  ROLE 3 OF 3",
         "icon": "🔬",
         "badge": "SATELLITE OCEANOGRAPHY",
         "title": "Marine Researcher Mode",
         "body": "Tailored for oceanographers and researchers. Inspect <strong>Sea Surface Temperature (SST)</strong> heatmaps, Chlorophyll-a density, thermocline depth, and multi-agent oceanographic reasoning chains.",
         "pills": ["SST Heatmaps", "Chlorophyll-a", "Thermocline Analysis"],
-        "tip": "Switched under the hood to Researcher mode for Earth observation analysis.",
-        "tab": "researcher"
+        "tip": "Look at the glowing spotlight above: that is the Marine Researcher mode selector!",
+        "tab": "researcher",
+        "target_type": "researcher",
+        "location_label": "Top Role Selector ➔ 🔬 Marine Researcher",
+        "beacon_text": "Role 3: Marine Researcher"
     },
     {
         "step_label": "STEP 5 OF 7  •  MULTILINGUAL AI",
@@ -1084,8 +1096,11 @@ PRODUCT_TOUR_STEPS = [
         "title": "Ask in Your Native Language",
         "body": "Ask in your own language! ORCA supports <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা, मराठी, and ગુજરાતી</strong> with automatic dialect detection and localized maritime terminology.",
         "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
-        "tip": "You can also manually set your preferred advisory language in the left sidebar.",
-        "tab": "language"
+        "tip": "Look at the glowing spotlight in the left sidebar: you can pick your language here!",
+        "tab": "language",
+        "target_type": "language",
+        "location_label": "Left Sidebar ➔ 🌐 Advisory Language (भाषा / மொழி)",
+        "beacon_text": "9 Languages Supported"
     },
     {
         "step_label": "STEP 6 OF 7  •  INTERACTIVE WORKFLOW",
@@ -1094,8 +1109,11 @@ PRODUCT_TOUR_STEPS = [
         "title": "Ask Anything Maritime",
         "body": "Type in the chat bar at the bottom or use the ⚡ <strong>Contextual Query Tools</strong> in the sidebar. Every response synthesizes a 4-tab card with safety decisions, interactive Folium maps, and ocean data.",
         "pills": ["Decision Cards", "Interactive Folium Maps", "Contextual Query Tools"],
-        "tip": "Try: 'Where can I fish near Kochi today?' or 'Check cyclone risk near Chennai.'",
-        "tab": "chat"
+        "tip": "Look at the glowing spotlight below: that is the natural language chat input bar!",
+        "tab": "chat",
+        "target_type": "chat",
+        "location_label": "Bottom Screen ➔ 💬 Chat Input Bar",
+        "beacon_text": "Ask Queries Here"
     },
     {
         "step_label": "STEP 7 OF 7  •  MISSION READY",
@@ -1105,20 +1123,18 @@ PRODUCT_TOUR_STEPS = [
         "body": "You're all set to use Project ORCA. Choose your role, type a query, and explore intelligent ocean analytics. Relaunch this guide anytime using <strong>❓ Help / Tour Guide</strong> in the sidebar.",
         "pills": ["ISRO Oceansat-3", "IMD Real-Time", "Ready to Explore"],
         "tip": "Click Finish to celebrate and begin exploring!",
-        "tab": "fisherman"
+        "tab": "fisherman",
+        "target_type": "none",
+        "location_label": "Whole Dashboard • All 3 Stakeholder Modes Active",
+        "beacon_text": "All Systems Ready"
     }
 ]
 
 
 def render_product_tour(force_open: bool = False) -> None:
     """
-    Renders the ProductTour modal overlay matching the project's clean light styling.
-    - Checks localStorage.getItem('app_tour_seen').
-    - If null: waits 1200ms -> opens modal.
-    - If force_open: opens immediately (from sidebar Help button).
-    - Next Step: increments step, updates dots, calls onNavigateTab under the hood.
-    - Finish or X: localStorage.setItem('app_tour_seen', 'true'), fires confetti, closes modal.
-    - NO st.stop() — the app renders fully and beautifully in the background!
+    Renders the ProductTour with spotlight cutout, pointing beacons, smart card positioning,
+    and tab synchronization matching the project's clean light styling.
     """
     import json
     import streamlit.components.v1 as cv1
@@ -1149,27 +1165,78 @@ def render_product_tour(force_open: bool = False) -> None:
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             
+            /* Main Overlay Backdrop */
             #orca-product-tour-overlay {
                 position: fixed !important;
                 inset: 0 !important;
                 width: 100vw !important;
                 height: 100vh !important;
                 background: rgba(15, 23, 42, 0.65) !important;
-                backdrop-filter: blur(5px) !important;
-                -webkit-backdrop-filter: blur(5px) !important;
-                z-index: 999999 !important;
+                backdrop-filter: blur(4px) !important;
+                -webkit-backdrop-filter: blur(4px) !important;
+                z-index: 999990 !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                padding: 16px !important;
+                padding: 20px !important;
                 box-sizing: border-box !important;
                 opacity: 0;
                 transition: opacity 0.25s ease-out !important;
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+                overflow-y: auto !important;
             }
             #orca-product-tour-overlay.orca-tour-active {
                 opacity: 1 !important;
             }
+            
+            /* Spotlight Cutout Box */
+            #orca-tour-spotlight {
+                position: fixed !important;
+                border-radius: 12px !important;
+                border: 2.5px solid #0EA5A8 !important;
+                box-shadow: 0 0 0 5px rgba(14, 165, 168, 0.45),
+                            0 0 30px rgba(14, 165, 168, 0.8),
+                            0 0 0 9999px rgba(15, 23, 42, 0.72) !important;
+                pointer-events: none !important;
+                z-index: 999995 !important;
+                transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                opacity: 0;
+                display: none;
+            }
+            #orca-tour-spotlight.active {
+                opacity: 1 !important;
+                display: block !important;
+            }
+
+            /* Animated Pointing Beacon */
+            #orca-tour-beacon {
+                position: fixed !important;
+                z-index: 1000000 !important;
+                background: linear-gradient(135deg, #0EA5A8 0%, #0891B2 100%) !important;
+                color: #FFFFFF !important;
+                font-size: 11.5px !important;
+                font-weight: 800 !important;
+                padding: 6px 14px !important;
+                border-radius: 20px !important;
+                box-shadow: 0 6px 18px rgba(14, 165, 168, 0.6) !important;
+                display: none;
+                align-items: center !important;
+                gap: 6px !important;
+                pointer-events: none !important;
+                animation: orcaBeaconBounce 1.4s infinite ease-in-out !important;
+                transition: all 0.3s ease !important;
+                letter-spacing: 0.04em !important;
+                text-transform: uppercase !important;
+            }
+            #orca-tour-beacon.active {
+                display: flex !important;
+            }
+            @keyframes orcaBeaconBounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-7px); }
+            }
+
+            /* Modal Card */
             .orca-tour-modal-card {
                 background: #FFFFFF !important;
                 border-radius: 20px !important;
@@ -1180,19 +1247,20 @@ def render_product_tour(force_open: bool = False) -> None:
                 width: 100% !important;
                 position: relative !important;
                 overflow: hidden !important;
-                padding: 30px 34px 26px 34px !important;
+                padding: 26px 32px 22px 32px !important;
                 color: #1E293B !important;
                 box-sizing: border-box !important;
                 transform: scale(0.96);
-                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.3s ease !important;
+                z-index: 1000001 !important;
             }
             #orca-product-tour-overlay.orca-tour-active .orca-tour-modal-card {
                 transform: scale(1) !important;
             }
             .orca-tour-close-x {
                 position: absolute !important;
-                top: 18px !important;
-                right: 18px !important;
+                top: 16px !important;
+                right: 16px !important;
                 width: 32px !important;
                 height: 32px !important;
                 border-radius: 50% !important;
@@ -1213,13 +1281,32 @@ def render_product_tour(force_open: bool = False) -> None:
                 color: #0F172A !important;
                 transform: scale(1.08) !important;
             }
+
+            /* Location Banner Pill */
+            .orca-tour-location-banner {
+                display: flex !important;
+                align-items: center !important;
+                gap: 7px !important;
+                background: #F0F9FF !important;
+                border: 1px solid #BAE6FD !important;
+                color: #0369A1 !important;
+                border-radius: 8px !important;
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                margin-bottom: 14px !important;
+            }
+            .orca-tour-location-banner-icon {
+                font-size: 14px !important;
+            }
+
             .orca-tour-step-label {
                 font-size: 10.5px !important;
                 font-weight: 800 !important;
                 letter-spacing: 0.14em !important;
                 text-transform: uppercase !important;
                 color: #0EA5A8 !important;
-                margin-bottom: 8px !important;
+                margin-bottom: 6px !important;
             }
             .orca-tour-badge {
                 display: inline-block !important;
@@ -1230,7 +1317,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 font-weight: 700 !important;
                 border-radius: 20px !important;
                 padding: 3px 12px !important;
-                margin-bottom: 12px !important;
+                margin-bottom: 10px !important;
                 letter-spacing: 0.05em !important;
             }
             .orca-tour-icon {
@@ -1244,14 +1331,14 @@ def render_product_tour(force_open: bool = False) -> None:
                 font-weight: 800 !important;
                 color: #0B2638 !important;
                 letter-spacing: -0.02em !important;
-                margin-bottom: 12px !important;
+                margin-bottom: 10px !important;
                 line-height: 1.25 !important;
             }
             .orca-tour-body {
                 font-size: 0.92rem !important;
                 line-height: 1.68 !important;
                 color: #475569 !important;
-                margin-bottom: 14px !important;
+                margin-bottom: 12px !important;
             }
             .orca-tour-body strong {
                 color: #0F172A !important;
@@ -1278,7 +1365,7 @@ def render_product_tour(force_open: bool = False) -> None:
                 padding: 10px 14px !important;
                 font-size: 12.5px !important;
                 color: #475569 !important;
-                margin-top: 14px !important;
+                margin-top: 12px !important;
                 line-height: 1.55 !important;
             }
             .orca-tour-tip-bold {
@@ -1288,7 +1375,7 @@ def render_product_tour(force_open: bool = False) -> None:
             .orca-tour-divider {
                 border: none !important;
                 border-top: 1px solid #F1F5F9 !important;
-                margin: 20px 0 16px 0 !important;
+                margin: 18px 0 14px 0 !important;
             }
             .orca-tour-footer {
                 display: flex !important;
@@ -1355,6 +1442,33 @@ def render_product_tour(force_open: bool = False) -> None:
 
     let currentStep = 0;
 
+    function findTargetElement(targetType) {
+        if (!targetType || targetType === 'none') return null;
+        try {
+            if (targetType === 'hero') {
+                return parentDoc.querySelector('.orca-hero-header') || parentDoc.querySelector('h1');
+            }
+            if (targetType === 'fisherman' || targetType === 'authority' || targetType === 'researcher') {
+                const labels = parentDoc.querySelectorAll('div[data-testid="stRadio"] label');
+                for (const lbl of labels) {
+                    const text = (lbl.innerText || "").toLowerCase();
+                    if (targetType === 'fisherman' && text.includes('fisherman')) return lbl;
+                    if (targetType === 'authority' && text.includes('authority')) return lbl;
+                    if (targetType === 'researcher' && text.includes('researcher')) return lbl;
+                }
+            }
+            if (targetType === 'language') {
+                return parentDoc.querySelector('[data-testid="stSidebar"] [data-testid="stSelectbox"]') || parentDoc.querySelector('[data-testid="stSidebar"]');
+            }
+            if (targetType === 'chat') {
+                return parentDoc.querySelector('[data-testid="stChatInput"]') || parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
+            }
+        } catch (e) {
+            console.warn('Target element query error:', e);
+        }
+        return null;
+    }
+
     function onNavigateTab(tabKey) {
         if (!tabKey) return;
         try {
@@ -1372,14 +1486,71 @@ def render_product_tour(force_open: bool = False) -> None:
                     break;
                 }
             }
-            if (tabKey === 'chat') {
-                const chatInput = parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
-                if (chatInput) {
-                    chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
         } catch (e) {
             console.warn('Tab navigation warning:', e);
+        }
+    }
+
+    function updateSpotlightAndPosition() {
+        const overlay = parentDoc.getElementById('orca-product-tour-overlay');
+        let spotlight = parentDoc.getElementById('orca-tour-spotlight');
+        let beacon = parentDoc.getElementById('orca-tour-beacon');
+        const card = overlay ? overlay.querySelector('.orca-tour-modal-card') : null;
+
+        if (!spotlight) {
+            spotlight = parentDoc.createElement('div');
+            spotlight.id = 'orca-tour-spotlight';
+            parentDoc.body.appendChild(spotlight);
+        }
+        if (!beacon) {
+            beacon = parentDoc.createElement('div');
+            beacon.id = 'orca-tour-beacon';
+            parentDoc.body.appendChild(beacon);
+        }
+
+        const data = steps[currentStep];
+        const targetEl = findTargetElement(data.target_type);
+
+        if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            
+            // Activate spotlight over target
+            spotlight.style.top = (rect.top - 6) + 'px';
+            spotlight.style.left = (rect.left - 8) + 'px';
+            spotlight.style.width = (rect.width + 16) + 'px';
+            spotlight.style.height = (rect.height + 12) + 'px';
+            spotlight.classList.add('active');
+
+            // Position animated beacon pointing to target
+            if (data.beacon_text) {
+                beacon.innerHTML = '<span>👇</span> ' + data.beacon_text;
+                beacon.style.top = Math.max(10, rect.top - 38) + 'px';
+                beacon.style.left = (rect.left + Math.max(0, (rect.width / 2) - 80)) + 'px';
+                beacon.classList.add('active');
+            } else {
+                beacon.classList.remove('active');
+            }
+
+            // Smart card positioning:
+            // If target is in upper half (like the role selector), position card below target!
+            if (card && overlay) {
+                if (rect.top < window.innerHeight / 2) {
+                    overlay.style.alignItems = 'flex-start';
+                    card.style.marginTop = Math.min(window.innerHeight - 500, Math.max(30, rect.bottom + 18)) + 'px';
+                } else {
+                    // Target is in lower half (like chat bar), position card above target!
+                    overlay.style.alignItems = 'flex-start';
+                    card.style.marginTop = Math.max(30, rect.top - 460) + 'px';
+                }
+            }
+        } else {
+            // General view (overview or finish): center card, hide spotlight
+            spotlight.classList.remove('active');
+            beacon.classList.remove('active');
+            if (card && overlay) {
+                overlay.style.alignItems = 'center';
+                card.style.marginTop = '0px';
+            }
         }
     }
 
@@ -1428,6 +1599,12 @@ def render_product_tour(force_open: bool = False) -> None:
         if (isFinish) {
             fireConfettiBurst();
         }
+
+        const spotlight = parentDoc.getElementById('orca-tour-spotlight');
+        if (spotlight) spotlight.remove();
+
+        const beacon = parentDoc.getElementById('orca-tour-beacon');
+        if (beacon) beacon.remove();
         
         const overlay = parentDoc.getElementById('orca-product-tour-overlay');
         if (overlay) {
@@ -1442,6 +1619,13 @@ def render_product_tour(force_open: bool = False) -> None:
 
         const data = steps[currentStep];
         const isLast = (currentStep === steps.length - 1);
+
+        const locationHtml = data.location_label ? `
+            <div class="orca-tour-location-banner">
+                <span class="orca-tour-location-banner-icon">📍</span>
+                <span><strong>${data.location_label}</strong></span>
+            </div>
+        ` : '';
 
         const pillsHtml = (data.pills || []).map(p => 
             `<span class="orca-tour-pill">${p}</span>`
@@ -1460,6 +1644,7 @@ def render_product_tour(force_open: bool = False) -> None:
         overlay.innerHTML = `
             <div class="orca-tour-modal-card">
                 <button class="orca-tour-close-x" id="orca-tour-btn-x" title="Close Tour">✕</button>
+                ${locationHtml}
                 <div class="orca-tour-step-label">${data.step_label}</div>
                 <span class="orca-tour-icon">${data.icon}</span>
                 <div class="orca-tour-badge">${data.badge}</div>
@@ -1477,6 +1662,9 @@ def render_product_tour(force_open: bool = False) -> None:
                 </div>
             </div>
         `;
+
+        // Update spotlight and card positioning
+        setTimeout(updateSpotlightAndPosition, 50);
 
         // Wire event listeners
         const btnX = parentDoc.getElementById('orca-tour-btn-x');
@@ -1540,12 +1728,12 @@ def render_product_tour(force_open: bool = False) -> None:
         requestAnimationFrame(() => {
             overlay.classList.add('orca-tour-active');
         });
+
+        // Re-align on window resize or scroll
+        window.parent.addEventListener('resize', updateSpotlightAndPosition);
     }
 
-    // Flow:
-    // Exists? -> Do nothing (User can still click Tour Guide button in sidebar)
-    // Null? -> Wait 1200ms -> setIsTourOpen(true)
-    // If forceOpen is true (clicked from sidebar Help button) -> open immediately!
+    // Check localStorage flow:
     if (forceOpen) {
         setTimeout(openTour, 100);
     } else {
