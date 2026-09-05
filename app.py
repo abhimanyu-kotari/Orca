@@ -785,7 +785,7 @@ hr { border-color: #E2E8F0 !important; }
     .safety-verdict { font-size: 1.2rem; } 
     .zone-metrics { flex-direction: column; gap: 6px; } 
 
-    /* 1. Stop the horizontal screen stretching globally */
+    /* Stop the horizontal screen stretching globally */
     .block-container {
         max-width: 100vw !important;
         overflow-x: hidden !important;
@@ -796,33 +796,34 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
 
-    /* 2. Lock the top header to a strict horizontal row */
+    /* 2. ENABLE WRAPPING — let columns flow onto a second row */
     div[data-testid="stHorizontalBlock"]:first-of-type {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         width: 100% !important;
-        gap: 10px !important;
+        gap: 6px !important;
+        box-sizing: border-box !important;
     }
 
-    /* 3. BRUTE-FORCE HIDE THE TOUR GUIDE (Middle Column) */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
-        display: none !important;
-        width: 0 !important;
-        flex: 0 !important;
-    }
-
-    /* 4. Let the Logo (Col 1) and Language (Col 3) safely share the screen */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1),
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
-        display: block !important;
-        flex: 1 1 0 !important;
+    /* 3. LOGO ON TOP — force Col 1 to claim the full width, pushing others down */
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+        flex: 0 0 100% !important;
+        width: 100% !important;
         min-width: 0 !important;
-        width: auto !important;
+        box-sizing: border-box !important;
     }
 
-    /* SHOW the sidebar Tour Guide button on mobile */
-    #sidebar-tour-btn-marker + div[data-testid="stButton"] {
+    /* 4. SIDE-BY-SIDE CONTROLS — Tour Guide and Language share the row below */
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+        flex: 1 1 45% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 5. Ensure Tour Guide button is fully visible */
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
         display: block !important;
     }
 
