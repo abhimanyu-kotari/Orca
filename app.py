@@ -763,13 +763,6 @@ hr { border-color: #E2E8F0 !important; }
 }
 [data-testid="stDataFrameContainer"] { border-radius: 10px !important; }
 
-/* Keep top header controls nicely proportioned on desktop */
-@media (min-width: 769px) {
-    div[data-testid="stHorizontalBlock"]:has(#orca-tour-lang-marker) {
-        max-width: 520px;
-    }
-}
-
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 1280px) { .safety-metrics { gap: 16px; } }
 @media (max-width: 768px)  { 
@@ -782,39 +775,6 @@ hr { border-color: #E2E8F0 !important; }
         padding-bottom: 2rem !important;
         padding-left: 0.65rem !important;
         padding-right: 0.65rem !important;
-    }
-
-    /* Target the first column block in the main app (the top header) and force it to stay a horizontal row */
-    .main div[data-testid="stHorizontalBlock"]:first-of-type {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: flex-end !important; /* Keeps them bottom-aligned */
-        gap: 10px !important;
-    }
-    
-    /* Force the individual columns inside that row to share the space equally */
-    .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
-        width: 50% !important;
-        min-width: 0 !important;
-    }
-    
-    /* Ensure the button expands to fill its half */
-    .main div[data-testid="stHorizontalBlock"]:first-of-type button {
-        width: 100% !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        padding: 4px 8px !important;
-        font-size: 0.8rem !important;
-        white-space: nowrap !important;
-        border-radius: 8px !important;
-    }
-
-    /* Ensure selectbox matches button height */
-    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
-    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div {
-        height: 38px !important;
-        min-height: 38px !important;
-        border-radius: 8px !important;
     }
 
     /* On mobile, hide the long subtitle sentence so Logo + Title fit cleanly in Column 1 */
@@ -4012,55 +3972,52 @@ with st.sidebar:
 # Global Top Navigation — Horizontal Persona Selector
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── Brand Header (Logo & Subtitle) ──
-if LOGO_B64:
-    st.markdown(f"""
-    <div class="orca-hero-header" style="margin: 0 0 6px 0 !important;">
-        <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
-        <div class="orca-hero-text">
-            <span class="orca-hero-title">ORCA</span>
-            <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+# ── Single Navbar Row (Logo & Title, Help Button, Advisory Language) ──
+col1, col2, col3 = st.columns([2, 1, 1], vertical_alignment="bottom")
+
+with col1:
+    if LOGO_B64:
+        st.markdown(f"""
+        <div class="orca-hero-header" style="margin: 0 !important;">
+            <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
+            <div class="orca-hero-text">
+                <span class="orca-hero-title">ORCA</span>
+                <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-    <div class="orca-hero-header" style="margin: 0 0 6px 0 !important;">
-        <div class="orca-hero-text">
-            <span class="orca-hero-title">🌊 ORCA</span>
-            <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="orca-hero-header" style="margin: 0 !important;">
+            <div class="orca-hero-text">
+                <span class="orca-hero-title">🌊 ORCA</span>
+                <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-# ── Top Header Controls (Help / Tour Guide & Advisory Language) ──
-# Dedicated container holding the 2-column controls row side-by-side
-header_container = st.container()
-with header_container:
-    col1, col2 = st.columns([1, 1], vertical_alignment="bottom")
+with col2:
+    if st.button("❓ Help / Tour Guide", use_container_width=True):
+        st.session_state.open_tour_modal = True
+        st.session_state.active_nav_view = "dashboard"
+        st.rerun()
 
-    with col1:
-        if st.button("❓ Help / Tour Guide", use_container_width=True):
-            st.session_state.open_tour_modal = True
-            st.session_state.active_nav_view = "dashboard"
-            st.rerun()
-
-    with col2:
-        st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
-        lang_keys = list(LANG_DISPLAY.keys())
-        lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
-        curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
-        selected_lang_label = st.selectbox(
-            "Advisory Language",
-            options=lang_labels,
-            index=curr_idx,
-            label_visibility="collapsed",
-            help="Select language for safety verdicts and tool execution"
-        )
-        new_lang = lang_keys[lang_labels.index(selected_lang_label)]
-        if new_lang != st.session_state.orca_lang:
-            st.session_state.orca_lang = new_lang
-            st.rerun()
+with col3:
+    st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="display:none;"></div>', unsafe_allow_html=True)
+    lang_keys = list(LANG_DISPLAY.keys())
+    lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
+    curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
+    selected_lang_label = st.selectbox(
+        "Advisory Language",
+        options=lang_labels,
+        index=curr_idx,
+        label_visibility="collapsed",
+        help="Select language for safety verdicts and tool execution"
+    )
+    new_lang = lang_keys[lang_labels.index(selected_lang_label)]
+    if new_lang != st.session_state.orca_lang:
+        st.session_state.orca_lang = new_lang
+        st.rerun()
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
