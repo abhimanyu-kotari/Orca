@@ -789,7 +789,7 @@ hr { border-color: #E2E8F0 !important; }
     .block-container {
         max-width: 100vw !important;
         overflow-x: hidden !important;
-        padding-top: 1.25rem !important;
+        padding-top: 3.5rem !important;    /* INCREASED: Prevents logo from hiding behind Streamlit's top sticky header */
         padding-bottom: 2rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
@@ -797,34 +797,35 @@ hr { border-color: #E2E8F0 !important; }
     }
 
     /* 1. FORCE HORIZONTAL WRAPPING — override Streamlit's flex-direction:column */
-    div[data-testid="stHorizontalBlock"]:first-of-type {
+    /* FIXED: Using :has(.orca-hero-header) instead of :first-of-type to avoid targeting the sidebar */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
         display: flex !important;
-        flex-direction: row !important;    /* override Streamlit's column stacking */
-        flex-wrap: wrap !important;        /* let items drop to next row */
+        flex-direction: row !important;    
+        flex-wrap: wrap !important;        
         width: 100% !important;
         gap: 6px !important;
         box-sizing: border-box !important;
-        overflow: visible !important;      /* do NOT clip the logo */
+        overflow: visible !important;      
     }
 
     /* 2. LOGO ROW — col 1 takes full width, forcing others to next row */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
         flex: 0 0 100% !important;
         width: 100% !important;
         min-width: 0 !important;
         box-sizing: border-box !important;
-        margin-top: 10px !important;      /* prevent logo from being cut off at top */
+        margin-top: 5px !important;      
         overflow: visible !important;
     }
 
     /* 3. BUTTON ROW — Tour Guide and Language share the row below at 50/50 */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
         flex: 1 1 48% !important;
         width: 48% !important;
         min-width: 0 !important;
         box-sizing: border-box !important;
-        display: block !important;         /* ensure Tour Guide is never hidden */
+        display: block !important;         
     }
 
     /* Center persona radio tabs when they wrap */
