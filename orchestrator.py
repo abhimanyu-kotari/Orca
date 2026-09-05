@@ -44,7 +44,8 @@ OUTPUTS (Schema):
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
-from agents.intent_agent import run as intent_agent_run
+from config import GEMINI_API_KEY, GEMINI_MODEL
+from agents.intent_agent import run as intent_agent_run, LANG_CODE_TO_NAME
 from agents.weather_agent import run as weather_agent_run
 from agents.pfz_agent import run as pfz_agent_run
 from agents.hazard_agent import run as hazard_agent_run
@@ -52,6 +53,88 @@ from tools.navigation_tools import calculate_optimal_route
 from tools.map_tools import _generate_coastal_geofence_coords
 from tools.eo_tools import generate_eo_grid
 from tools.weather_tools import get_coordinates
+
+_GEMINI_TIMEOUT_S = 30
+_gemini = None
+
+
+def _get_gemini_client():
+    """Lazily and safely instantiate or return the genai.Client."""
+    global _gemini
+    if _gemini is not None:
+        return _gemini
+    from config import get_gemini_api_key
+    key = get_gemini_api_key()
+    if key:
+        try:
+            from google import genai
+            _gemini = genai.Client(
+                api_key=key,
+                http_options={"timeout": _GEMINI_TIMEOUT_S},
+            )
+        except Exception:
+            _gemini = None
+    return _gemini
+
+
+def _localize_synthesis(text: str, language: str, language_code: str) -> str:
+    """
+    Localize/translate synthesis text into the target language.
+    Preserves markdown formatting, numbers, coordinates, and emojis.
+    Fallback to deep-translator if Gemini is unavailable or errors out.
+    Fallback to original text if translation fails.
+    """
+    if not text or not language_code or language_code == "en":
+        return text
+
+    # Attempt 1: Gemini translation (best natural phrasing and terminology)
+    client = _get_gemini_client()
+    if client:
+        try:
+            prompt = (
+                f"You are the multilingual translator for ORCA, an Indian marine decision intelligence platform.\n"
+                f"Translate the following marine advisory from English to {language} ({language_code}).\n"
+                f"CRITICAL REQUIREMENTS:\n"
+                f"1. Preserve ALL Markdown formatting (bold **text**, headers #, bullet points -, line breaks).\n"
+                f"2. Keep all place names (e.g., Kochi, Chennai, Rameswaram), nautical coordinates, numbers, units (km, NM, m, km/h, knots, °C, mg/m³, J/kg), and emojis intact.\n"
+                f"3. Use natural, clear marine phrasing suitable for coastal fishermen and maritime authorities.\n"
+                f"4. Output ONLY the translated markdown text without code fences or additional commentary.\n\n"
+                f"Text to translate:\n{text}"
+            )
+            resp = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config={"http_options": {"timeout": _GEMINI_TIMEOUT_S}},
+            )
+            if resp and resp.text:
+                clean = resp.text.strip().removeprefix("```markdown").removeprefix("```").removesuffix("```").strip()
+                if clean and len(clean) > 10:
+                    return clean
+        except Exception:
+            pass  # Fall through to deep-translator
+
+    # Attempt 2: deep-translator (fast, dedicated translation endpoint)
+    try:
+        from deep_translator import GoogleTranslator
+        if len(text) < 4500:
+            translated = GoogleTranslator(source="auto", target=language_code).translate(text)
+            if translated and "Error" not in translated[:30] and "<html" not in translated.lower():
+                return translated
+        else:
+            paragraphs = text.split("\n\n")
+            translated_paras = []
+            for p in paragraphs:
+                if p.strip():
+                    tp = GoogleTranslator(source="auto", target=language_code).translate(p)
+                    translated_paras.append(tp if tp else p)
+                else:
+                    translated_paras.append("")
+            return "\n\n".join(translated_paras)
+    except Exception:
+        pass
+
+    # Attempt 3: Return original English text
+    return text
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -151,8 +234,18 @@ def _execute_orchestration(inputs: dict) -> dict:
         }
 
     # ── Step 1: Intent & Language Analysis ───────────────────────────────────
-    intent_result = intent_agent_run({"query": query})
+    forced_lang_code = inputs.get("language_code")
+    intent_payload = {"query": query}
+    if forced_lang_code and forced_lang_code != "auto":
+        intent_payload["language_code"] = forced_lang_code
+        intent_payload["language"] = inputs.get("language")
+
+    intent_result = intent_agent_run(intent_payload)
     agents_invoked = ["intent_agent"]
+
+    if forced_lang_code and forced_lang_code != "auto":
+        intent_result["language_code"] = forced_lang_code
+        intent_result["language"] = inputs.get("language") or LANG_CODE_TO_NAME.get(forced_lang_code, intent_result.get("language", "English"))
 
     intent = intent_result.get("intent", "unknown")
     entities = intent_result.get("entities", {})
@@ -316,7 +409,7 @@ def _execute_orchestration(inputs: dict) -> dict:
                 f"{weather_res.get('summary', '')}\n\n"
                 f"⚠️ **Navigation Suspended: Sea state / Lightning hazard active. "
                 f"Showing direct displacement metrics for planning purposes only once weather clears.**\n\n"
-                f"🐟 **Identified Hotspot (Pre-Voyage Planning):** **{best_name}**.\n"
+                f"🐟 **Identified Hotspot (Pre-Voyage Planning):** **{best_name}**.\n\n"
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
             )
             if nav_res and nav_res.get("imbl_warning_active"):
@@ -370,7 +463,7 @@ def _execute_orchestration(inputs: dict) -> dict:
             synthesis = (
                 f"⚠️ **CAUTION Advisory for {location}:** Sea conditions require heightened care.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
-                f"🐟 **PFZ Available with Caution:** Nearest hotspot is **{best_name}**. "
+                f"🐟 **PFZ Available with Caution:** Nearest hotspot is **{best_name}**.\n\n"
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
             )
             if nav_res and nav_res.get("imbl_warning_active"):
@@ -419,7 +512,7 @@ def _execute_orchestration(inputs: dict) -> dict:
             synthesis = (
                 f"✅ **Favorable Conditions for {location}:** Weather and sea conditions are SAFE for operations.\n\n"
                 f"{weather_res.get('summary', '')}\n\n"
-                f"🐟 **Top Recommended Fishing Zone:** **{best_name}**.\n"
+                f"🐟 **Top Recommended Fishing Zone:** **{best_name}**.\n\n"
                 f"{pfz_res.get('advisory', '') if pfz_res.get('success') else ''}"
             )
             if nav_res and nav_res.get("imbl_warning_active"):
@@ -748,7 +841,8 @@ def _execute_orchestration(inputs: dict) -> dict:
 def run(inputs: dict) -> dict:
     """
     Public entry point for Master Orchestrator.
-    Handles stakeholder persona normalization and ensures persona is returned.
+    Handles stakeholder persona normalization, multilingual synthesis localization,
+    and ensures persona is returned.
     """
     if not isinstance(inputs, dict):
         inputs = {}
@@ -766,5 +860,22 @@ def run(inputs: dict) -> dict:
 
     result = _execute_orchestration(inputs)
     result["persona"] = persona
+
+    # ── Multilingual Localization ────────────────────────────────────────────
+    intent_res = result.get("intent_result") or {}
+    target_code = inputs.get("language_code")
+    if not target_code or target_code == "auto":
+        target_code = intent_res.get("language_code", "en")
+    target_name = inputs.get("language") or intent_res.get("language") or LANG_CODE_TO_NAME.get(target_code, "English")
+
+    if target_code and target_code != "en" and result.get("synthesis"):
+        orig_synth = result["synthesis"]
+        result["synthesis"] = _localize_synthesis(orig_synth, target_name, target_code)
+        result["language"] = target_name
+        result["language_code"] = target_code
+        if "intent_result" in result and isinstance(result["intent_result"], dict):
+            result["intent_result"]["language"] = target_name
+            result["intent_result"]["language_code"] = target_code
+
     return result
 

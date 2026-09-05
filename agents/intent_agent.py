@@ -174,7 +174,9 @@ NON_LOCATION_WORDS = {
     "indian", "india", "bay", "coast", "coastal", "waters", "port", "harbour", "harbor",
     "catch", "fish", "spot", "spots", "place", "places", "ground", "grounds", "area", "areas",
     "shoal", "shoals", "boat", "trawler", "vessel", "trip", "go", "going", "gone", "can",
-    "may", "want", "neare", "ner", "neer", "naer", "clos", "close", "arround", "arund"
+    "may", "want", "neare", "ner", "neer", "naer", "clos", "close", "arround", "arund",
+    "hello", "hi", "hey", "greetings", "good", "afternoon", "evening", "thanks", "thank",
+    "you", "who", "orca", "assistant", "ai", "bot", "there", "sir", "madam"
 }
 
 PREPOSITION_TYPO_PATTERN = re.compile(
@@ -406,9 +408,23 @@ def _fallback_parse(query: str, error: str) -> dict:
     intent. This ensures the app stays functional even without the LLM.
     """
     # --- Language detection via langdetect ---
-    try:
-        lang_code = langdetect_detect(query)
-    except LangDetectException:
+    q_words = [w.strip("?,.!:;\"'") for w in query.lower().split() if w.strip("?,.!:;\"'")]
+    english_greetings = {"hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "thanks", "thank", "who"}
+    is_common_ascii = all(w.isascii() for w in q_words) if q_words else True
+
+    if any(w in english_greetings for w in q_words):
+        lang_code = "en"
+    else:
+        try:
+            detected = langdetect_detect(query)
+            if is_common_ascii and detected not in ("hi", "ta", "te", "ml", "kn", "bn", "mr", "gu", "pa", "or", "ur"):
+                lang_code = "en"
+            else:
+                lang_code = detected
+        except LangDetectException:
+            lang_code = "en"
+
+    if lang_code not in LANG_CODE_TO_NAME:
         lang_code = "en"
 
     lang_name = LANG_CODE_TO_NAME.get(lang_code, "English")
@@ -595,6 +611,12 @@ def run(inputs: dict) -> dict:
     # Ensure language fields are present
     language       = parsed.get("language", "English")
     language_code  = parsed.get("language_code", "en")
+
+    # Support explicit caller override (e.g. UI language picker)
+    forced_code = inputs.get("language_code")
+    if forced_code and forced_code != "auto":
+        language_code = forced_code
+        language = inputs.get("language") or LANG_CODE_TO_NAME.get(forced_code, language)
 
     # gemini_response is only meaningful for casual_chat
     gemini_response = parsed.get("gemini_response") if intent == "casual_chat" else None

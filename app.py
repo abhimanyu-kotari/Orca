@@ -961,7 +961,138 @@ QUALITY_EMOJI = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}
 LANG_DISPLAY = {
     "en": "English", "hi": "हिन्दी", "ml": "മലയാളം",
     "ta": "தமிழ்",   "te": "తెలుగు", "kn": "ಕನ್ನಡ",
+    "bn": "বাংলা",   "mr": "मराठी",  "gu": "ગુજરાતી",
 }
+
+CARD_LOCALIZATION = {
+    "hi": {
+        "SAFE": "🟢  प्रस्थान के लिए सुरक्षित",
+        "CAUTION": "🟡  सावधानी बरतें",
+        "DANGER": "🔴  समुद्र में न जाएं",
+        "PFZ_FOUND": "🟢  मछली पकड़ने के क्षेत्र उपलब्ध",
+        "ANALYSIS_READY": "ℹ️  ORCA विश्लेषण तैयार",
+        "sub_safe": "कम समुद्री जोखिम · सभी स्थितियाँ सुरक्षित सीमा के भीतर",
+        "sub_caution": "उन्नत समुद्र स्थिति · जीवन-रक्षक जैकेट अनिवार्य",
+        "sub_danger": "खतरनाक स्थितियां सक्रिय · मौसम साफ होने तक तट पर रहें",
+        "sub_pfz": "INCOIS उपग्रह डेटा · कोई मौसम चेतावनी नहीं",
+        "sub_ready": "सुरक्षा निर्णय प्राप्त करने के लिए प्रश्न पूछें",
+        "wind": "हवा", "wave": "लहर", "weather": "मौसम", "lightning": "बिजली", "cyclone": "चक्रवात",
+        "updated": "डेटा अपडेट",
+    },
+    "ta": {
+        "SAFE": "🟢  புறப்பட பாதுகாப்பானது",
+        "CAUTION": "🟡  எச்சரிக்கையுடன் செல்லவும்",
+        "DANGER": "🔴  கடலுக்கு செல்ல வேண்டாம்",
+        "PFZ_FOUND": "🟢  மீன்பிடி மண்டலங்கள் தயார்",
+        "ANALYSIS_READY": "ℹ️  ORCA பகுப்பாய்வு தயார்",
+        "sub_safe": "குறைந்த கடல் ஆபத்து · அனைத்து நிலைகளும் பாதுகாப்பானவை",
+        "sub_caution": "உயர்ந்த கடல் அலைகள் · பாதுகாப்பு அங்கிகளுடன் செல்லவும்",
+        "sub_danger": "ஆபத்தான வானிலை · நிலைமை சரியாகும் வரை கரையிலேயே இருக்கவும்",
+        "sub_pfz": "இன்கோயிஸ் செயற்கைக்கோள் தரவு · எச்சரிக்கை இல்லை",
+        "sub_ready": "பாதுகாப்பு முடிவை அறிய ஒரு கேள்வியைக் கேளுங்கள்",
+        "wind": "காற்று", "wave": "அலை", "weather": "வானிலை", "lightning": "மின்னல்", "cyclone": "புயல்",
+        "updated": "தரவு புதுப்பிப்பு",
+    },
+    "ml": {
+        "SAFE": "🟢  പുറപ്പെടാൻ സുരക്ഷിതം",
+        "CAUTION": "🟡  ജാഗ്രത പാലിക്കുക",
+        "DANGER": "🔴  കടലിൽ പോകരുത്",
+        "PFZ_FOUND": "🟢  മത്സ്യബന്ധന മേഖല കണ്ടെത്തി",
+        "ANALYSIS_READY": "ℹ️  ഓർക്ക വിശകലനം തയ്യാർ",
+        "sub_safe": "കുറഞ്ഞ കടൽ അപകടസാധ്യത · എല്ലാ സാഹചര്യങ്ങളും സുരക്ഷിതം",
+        "sub_caution": "ഉയർന്ന കടൽ ക്ഷോഭം · ലൈഫ് ജാക്കറ്റ് നിർബന്ധം",
+        "sub_danger": "അപകടകരമായ സാഹചര്യം · തീരത്ത് തുടരുക",
+        "sub_pfz": "ഇൻകോയിസ് ഉപഗ്രഹ ഡാറ്റ · ജാഗ്രതാ നിർദ്ദേശമില്ല",
+        "sub_ready": "സുരക്ഷാ വിവരങ്ങൾക്ക് ചോദ്യം ചോദിക്കുക",
+        "wind": "കാറ്റ്", "wave": "തിരമാല", "weather": "കാലാവസ്ഥ", "lightning": "മിന്നൽ", "cyclone": "ചുഴലിക്കാറ്റ്",
+        "updated": "ഡാറ്റ അപ്ഡേറ്റ്",
+    },
+    "te": {
+        "SAFE": "🟢  ప్రయాణానికి సురక్షితం",
+        "CAUTION": "🟡  జాగ్రత్త వహించండి",
+        "DANGER": "🔴  సముద్రంలోకి వెళ్లవద్దు",
+        "PFZ_FOUND": "🟢  చేపల వేట ప్రాంతాలు సిద్ధం",
+        "ANALYSIS_READY": "ℹ️  ORCA విశ్లేషణ సిద్ధంగా ఉంది",
+        "sub_safe": "తక్కువ సముద్ర ప్రమాదం · అన్ని పరిస్థితులు అనుకూలం",
+        "sub_caution": "ఎత్తైన అలలు · లైఫ్ జాకెట్లు తప్పనిసరి",
+        "sub_danger": "ప్రమాదకరమైన వాతావరణం · తీరంలోనే ఉండండి",
+        "sub_pfz": "INCOIS ఉపగ్రహ డేటా · వాతావరణ హెచ్చరిక లేదు",
+        "sub_ready": "భద్రతా సమాచారం కోసం ప్రశ్న అడగండి",
+        "wind": "గాలి", "wave": "అలలు", "weather": "వాతావరణం", "lightning": "మెరుపు", "cyclone": "తుఫాను",
+        "updated": "డేటా అప్‌డేట్",
+    },
+    "kn": {
+        "SAFE": "🟢  ನಿರ್ಗಮನಕ್ಕೆ ಸುರಕ್ಷಿತ",
+        "CAUTION": "🟡  ಎಚ್ಚರಿಕೆ ವಹಿಸಿ",
+        "DANGER": "🔴  ಸಮುದ್ರಕ್ಕೆ ಇಳಿಯಬೇಡಿ",
+        "PFZ_FOUND": "🟢  ಮೀನುಗಾರಿಕಾ ವಲಯ ಲಭ್ಯ",
+        "ANALYSIS_READY": "ℹ️  ORCA ವಿಶ್ಲೇಷಣೆ ಸಿದ್ಧ",
+        "sub_safe": "ಕಡಿಮೆ ಸಾಗರ ಅಪಾಯ · ಎಲ್ಲಾ ಪರಿಸ್ಥಿತಿಗಳು ಸುರಕ್ಷಿತ",
+        "sub_caution": "ಹೆಚ್ಚಿದ ಅಲೆಗಳು · ಲೈಫ್ ಜಾಕೆಟ್ ಧರಿಸಿ",
+        "sub_danger": "ಅಪಾಯಕಾರಿ ಹವಾಮಾನ · ತೀರದಲ್ಲೇ ಇರಿ",
+        "sub_pfz": "ಇನ್ಕೋಯಿಸ್ ಉಪಗ್ರಹ ಡೇಟಾ",
+        "sub_ready": "ಸುರಕ್ಷತಾ ನಿರ್ಧಾರಕ್ಕೆ ಪ್ರಶ್ನೆ ಕೇಳಿ",
+        "wind": "ಗಾಳಿ", "wave": "ಅಲೆ", "weather": "ಹವಾಮಾನ", "lightning": "ಮಿಂಚು", "cyclone": "ಚಂಡಮಾರುತ",
+        "updated": "ಡೇಟಾ ನವೀಕರಣ",
+    },
+    "bn": {
+        "SAFE": "🟢  যাত্রার জন্য নিরাপদ",
+        "CAUTION": "🟡  সতর্কতা অবলম্বন করুন",
+        "DANGER": "🔴  সমুদ্রে যাবেন না",
+        "PFZ_FOUND": "🟢  মাছ ধরার অঞ্চল প্রস্তুত",
+        "ANALYSIS_READY": "ℹ️  ORCA বিশ্লেষণ প্রস্তুত",
+        "sub_safe": "কম সামুদ্রিক ঝুঁকি · সমস্ত পরিস্থিতি নিরাপদ",
+        "sub_caution": "উত্তাল সমুদ্র · লাইফ জ্যাকেট ব্যবহার করুন",
+        "sub_danger": "বিপজ্জনক পরিস্থিতি · তীরে থাকুন",
+        "sub_pfz": "INCOIS উপগ্রহ তথ্য · সতর্কতা নেই",
+        "sub_ready": "নিরাপত্তা তথ্যের জন্য প্রশ্ন করুন",
+        "wind": "বাতাস", "wave": "ঢেউ", "weather": "আবহাওয়া", "lightning": "বজ্রপাত", "cyclone": "ঘূর্ণিঝড়",
+        "updated": "তথ্য আপডেট",
+    },
+    "mr": {
+        "SAFE": "🟢  प्रवासासाठी सुरक्षित",
+        "CAUTION": "🟡  काळजी घ्या",
+        "DANGER": "🔴  समुद्रात जाऊ नका",
+        "PFZ_FOUND": "🟢  मासेमारी क्षेत्र उपलब्ध",
+        "ANALYSIS_READY": "ℹ️  ORCA विश्लेषण सज्ज",
+        "sub_safe": "कमी सागरी धोका · सर्व परिस्थिती सुरक्षित",
+        "sub_caution": "उधाणाचा समुद्र · लाइफ जॅकेट आवश्यक",
+        "sub_danger": "धोकादायक परिस्थिती · किनाऱ्यावर राहा",
+        "sub_pfz": "INCOIS उपग्रह डेटा",
+        "sub_ready": "सुरक्षा माहितीसाठी प्रश्न विचारा",
+        "wind": "वारा", "wave": "लाट", "weather": "हवामान", "lightning": "वीज", "cyclone": "वादळ",
+        "updated": "डेटा अपडेट",
+    },
+    "gu": {
+        "SAFE": "🟢  પ્રસ્થાન માટે સલામત",
+        "CAUTION": "🟡  સાવચેતી રાખો",
+        "DANGER": "🔴  દરિયામાં ન જવું",
+        "PFZ_FOUND": "🟢  માછીમારી વિસ્તાર તૈયાર",
+        "ANALYSIS_READY": "ℹ️  ORCA વિશ્લેષણ તૈયાર",
+        "sub_safe": "ઓછું દરિયાઈ જોખમ · તમામ સ્થિતિ સલામત",
+        "sub_caution": "વધેલા મોજા · લાઈફ જેકેટ ફરજિયાત",
+        "sub_danger": "જોખમી સ્થિતિ · કિનારે રહો",
+        "sub_pfz": "INCOIS સેટેલાઇટ ડેટા",
+        "sub_ready": "સલામતી નિર્ણય માટે પ્રશ્ન પૂછો",
+        "wind": "પવન", "wave": "મોજા", "weather": "હવામાન", "lightning": "વીજળી", "cyclone": "વાવાઝોડું",
+        "updated": "ડેટા અપડેટ",
+    },
+}
+
+
+def _render_data_trust_badge(ctx, result: dict) -> None:
+    """Render unified data provenance and active language badge."""
+    intent_res = result.get("intent_result", {}) if isinstance(result, dict) else {}
+    lang_code = result.get("language_code") or intent_res.get("language_code", "en")
+    lang_name = result.get("language") or intent_res.get("language", "English")
+    flag = LANG_FLAG.get(lang_code, "🌐")
+    ctx.markdown(f"""
+<div class="data-trust">
+  <span>📡 Sources: Satellite · IMD Weather · INCOIS Oceanographic</span>
+  <span>·</span><span>🌐 {flag} {lang_name}</span>
+  <span>·</span><span><span class="demo-badge">DEMO DATA</span> Simulated for SIH 26176</span>
+</div>
+""", unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1287,6 +1418,17 @@ def render_fisherman_response(
     is_danger     = weather_res and weather_res.get("verdict") == "DANGER"
     is_suspended  = nav_suspended or is_danger
 
+    intent        = result.get("intent", "casual_chat")
+    is_casual     = (intent == "casual_chat") or (not weather_res and not pfz_res and not nav_res)
+
+    # If non-telemetry / conversational query, render cleanly without empty cards
+    if is_casual:
+        synthesis = result.get("synthesis", "")
+        if synthesis:
+            ctx.markdown(synthesis)
+        _render_data_trust_badge(ctx, result)
+        return
+
     verdict = None
     m_wx    = {}
     if weather_res and weather_res.get("success"):
@@ -1298,26 +1440,38 @@ def render_fisherman_response(
     location_str = (weather_res.get("location", "N/A") if weather_res
                     else (pfz_res.get("location", "N/A") if pfz_res else "N/A"))
 
+    # Localized card text
+    intent_res = result.get("intent_result", {}) if isinstance(result, dict) else {}
+    lang_code = result.get("language_code") or intent_res.get("language_code", "en")
+    loc = CARD_LOCALIZATION.get(lang_code, {})
+
     if verdict == "SAFE" and not is_suspended:
         card_cls    = "safety-card-safe"
-        verdict_txt = "🟢  SAFE FOR DEPARTURE"
-        subtitle    = "Low marine risk · All conditions within safe limits"
+        verdict_txt = loc.get("SAFE", "🟢  SAFE FOR DEPARTURE")
+        subtitle    = loc.get("sub_safe", "Low marine risk · All conditions within safe limits")
     elif verdict == "CAUTION" or (verdict == "SAFE" and is_suspended):
         card_cls    = "safety-card-caution"
-        verdict_txt = "🟡  EXERCISE CAUTION"
-        subtitle    = "Elevated sea state · Proceed with life-jacket compliance"
+        verdict_txt = loc.get("CAUTION", "🟡  EXERCISE CAUTION")
+        subtitle    = loc.get("sub_caution", "Elevated sea state · Proceed with life-jacket compliance")
     elif verdict == "DANGER" or is_suspended:
         card_cls    = "safety-card-danger"
-        verdict_txt = "🔴  TRANSIT NOT ADVISED"
-        subtitle    = "Hazardous conditions active · Stay ashore until all-clear"
+        verdict_txt = loc.get("DANGER", "🔴  TRANSIT NOT ADVISED")
+        subtitle    = loc.get("sub_danger", "Hazardous conditions active · Stay ashore until all-clear")
     elif pfz_res and pfz_res.get("success"):
         card_cls    = "safety-card-safe"
-        verdict_txt = "🟢  FISHING ZONES IDENTIFIED"
-        subtitle    = "INCOIS satellite data · No weather alert in effect"
+        verdict_txt = loc.get("PFZ_FOUND", "🟢  FISHING ZONES IDENTIFIED")
+        subtitle    = loc.get("sub_pfz", "INCOIS satellite data · No weather alert in effect")
     else:
         card_cls    = "safety-card-safe"
-        verdict_txt = "ℹ️  ORCA ANALYSIS READY"
-        subtitle    = "Ask a specific query to get a safety verdict"
+        verdict_txt = loc.get("ANALYSIS_READY", "ℹ️  ORCA ANALYSIS READY")
+        subtitle    = loc.get("sub_ready", "Ask a specific query to get a safety verdict")
+
+    lbl_wind     = loc.get("wind", "Wind")
+    lbl_wave     = loc.get("wave", "Wave")
+    lbl_wx       = loc.get("weather", "Weather")
+    lbl_light    = loc.get("lightning", "Lightning")
+    lbl_cyc      = loc.get("cyclone", "Cyclone")
+    lbl_updated  = loc.get("updated", "Data updated")
 
     wind_val = f"{m_wx.get('max_wind_speed_kmh', 0.0):.0f} km/h" if m_wx else "—"
     wave_h   = m_wx.get("max_wave_height_m", 0.0)
@@ -1332,13 +1486,13 @@ def render_fisherman_response(
   <p class="safety-verdict">{verdict_txt}</p>
   <p class="safety-subtitle">📍 {location_str} &nbsp;·&nbsp; {subtitle}</p>
   <div class="safety-metrics">
-    <div class="safety-metric"><span class="safety-metric-val">{wind_val}</span><span class="safety-metric-lbl">Wind</span></div>
-    <div class="safety-metric"><span class="safety-metric-val">{wave_val}</span><span class="safety-metric-lbl">Wave</span></div>
-    <div class="safety-metric"><span class="safety-metric-val">{wx_label}</span><span class="safety-metric-lbl">Weather</span></div>
-    <div class="safety-metric"><span class="safety-metric-val">{lightning}</span><span class="safety-metric-lbl">Lightning</span></div>
-    <div class="safety-metric"><span class="safety-metric-val">{cyclone}</span><span class="safety-metric-lbl">Cyclone</span></div>
+    <div class="safety-metric"><span class="safety-metric-val">{wind_val}</span><span class="safety-metric-lbl">{lbl_wind}</span></div>
+    <div class="safety-metric"><span class="safety-metric-val">{wave_val}</span><span class="safety-metric-lbl">{lbl_wave}</span></div>
+    <div class="safety-metric"><span class="safety-metric-val">{wx_label}</span><span class="safety-metric-lbl">{lbl_wx}</span></div>
+    <div class="safety-metric"><span class="safety-metric-val">{lightning}</span><span class="safety-metric-lbl">{lbl_light}</span></div>
+    <div class="safety-metric"><span class="safety-metric-val">{cyclone}</span><span class="safety-metric-lbl">{lbl_cyc}</span></div>
   </div>
-  <p class="safety-updated">📡 Data updated: {now_str} &nbsp;·&nbsp; <span class="demo-badge">DEMO DATA</span></p>
+  <p class="safety-updated">📡 {lbl_updated}: {now_str} &nbsp;·&nbsp; <span class="demo-badge">DEMO DATA</span></p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1512,16 +1666,7 @@ def render_fisherman_response(
 """)
 
     # ── 6. Data Trust Badge ───────────────────────────────────────────────────
-    intent_res = result.get("intent_result", {})
-    lang_code  = intent_res.get("language_code", "en")
-    lang_name  = intent_res.get("language", "English")
-    ctx.markdown(f"""
-<div class="data-trust">
-  <span>📡 Sources: Satellite · IMD Weather · INCOIS Oceanographic</span>
-  <span>·</span><span>🌐 {LANG_FLAG.get(lang_code,"🌐")} {lang_name}</span>
-  <span>·</span><span><span class="demo-badge">DEMO DATA</span> Simulated for SIH 26176</span>
-</div>
-""", unsafe_allow_html=True)
+    _render_data_trust_badge(ctx, result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1563,6 +1708,15 @@ def render_authority_response(
     nav_res     = result.get("navigation_result")
     pfz_res     = result.get("pfz_result")
     synthesis   = result.get("synthesis", "")
+    intent      = result.get("intent", "casual_chat")
+    is_casual   = (intent == "casual_chat") or (not weather_res and not pfz_res and not nav_res)
+
+    if is_casual:
+        if synthesis:
+            ctx.markdown(synthesis)
+        _render_data_trust_badge(ctx, result)
+        return
+
     is_danger   = weather_res and weather_res.get("verdict") == "DANGER"
 
     verdict = (weather_res.get("verdict", "SAFE")
@@ -1678,13 +1832,15 @@ def render_authority_response(
 </div>
 """, unsafe_allow_html=True)
 
-    # ── 2. Folium Map (Default View) ──────────────────────────────────────────
+    # ── 2. Operational Synthesis (Default View) ──────────────────────────────
+    if synthesis:
+        ctx.markdown(synthesis)
+
+    # ── 3. Folium Map (Default View) ──────────────────────────────────────────
     if fmap is not None:
         ctx.markdown("#### 🗺️ Coastal Surveillance & Hazard Geofence Chart")
         ctx.caption("Red polygon = active storm-surge exclusion zone · Blue track = monitored vessel corridor · Green pins = PFZ clusters")
         st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
-    else:
-        ctx.info("📡 No spatial data available. Run a Weather Check or PFZ query to load the geofence chart.")
 
     # ── 3. Progressive Disclosure: Operational Telemetry & Geofence Details ───
     with ctx.expander("🚨 View Operational Telemetry & Geofence Details", expanded=False):
@@ -1785,13 +1941,7 @@ def render_authority_response(
             ctx.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
 
     # ── 4. Data Trust Badge ───────────────────────────────────────────────────
-    ctx.markdown(f"""
-<div class="data-trust">
-  <span>📡 Sources: IMD · INCOIS · Coast Guard AIS · IMBL Database</span>
-  <span>·</span><span>🕐 {now_str}</span>
-  <span>·</span><span><span class="demo-badge">DEMO DATA</span> Simulated for SIH 26176</span>
-</div>
-""", unsafe_allow_html=True)
+    _render_data_trust_badge(ctx, result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1831,7 +1981,17 @@ def render_researcher_response(
 
     eo_res      = result.get("eo_result")
     weather_res = result.get("weather_result")
+    pfz_res     = result.get("pfz_result")
     synthesis   = result.get("synthesis", "")
+    intent      = result.get("intent", "casual_chat")
+    is_casual   = (intent == "casual_chat") or (not eo_res and not weather_res and not pfz_res)
+
+    if is_casual:
+        if synthesis:
+            ctx.markdown(synthesis)
+        _render_data_trust_badge(ctx, result)
+        return
+
     now_str     = datetime.datetime.now().strftime("%d %b %Y · %H:%M IST")
 
     # ── 1. Top 4-metric Oceanographic Dashboard (Default View) ────────────────
@@ -1867,7 +2027,11 @@ def render_researcher_response(
     else:
         ctx.info("📡 Query an ecosystem or SST location to populate the oceanographic telemetry dashboard.")
 
-    # ── 2. Interactive Satellite Map (Default View) ───────────────────────────
+    # ── 2. Scientific Synthesis (Default View) ────────────────────────────────
+    if synthesis:
+        ctx.markdown(synthesis)
+
+    # ── 3. Interactive Satellite Map (Default View) ───────────────────────────
     if fmap is not None:
         ctx.markdown("#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
         ctx.caption("Use layer control to toggle SST Thermal Gradient and Chlorophyll-a Productivity")
@@ -2036,13 +2200,7 @@ def render_researcher_response(
             ctx.markdown(f"**🤖 Agent Pipeline:** {_agents_badge(result)}")
 
     # ── 4. Data Trust Badge ───────────────────────────────────────────────────
-    ctx.markdown(f"""
-<div class="data-trust">
-  <span>📡 Sources: ISRO Oceansat-3 · Copernicus Sentinel-3 · Open-Meteo</span>
-  <span>·</span><span>🕐 {now_str}</span>
-  <span>·</span><span><span class="demo-badge">DEMO DATA</span> Simulated for SIH 26176</span>
-</div>
-""", unsafe_allow_html=True)
+    _render_data_trust_badge(ctx, result)
 
 
 def generate_map_for_result(
@@ -2115,17 +2273,24 @@ def render_history():
     """
     Replay conversation history in chronological order.
     Each persona's assistant messages are re-rendered via their dedicated
-    widget renderer. All other messages use plain markdown.
+    widget renderer. The latest assistant message receives the active folium map.
     """
-    for msg in st.session_state.messages:
+    latest_assistant_idx = -1
+    for idx, msg in enumerate(st.session_state.messages):
+        if msg.get("role") == "assistant" and msg.get("orch_result"):
+            latest_assistant_idx = idx
+
+    for idx, msg in enumerate(st.session_state.messages):
         with st.chat_message(msg["role"]):
             orch_result = msg.get("orch_result")
+            is_latest = (idx == latest_assistant_idx)
+            active_map = st.session_state.current_map if is_latest else None
             if orch_result and msg.get("is_fisherman_render"):
-                render_fisherman_response(orch_result, fmap=None)   # map shown live only
+                render_fisherman_response(orch_result, fmap=active_map)
             elif orch_result and msg.get("is_authority_render"):
-                render_authority_response(orch_result, fmap=None)   # map shown live only
+                render_authority_response(orch_result, fmap=active_map)
             elif orch_result and msg.get("is_researcher_render"):
-                render_researcher_response(orch_result, fmap=None)  # map shown live only
+                render_researcher_response(orch_result, fmap=active_map)
             else:
                 st.markdown(msg["content"])
 
@@ -2149,7 +2314,22 @@ with st.sidebar:
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
-    st.markdown("<hr style='border-color:#1E3A52;margin:12px 0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color:#1E3A52;margin:10px 0;'>", unsafe_allow_html=True)
+
+    # ── Advisory Language Selector ────────────────────────────────────────────
+    lang_keys = list(LANG_DISPLAY.keys())
+    lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
+    curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
+    selected_lang_label = st.selectbox(
+        "🌐 Advisory Language (भाषा / மொழி)",
+        options=lang_labels,
+        index=curr_idx,
+        key="sb_lang_selector",
+        help="Language for AI synthesis, voice advisories, and status cards",
+    )
+    st.session_state.orca_lang = lang_keys[lang_labels.index(selected_lang_label)]
+
+    st.markdown("<hr style='border-color:#1E3A52;margin:10px 0;'>", unsafe_allow_html=True)
 
     # ── Stakeholder Persona Context Badge ─────────────────────────────────────
     if "stakeholder_persona_radio" in st.session_state and st.session_state.stakeholder_persona_radio:
@@ -2202,6 +2382,7 @@ with st.sidebar:
                         "location": manual_location.strip(),
                         "time_context": manual_time,
                         "persona": _sidebar_persona,
+                        "language_code": st.session_state.orca_lang,
                     })
                 fmap = generate_map_for_result(orch_result, persona=_sidebar_persona, show_sst_heatmap=show_sst)
                 st.session_state.messages.append({
@@ -2241,6 +2422,7 @@ with st.sidebar:
                         "query": f"Where can I fish near {pfz_loc} today?",
                         "location": pfz_loc.strip(),
                         "persona": _sidebar_persona,
+                        "language_code": st.session_state.orca_lang,
                     })
                 fmap = generate_map_for_result(orch_result, persona=_sidebar_persona, show_sst_heatmap=show_sst)
                 st.session_state.messages.append({
@@ -2419,7 +2601,7 @@ if active_view == "map":
     for c, (btn_label, port_name) in zip([col_s1, col_s2, col_s3, col_s4, col_s5, col_s6], sectors):
         if c.button(btn_label, use_container_width=True):
             with st.spinner(f"Rendering GIS spatial layers for {port_name}..."):
-                res = orchestrator_run({"query": f"Analyze conditions near {port_name}", "location": port_name, "persona": persona})
+                res = orchestrator_run({"query": f"Analyze conditions near {port_name}", "location": port_name, "persona": persona, "language_code": st.session_state.orca_lang})
                 st.session_state.current_map = generate_map_for_result(res, persona=persona, show_sst_heatmap=True)
                 st.rerun()
 
@@ -2427,7 +2609,7 @@ if active_view == "map":
         st_folium(st.session_state.current_map, width=None, height=360, returned_objects=[], use_container_width=True)
     else:
         def_loc = "Chennai" if persona == "coastal_authority" else "Kochi"
-        res = orchestrator_run({"query": f"Analyze conditions near {def_loc}", "location": def_loc, "persona": persona})
+        res = orchestrator_run({"query": f"Analyze conditions near {def_loc}", "location": def_loc, "persona": persona, "language_code": st.session_state.orca_lang})
         st.session_state.current_map = generate_map_for_result(res, persona=persona, show_sst_heatmap=True)
         st_folium(st.session_state.current_map, width=None, height=360, returned_objects=[], use_container_width=True)
 
@@ -2470,7 +2652,7 @@ elif active_view == "alerts":
     with c_al1:
         if st.button("🔍 Run Live Sector Safety Scan", type="primary", use_container_width=True):
             with st.spinner("Executing live safety & hazard scan..."):
-                scan_res = orchestrator_run({"query": "Check current sea state and hazard warnings near Kochi", "persona": persona})
+                scan_res = orchestrator_run({"query": "Check current sea state and hazard warnings near Kochi", "persona": persona, "language_code": st.session_state.orca_lang})
                 st.session_state.messages.append({"role": "user", "content": "🚨 Manual Live Safety & Hazard Scan"})
                 if persona == "fisherman":
                     st.session_state.messages.append({"role": "assistant", "content": scan_res.get("synthesis",""), "orch_result": scan_res, "is_fisherman_render": True})
@@ -2579,7 +2761,7 @@ elif active_view == "ask_orca":
         col_q = c_q1 if i % 2 == 0 else c_q2
         if col_q.button(f"👉 {q}", use_container_width=True):
             with st.spinner("Processing through ORCA multi-agent engine..."):
-                q_res = orchestrator_run({"query": q, "persona": persona})
+                q_res = orchestrator_run({"query": q, "persona": persona, "language_code": st.session_state.orca_lang})
                 st.session_state.messages.append({"role": "user", "content": q})
                 if persona == "fisherman":
                     st.session_state.messages.append({"role": "assistant", "content": q_res.get("synthesis",""), "orch_result": q_res, "is_fisherman_render": True})
@@ -2602,38 +2784,39 @@ else:
     # 1. Render message history
     render_history()
 
-    # 2. Render latest interactive Folium map if available, or default authority map on initial load
-    if st.session_state.current_map is not None:
-        st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
-        st_folium(
-            st.session_state.current_map,
-            width=None,
-            height=360,
-            returned_objects=[],
-            use_container_width=True,
-        )
-    elif persona == "coastal_authority" and not st.session_state.messages:
-        st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
-        default_auth_map = create_weather_map(
-            user_lat=13.0827,
-            user_lon=80.2707,
-            user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
-            safety_verdict="CAUTION",
-            persona="coastal_authority",
-        )
-        st_folium(
-            default_auth_map,
-            width=None,
-            height=360,
-            returned_objects=[],
-            use_container_width=True,
-        )
-        with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
-            col_a, col_b, col_c = st.columns(3)
-            col_a.metric("Active Vessels in Geofence", "142 Small Craft", "Evacuation Ready")
-            col_b.metric("Significant Wave Height", "2.10 m", "Elevated Swell")
-            col_c.metric("Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
-            st.caption("Active surveillance baseline for Coastal Warning Zone 4. Ask a query below or use direct controls to query any port.")
+    # 2. Render latest interactive Folium map if available, or default authority map on initial load (only when no chat messages)
+    if not st.session_state.messages:
+        if st.session_state.current_map is not None:
+            st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
+            st_folium(
+                st.session_state.current_map,
+                width=None,
+                height=360,
+                returned_objects=[],
+                use_container_width=True,
+            )
+        elif persona == "coastal_authority":
+            st.markdown("**🗺️ Hazard Surveillance Overview: Coastal Warning Zone 4 (Chennai–Ennore Sector)**")
+            default_auth_map = create_weather_map(
+                user_lat=13.0827,
+                user_lon=80.2707,
+                user_location_name="Coastal Warning Zone 4 (Chennai Sector)",
+                safety_verdict="CAUTION",
+                persona="coastal_authority",
+            )
+            st_folium(
+                default_auth_map,
+                width=None,
+                height=360,
+                returned_objects=[],
+                use_container_width=True,
+            )
+            with st.expander("📋 Zone 4 Maritime Hazard & Surveillance Baseline", expanded=True):
+                col_a, col_b, col_c = st.columns(3)
+                col_a.metric("Active Vessels in Geofence", "142 Small Craft", "Evacuation Ready")
+                col_b.metric("Significant Wave Height", "2.10 m", "Elevated Swell")
+                col_c.metric("Gale Inundation Risk", "Level 2 (Moderate)", "Surge Watch")
+                st.caption("Active surveillance baseline for Coastal Warning Zone 4. Ask a query below or use direct controls to query any port.")
 
     # 3. Welcome banner when chat is fresh (tailored to active Persona)
     if not st.session_state.messages:
@@ -2694,7 +2877,7 @@ if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safe
     # B. Route through Orchestrator
     with st.chat_message("assistant"):
         with st.spinner("ORCA agents collaborating & synthesizing..."):
-            orch_result = orchestrator_run({"query": user_query, "persona": persona})
+            orch_result = orchestrator_run({"query": user_query, "persona": persona, "language_code": st.session_state.orca_lang})
             fmap = generate_map_for_result(orch_result, persona=persona, show_sst_heatmap=show_sst)
 
         if persona == "fisherman":
