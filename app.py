@@ -1525,8 +1525,6 @@ def render_product_tour(force_open: bool = False) -> None:
                 }
             }
         `;
-        parentDoc.head.appendChild(style);
-    }
 
     // Persist tour step on parent window so state is immune to any iframe reloads
     if (typeof parentWin.__orcaTourStep === 'undefined') {
@@ -1552,9 +1550,36 @@ def render_product_tour(force_open: bool = False) -> None:
             if (targetType === 'authority') return findRadioByText('Authority');
             if (targetType === 'researcher') return findRadioByText('Researcher');
             if (targetType === 'language') {
-                const sb = parentDoc.querySelector('[data-testid="stSidebar"] [data-testid="stSelectbox"]');
-                if (sb && sb.getBoundingClientRect().width > 0) return sb;
-                return null; // Don't spotlight hidden sidebar on mobile
+                // Strategy 1: Find by label text in sidebar or anywhere
+                const allLabels = parentDoc.querySelectorAll('[data-testid="stSidebar"] label, [data-testid="stSidebar"] [data-testid="stWidgetLabel"], label, [data-testid="stWidgetLabel"]');
+                for (const lbl of allLabels) {
+                    const txt = lbl.textContent || '';
+                    if (txt.includes('Advisory Language') || txt.includes('Language') || txt.includes('भाषा') || txt.includes('மொழி')) {
+                        const widget = lbl.closest('[data-testid="stSelectbox"]') || 
+                                       lbl.closest('div[data-baseweb="select"]') || 
+                                       lbl.parentElement;
+                        if (widget && widget.getBoundingClientRect().width > 0) {
+                            return widget;
+                        }
+                    }
+                }
+
+                // Strategy 2: Direct selectbox in sidebar
+                const sidebar = parentDoc.querySelector('[data-testid="stSidebar"]') || 
+                                parentDoc.querySelector('section[data-testid="stSidebar"]') || 
+                                parentDoc.querySelector('.stSidebar');
+                if (sidebar) {
+                    const sb = sidebar.querySelector('[data-testid="stSelectbox"]') || 
+                               sidebar.querySelector('div[data-baseweb="select"]');
+                    if (sb && sb.getBoundingClientRect().width > 0) return sb;
+                }
+
+                // Strategy 3: Any selectbox in document
+                const anySb = parentDoc.querySelector('[data-testid="stSelectbox"]') || 
+                              parentDoc.querySelector('div[data-baseweb="select"]');
+                if (anySb && anySb.getBoundingClientRect().width > 0) return anySb;
+
+                return null;
             }
             if (targetType === 'chat') {
                 return parentDoc.querySelector('[data-testid="stChatInput"]') || parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
@@ -1831,6 +1856,30 @@ def render_product_tour(force_open: bool = False) -> None:
         parentWin.removeEventListener('resize', updateSpotlightAndPosition);
         parentWin.addEventListener('resize', updateSpotlightAndPosition);
     }
+
+    // Expose openTour on parent window for instant client-side trigger
+    parentWin.__orcaOpenTour = openTour;
+
+    // Attach immediate client-side click listener to sidebar Tour Guide button
+    function bindSidebarTourButton() {
+        try {
+            const buttons = parentDoc.querySelectorAll('[data-testid="stSidebar"] button, section[data-testid="stSidebar"] button, button');
+            for (const btn of buttons) {
+                const txt = btn.textContent || '';
+                if (txt.includes('Tour Guide') || txt.includes('Help')) {
+                    if (!btn.__orcaBound) {
+                        btn.__orcaBound = true;
+                        btn.addEventListener('click', function(e) {
+                            setTimeout(openTour, 60);
+                        });
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+    bindSidebarTourButton();
+    setTimeout(bindSidebarTourButton, 400);
+    setTimeout(bindSidebarTourButton, 1200);
 
     // Check localStorage flow:
     if (forceOpen) {
