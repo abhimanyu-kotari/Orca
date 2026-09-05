@@ -1028,277 +1028,545 @@ if "active_layers" not in st.session_state:
     st.session_state.active_layers = ["SST", "Chlorophyll", "PFZ"]
 if "active_nav_view" not in st.session_state:
     st.session_state.active_nav_view = "dashboard"
-if "orca_tour_step" not in st.session_state:
-    st.session_state.orca_tour_step = 1          # 1–7: active step; 0: tour done/hidden
-if "orca_tour_shown" not in st.session_state:
-    st.session_state.orca_tour_shown = False     # flips to True once tour starts
+if "open_tour_modal" not in st.session_state:
+    st.session_state.open_tour_modal = False     # Set to True when user clicks Help in sidebar
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ORCA Interactive Tour Guide  (7 steps, project-accurate)
+# ORCA ProductTour Component — Modal Overlay, LocalStorage, Confetti & Tab Sync
 # ─────────────────────────────────────────────────────────────────────────────
 
-TOUR_STEPS = [
+PRODUCT_TOUR_STEPS = [
     {
         "step_label": "STEP 1 OF 7  •  SYSTEM OVERVIEW",
         "icon": "🌊",
         "badge": "ISRO · SIH PROBLEM STATEMENT 26176",
         "title": "Welcome to Project ORCA",
-        "body": (
-            "ORCA (<strong>Ocean Research &amp; Coastal Analytics</strong>) is a "
-            "<strong>collaborative multi-agent AI platform</strong> built for India's maritime stakeholders. "
-            "Powered by real-time ISRO satellite data, IMD weather feeds, and INCOIS PFZ advisories, "
-            "it delivers actionable ocean intelligence in your own language."
-        ),
+        "body": "ORCA (<strong>Ocean Research & Coastal Analytics</strong>) is a <strong>collaborative multi-agent AI platform</strong> built for India's maritime stakeholders. It fuses real-time ISRO satellite data, IMD weather feeds, and INCOIS PFZ advisories into actionable ocean intelligence.",
         "pills": ["Multi-Agent AI", "ISRO Satellite Data", "IMD Weather", "INCOIS PFZ"],
-        "tip": None,
+        "tip": "Take a 1-minute guided tour to see how ORCA empowers fishermen, disaster authorities, and researchers.",
+        "tab": None
     },
     {
-        "step_label": "STEP 2 OF 7  •  PERSONA SELECTION",
-        "icon": "👥",
-        "badge": "3 STAKEHOLDER MODES",
-        "title": "Choose Your Role",
-        "body": (
-            "ORCA serves <strong>three distinct stakeholders</strong>, each with a tailored dashboard:<br><br>"
-            "<strong>🎣 Artisanal Fisherman</strong> — Safety verdicts, PFZ fishing zones, navigation routes.<br>"
-            "<strong>🚨 Coastal Authority</strong> — Disaster monitoring, cyclone geofences, vessel alerts.<br>"
-            "<strong>🔬 Marine Researcher</strong> — SST, Chlorophyll-a, thermocline &amp; oceanographic analysis."
-        ),
-        "pills": ["🎣 Artisanal Fisherman", "🚨 Coastal Authority", "🔬 Marine Researcher"],
-        "tip": "Select your role using the horizontal radio buttons at the top of the main panel.",
+        "step_label": "STEP 2 OF 7  •  PERSONA 1 OF 3",
+        "icon": "🎣",
+        "badge": "COASTAL FISHING & SAFETY",
+        "title": "Artisanal Fisherman Mode",
+        "body": "Designed for traditional coastal fishermen. Delivers instant <strong>SAFE / CAUTION / DANGER</strong> weather verdicts, recommended <strong>Potential Fishing Zones (PFZ)</strong> with depth and target species, and GPS navigation routes away from hazard zones.",
+        "pills": ["Safety Verdicts", "PFZ Hotspots", "Navigation Tracks"],
+        "tip": "Notice how the background view switches to Fisherman mode!",
+        "tab": "fisherman"
     },
     {
-        "step_label": "STEP 3 OF 7  •  MULTILINGUAL SUPPORT",
+        "step_label": "STEP 3 OF 7  •  PERSONA 2 OF 3",
+        "icon": "🚨",
+        "badge": "DISASTER MANAGEMENT & SURVEILLANCE",
+        "title": "Coastal Authority Mode",
+        "body": "Built for Coast Guard and disaster management authorities. Features real-time <strong>cyclone & storm surge geofences</strong>, vessel exclusion alerts, and simulated emergency broadcasts (VHF Ch 16, NAVTEX, SMS gateway).",
+        "pills": ["Cyclone Geofences", "Exclusion Alerts", "Emergency Broadcasts"],
+        "tip": "Switched under the hood to Coastal Authority mode so you can see the hazard telemetry!",
+        "tab": "authority"
+    },
+    {
+        "step_label": "STEP 4 OF 7  •  PERSONA 3 OF 3",
+        "icon": "🔬",
+        "badge": "SATELLITE OCEANOGRAPHY",
+        "title": "Marine Researcher Mode",
+        "body": "Tailored for oceanographers and researchers. Inspect <strong>Sea Surface Temperature (SST)</strong> heatmaps, Chlorophyll-a density, thermocline depth, and multi-agent oceanographic reasoning chains.",
+        "pills": ["SST Heatmaps", "Chlorophyll-a", "Thermocline Analysis"],
+        "tip": "Switched under the hood to Researcher mode for Earth observation analysis.",
+        "tab": "researcher"
+    },
+    {
+        "step_label": "STEP 5 OF 7  •  MULTILINGUAL AI",
         "icon": "🌐",
-        "badge": "9 LANGUAGES",
-        "title": "Ask in Your Language",
-        "body": (
-            "ORCA <strong>auto-detects your language</strong> and responds accordingly. "
-            "Type naturally in any of these languages:<br><br>"
-            "<strong>English · हिन्दी · ಕನ್ನಡ · தமிழ் · తెలుగు · മലയാളം · বাংলা · मराठी · ગુજરાતી</strong><br><br>"
-            "You can also manually override the advisory language using the selector in the sidebar."
-        ),
-        "pills": ["Auto Language Detection", "Regional Script Support", "Voice-Ready"],
-        "tip": "Look for the 🌐 Advisory Language selector in the left sidebar.",
+        "badge": "9 INDIAN LANGUAGES",
+        "title": "Ask in Your Native Language",
+        "body": "Ask in your own language! ORCA supports <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা, मराठी, and ગુજરાતી</strong> with automatic dialect detection and localized maritime terminology.",
+        "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
+        "tip": "You can also manually set your preferred advisory language in the left sidebar.",
+        "tab": "language"
     },
     {
-        "step_label": "STEP 4 OF 7  •  CHAT INTERFACE",
+        "step_label": "STEP 6 OF 7  •  INTERACTIVE WORKFLOW",
         "icon": "💬",
-        "badge": "NATURAL LANGUAGE AI",
-        "title": "Ask ORCA a Question",
-        "body": (
-            "Type any maritime question in the <strong>chat bar at the bottom</strong> of the screen. "
-            "ORCA's multi-agent engine will classify your intent, run parallel satellite and weather "
-            "queries, apply safety gating, and deliver a <strong>synthesized decision card</strong> with maps.<br><br>"
-            "<em>\"Where can I fish near Kochi today?\"</em><br>"
-            "<em>\"Check cyclone risk near Chennai.\"</em><br>"
-            "<em>\"ಕಾರವಾರ ಬಳಿ ಮೀನು ಹಿಡಿಯಲು ಸುರಕ್ಷಿತವೇ?\"</em>"
-        ),
-        "pills": ["Intent Classification", "Parallel Agent Queries", "Safety Gating"],
-        "tip": "You can also use the ⚡ Contextual Query Tools in the sidebar for quick location-based queries.",
+        "badge": "CHAT & INTERACTIVE GIS",
+        "title": "Ask Anything Maritime",
+        "body": "Type in the chat bar at the bottom or use the ⚡ <strong>Contextual Query Tools</strong> in the sidebar. Every response synthesizes a 4-tab card with safety decisions, interactive Folium maps, and ocean data.",
+        "pills": ["Decision Cards", "Interactive Folium Maps", "Contextual Query Tools"],
+        "tip": "Try: 'Where can I fish near Kochi today?' or 'Check cyclone risk near Chennai.'",
+        "tab": "chat"
     },
     {
-        "step_label": "STEP 5 OF 7  •  RESPONSE CARDS",
-        "icon": "📊",
-        "badge": "RICH TABBED CARDS",
-        "title": "Reading Your Results",
-        "body": (
-            "Every ORCA response is a <strong>4-tab decision card</strong> tailored to your persona:<br><br>"
-            "<strong>✅ Decision Card</strong> — SAFE / CAUTION / DANGER verdict with key conditions.<br>"
-            "<strong>🗺️ Interactive Map</strong> — Folium map with PFZ zones, geofences, SST layers.<br>"
-            "<strong>🌊 Ocean Data</strong> — Telemetry: SST, Chlorophyll-a, thermocline, salinity.<br>"
-            "<strong>🧠 AI Reasoning</strong> — Step-by-step multi-agent reasoning chain."
-        ),
-        "pills": ["Decision Card", "Interactive Map", "Ocean Telemetry", "AI Reasoning"],
-        "tip": "Tap the tab headers in each response card to switch between views.",
-    },
-    {
-        "step_label": "STEP 6 OF 7  •  SIDEBAR TOOLS",
-        "icon": "⚙️",
-        "badge": "POWER TOOLS",
-        "title": "Sidebar Tools &amp; Navigation",
-        "body": (
-            "The <strong>left sidebar</strong> is your control center:<br><br>"
-            "<strong>🌐 Language Selector</strong> — Override the advisory language.<br>"
-            "<strong>⚡ Contextual Query Tools</strong> — Run weather checks and find fishing zones by location.<br>"
-            "<strong>🗺️ Map / 🚨 Alerts / 💬 Ask ORCA</strong> — Navigate views in Coastal Authority mode.<br>"
-            "<strong>🧠 ORCA Intelligence</strong> — View the multi-agent orchestration architecture."
-        ),
-        "pills": ["Location Weather Check", "PFZ Finder", "Hazard Alerts", "GIS Map View"],
-        "tip": "Use the ⚡ Contextual Query Tools expander for quick one-click maritime queries.",
-    },
-    {
-        "step_label": "STEP 7 OF 7  •  GET STARTED",
+        "step_label": "STEP 7 OF 7  •  MISSION READY",
         "icon": "🚀",
-        "badge": "MISSION READY",
-        "title": "You're Ready to Go!",
-        "body": (
-            "ORCA is now ready to assist you. Here is a quick checklist:<br><br>"
-            "1️⃣ Select your <strong>stakeholder role</strong> at the top of the screen.<br>"
-            "2️⃣ Choose your preferred <strong>advisory language</strong> in the sidebar.<br>"
-            "3️⃣ Type your query in the <strong>chat bar</strong> at the bottom.<br>"
-            "4️⃣ Explore the <strong>tabbed response card</strong> — map, data, and reasoning.<br><br>"
-            "You can relaunch this tour anytime via <strong>❓ Help / Tour Guide</strong> in the sidebar."
-        ),
-        "pills": ["ISRO Oceansat-3", "IMD Real-Time", "INCOIS PFZ", "Multilingual AI"],
-        "tip": None,
-    },
+        "badge": "ALL SYSTEMS GO",
+        "title": "You're Ready to Explore!",
+        "body": "You're all set to use Project ORCA. Choose your role, type a query, and explore intelligent ocean analytics. Relaunch this guide anytime using <strong>❓ Help / Tour Guide</strong> in the sidebar.",
+        "pills": ["ISRO Oceansat-3", "IMD Real-Time", "Ready to Explore"],
+        "tip": "Click Finish to celebrate and begin exploring!",
+        "tab": "fisherman"
+    }
 ]
 
 
-def render_tour_guide() -> None:
+def render_product_tour(force_open: bool = False) -> None:
     """
-    Render the ORCA onboarding tour — 7 project-accurate steps.
-
-    Technical approach (Streamlit-compatible, no backend changes):
-      • Full card HTML rendered via st.components.v1.html() inside a tinted backdrop
-        div injected by st.markdown — this avoids Streamlit's markdown parser escaping
-        inline HTML inside f-string content (the bug that caused raw HTML to show as text)
-      • Dark background injected via CSS on [data-testid="stMain"]
-      • Navigation buttons (← Back | ✕ Skip | Next Step →) are native Streamlit buttons
-        rendered in st.columns directly below the card
-      • st.stop() prevents the rest of the page (persona selector, chat, maps) from
-        rendering while the tour is active — sidebar already rendered before this call
+    Renders the ProductTour modal overlay matching the project's clean light styling.
+    - Checks localStorage.getItem('app_tour_seen').
+    - If null: waits 1200ms -> opens modal.
+    - If force_open: opens immediately (from sidebar Help button).
+    - Next Step: increments step, updates dots, calls onNavigateTab under the hood.
+    - Finish or X: localStorage.setItem('app_tour_seen', 'true'), fires confetti, closes modal.
+    - NO st.stop() — the app renders fully and beautifully in the background!
     """
-    step = st.session_state.get("orca_tour_step", 0)
-    if step == 0:
-        return
+    import json
+    import streamlit.components.v1 as cv1
 
-    step_idx = step - 1
-    if step_idx < 0 or step_idx >= len(TOUR_STEPS):
-        st.session_state.orca_tour_step = 0
-        return
+    steps_json = json.dumps(PRODUCT_TOUR_STEPS)
+    force_open_js = "true" if force_open else "false"
 
-    import streamlit.components.v1 as _cv1
-
-    data   = TOUR_STEPS[step_idx]
-    total  = len(TOUR_STEPS)
-
-    # ── Build pill and dot HTML (inside the iframe-safe component) ─────────────
-    pills_html = "".join(
-        f'<span style="display:inline-block;background:rgba(14,165,168,0.12);'
-        f'border:1px solid rgba(14,165,168,0.45);color:#22D3EE;border-radius:20px;'
-        f'padding:4px 13px;font-size:11px;font-weight:600;letter-spacing:.03em;margin:4px 4px 0 0;">'
-        f'{p}</span>'
-        for p in data["pills"]
-    )
-
-    dots_html = "".join(
-        f'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;'
-        f'background:{"#0EA5A8" if i == step_idx else "#1E3A52"};'
-        f'box-shadow:{"0 0 5px rgba(14,165,168,.7)" if i == step_idx else "none"};'
-        f'margin:0 4px;"></span>'
-        for i in range(total)
-    )
-
-    tip_html = ""
-    if data.get("tip"):
-        tip_html = (
-            f'<div style="margin-top:14px;background:#071f30;border-left:3px solid #0EA5A8;'
-            f'border-radius:0 10px 10px 0;padding:9px 14px;font-size:12px;color:#94A3B8;line-height:1.6;">'
-            f'<span style="color:#0EA5A8;font-weight:700;">💡 Tip: </span>{data["tip"]}</div>'
-        )
-
-    # The full card is rendered inside components.html (sandboxed iframe) so
-    # Streamlit's markdown parser never touches the HTML — no escaping bugs.
-    card_html = f"""<!DOCTYPE html>
+    raw_html = """<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  html, body {{ height: 100%; background: transparent; }}
-  body {{ font-family: 'Inter', 'Segoe UI', sans-serif; padding: 4px 2px; }}
-
-  .card {{
-    background: linear-gradient(145deg, #071a26 0%, #0B2638 55%, #0D3048 100%);
-    border: 1px solid #1E4A6E;
-    border-radius: 20px;
-    padding: 28px 32px 22px 32px;
-    box-shadow: 0 20px 70px rgba(0,0,0,.65), 0 0 0 1px rgba(14,165,168,.1);
-    color: #F8FAFC;
-  }}
-  .step-label {{
-    font-size: 10px; font-weight: 800; letter-spacing: .15em;
-    text-transform: uppercase; color: #0EA5A8; margin-bottom: 12px;
-  }}
-  .icon {{ font-size: 2.2rem; margin-bottom: 6px; display: block; line-height: 1; }}
-  .badge {{
-    display: inline-block;
-    background: rgba(14,165,168,.12); border: 1px solid rgba(14,165,168,.35);
-    color: #22D3EE; border-radius: 20px; padding: 3px 12px;
-    font-size: 10px; font-weight: 700; letter-spacing: .07em; margin-bottom: 14px;
-  }}
-  .title {{
-    font-size: 1.45rem; font-weight: 800; color: #F8FAFC;
-    margin-bottom: 12px; line-height: 1.2; letter-spacing: -.02em;
-  }}
-  .body {{
-    font-size: .85rem; line-height: 1.72; color: #94A3B8; margin-bottom: 14px;
-  }}
-  .body strong {{ color: #E2E8F0; font-weight: 600; }}
-  .body em {{ color: #64B6D0; font-style: italic; }}
-  .divider {{ border: none; border-top: 1px solid #1E3A52; margin: 16px 0 0 0; }}
-  .dots {{ text-align: center; padding: 12px 0 2px 0; }}
+  body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="step-label">{data["step_label"]}</div>
-  <span class="icon">{data["icon"]}</span>
-  <div class="badge">{data["badge"]}</div>
-  <div class="title">{data["title"]}</div>
-  <div class="body">{data["body"]}</div>
-  <div style="margin-bottom:6px">{pills_html}</div>
-  {tip_html}
-  <hr class="divider">
-  <div class="dots">{dots_html}</div>
-</div>
+<script>
+(function() {
+    const steps = __STEPS_JSON__;
+    const forceOpen = __FORCE_OPEN__;
+    const parentDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+
+    // Inject styles into parent document head if not already present
+    if (!parentDoc.getElementById('orca-tour-injected-styles')) {
+        const style = parentDoc.createElement('style');
+        style.id = 'orca-tour-injected-styles';
+        style.textContent = `
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            
+            #orca-product-tour-overlay {
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(15, 23, 42, 0.65) !important;
+                backdrop-filter: blur(5px) !important;
+                -webkit-backdrop-filter: blur(5px) !important;
+                z-index: 999999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 16px !important;
+                box-sizing: border-box !important;
+                opacity: 0;
+                transition: opacity 0.25s ease-out !important;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            }
+            #orca-product-tour-overlay.orca-tour-active {
+                opacity: 1 !important;
+            }
+            .orca-tour-modal-card {
+                background: #FFFFFF !important;
+                border-radius: 20px !important;
+                border: 1px solid #E2E8F0 !important;
+                border-top: 5px solid #0EA5A8 !important;
+                box-shadow: 0 25px 60px -12px rgba(11, 38, 56, 0.35), 0 0 0 1px rgba(14, 165, 168, 0.12) !important;
+                max-width: 580px !important;
+                width: 100% !important;
+                position: relative !important;
+                overflow: hidden !important;
+                padding: 30px 34px 26px 34px !important;
+                color: #1E293B !important;
+                box-sizing: border-box !important;
+                transform: scale(0.96);
+                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            }
+            #orca-product-tour-overlay.orca-tour-active .orca-tour-modal-card {
+                transform: scale(1) !important;
+            }
+            .orca-tour-close-x {
+                position: absolute !important;
+                top: 18px !important;
+                right: 18px !important;
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 50% !important;
+                background: #F1F5F9 !important;
+                border: 1px solid #E2E8F0 !important;
+                color: #64748B !important;
+                font-size: 15px !important;
+                font-weight: 700 !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                transition: all 0.15s ease !important;
+                line-height: 1 !important;
+            }
+            .orca-tour-close-x:hover {
+                background: #E2E8F0 !important;
+                color: #0F172A !important;
+                transform: scale(1.08) !important;
+            }
+            .orca-tour-step-label {
+                font-size: 10.5px !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.14em !important;
+                text-transform: uppercase !important;
+                color: #0EA5A8 !important;
+                margin-bottom: 8px !important;
+            }
+            .orca-tour-badge {
+                display: inline-block !important;
+                background: rgba(14, 165, 168, 0.1) !important;
+                border: 1px solid rgba(14, 165, 168, 0.3) !important;
+                color: #0E7490 !important;
+                font-size: 10.5px !important;
+                font-weight: 700 !important;
+                border-radius: 20px !important;
+                padding: 3px 12px !important;
+                margin-bottom: 12px !important;
+                letter-spacing: 0.05em !important;
+            }
+            .orca-tour-icon {
+                font-size: 2.2rem !important;
+                line-height: 1 !important;
+                display: block !important;
+                margin-bottom: 6px !important;
+            }
+            .orca-tour-title {
+                font-size: 1.45rem !important;
+                font-weight: 800 !important;
+                color: #0B2638 !important;
+                letter-spacing: -0.02em !important;
+                margin-bottom: 12px !important;
+                line-height: 1.25 !important;
+            }
+            .orca-tour-body {
+                font-size: 0.92rem !important;
+                line-height: 1.68 !important;
+                color: #475569 !important;
+                margin-bottom: 14px !important;
+            }
+            .orca-tour-body strong {
+                color: #0F172A !important;
+                font-weight: 600 !important;
+            }
+            .orca-tour-pills {
+                margin-bottom: 6px !important;
+            }
+            .orca-tour-pill {
+                display: inline-block !important;
+                background: #F0FDFA !important;
+                border: 1px solid #99F6E4 !important;
+                color: #0F766E !important;
+                border-radius: 20px !important;
+                padding: 4px 12px !important;
+                font-size: 11.5px !important;
+                font-weight: 600 !important;
+                margin: 3px 5px 3px 0 !important;
+            }
+            .orca-tour-tip {
+                background: #F8FAFC !important;
+                border-left: 3.5px solid #0EA5A8 !important;
+                border-radius: 0 8px 8px 0 !important;
+                padding: 10px 14px !important;
+                font-size: 12.5px !important;
+                color: #475569 !important;
+                margin-top: 14px !important;
+                line-height: 1.55 !important;
+            }
+            .orca-tour-tip-bold {
+                color: #0EA5A8 !important;
+                font-weight: 700 !important;
+            }
+            .orca-tour-divider {
+                border: none !important;
+                border-top: 1px solid #F1F5F9 !important;
+                margin: 20px 0 16px 0 !important;
+            }
+            .orca-tour-footer {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            .orca-tour-dots {
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+            }
+            .orca-tour-dot {
+                height: 8px !important;
+                border-radius: 4px !important;
+                background: #CBD5E1 !important;
+                width: 8px !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+            }
+            .orca-tour-dot.active {
+                background: #0EA5A8 !important;
+                width: 24px !important;
+                box-shadow: 0 0 8px rgba(14, 165, 168, 0.4) !important;
+            }
+            .orca-tour-btns {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+            }
+            .orca-tour-btn-back {
+                background: #F1F5F9 !important;
+                border: 1px solid #E2E8F0 !important;
+                color: #475569 !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                padding: 9px 18px !important;
+                border-radius: 10px !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease !important;
+            }
+            .orca-tour-btn-back:hover {
+                background: #E2E8F0 !important;
+                color: #0F172A !important;
+            }
+            .orca-tour-btn-next {
+                background: linear-gradient(135deg, #0EA5A8 0%, #0891B2 100%) !important;
+                border: none !important;
+                color: #FFFFFF !important;
+                font-size: 13px !important;
+                font-weight: 700 !important;
+                padding: 9px 22px !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 14px rgba(14, 165, 168, 0.35) !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease !important;
+            }
+            .orca-tour-btn-next:hover {
+                box-shadow: 0 6px 20px rgba(14, 165, 168, 0.45) !important;
+                transform: translateY(-1px) !important;
+            }
+        `;
+        parentDoc.head.appendChild(style);
+    }
+
+    let currentStep = 0;
+
+    function onNavigateTab(tabKey) {
+        if (!tabKey) return;
+        try {
+            const labels = parentDoc.querySelectorAll('label[data-baseweb="radio"], div[data-testid="stRadio"] label');
+            for (const lbl of labels) {
+                const text = (lbl.innerText || "").toLowerCase();
+                if (tabKey === 'fisherman' && text.includes('fisherman')) {
+                    lbl.click();
+                    break;
+                } else if (tabKey === 'authority' && text.includes('authority')) {
+                    lbl.click();
+                    break;
+                } else if (tabKey === 'researcher' && text.includes('researcher')) {
+                    lbl.click();
+                    break;
+                }
+            }
+            if (tabKey === 'chat') {
+                const chatInput = parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
+                if (chatInput) {
+                    chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        } catch (e) {
+            console.warn('Tab navigation warning:', e);
+        }
+    }
+
+    function fireConfettiBurst() {
+        try {
+            const canvas = parentDoc.createElement('canvas');
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100vw';
+            canvas.style.height = '100vh';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.zIndex = '9999999';
+            parentDoc.body.appendChild(canvas);
+
+            if (typeof confetti !== 'undefined') {
+                const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+                myConfetti({
+                    particleCount: 140,
+                    spread: 80,
+                    origin: { y: 0.55 },
+                    colors: ['#0EA5A8', '#22D3EE', '#F59E0B', '#10B981', '#6366F1']
+                });
+                setTimeout(() => {
+                    myConfetti({
+                        particleCount: 70,
+                        spread: 120,
+                        origin: { y: 0.65 },
+                        colors: ['#0EA5A8', '#22D3EE', '#F8FAFC']
+                    });
+                }, 350);
+                setTimeout(() => { canvas.remove(); }, 4000);
+            } else {
+                setTimeout(() => { canvas.remove(); }, 100);
+            }
+        } catch (e) {
+            console.warn('Confetti error:', e);
+        }
+    }
+
+    function closeTour(isFinish) {
+        try {
+            localStorage.setItem('app_tour_seen', 'true');
+        } catch(e) {}
+        
+        if (isFinish) {
+            fireConfettiBurst();
+        }
+        
+        const overlay = parentDoc.getElementById('orca-product-tour-overlay');
+        if (overlay) {
+            overlay.classList.remove('orca-tour-active');
+            setTimeout(() => { overlay.remove(); }, 250);
+        }
+    }
+
+    function renderModalContent() {
+        const overlay = parentDoc.getElementById('orca-product-tour-overlay');
+        if (!overlay) return;
+
+        const data = steps[currentStep];
+        const isLast = (currentStep === steps.length - 1);
+
+        const pillsHtml = (data.pills || []).map(p => 
+            `<span class="orca-tour-pill">${p}</span>`
+        ).join('');
+
+        const tipHtml = data.tip ? `
+            <div class="orca-tour-tip">
+                <span class="orca-tour-tip-bold">💡 Tip: </span>${data.tip}
+            </div>
+        ` : '';
+
+        const dotsHtml = steps.map((_, i) => `
+            <div class="orca-tour-dot ${i === currentStep ? 'active' : ''}" data-step="${i}"></div>
+        `).join('');
+
+        overlay.innerHTML = `
+            <div class="orca-tour-modal-card">
+                <button class="orca-tour-close-x" id="orca-tour-btn-x" title="Close Tour">✕</button>
+                <div class="orca-tour-step-label">${data.step_label}</div>
+                <span class="orca-tour-icon">${data.icon}</span>
+                <div class="orca-tour-badge">${data.badge}</div>
+                <div class="orca-tour-title">${data.title}</div>
+                <div class="orca-tour-body">${data.body}</div>
+                <div class="orca-tour-pills">${pillsHtml}</div>
+                ${tipHtml}
+                <hr class="orca-tour-divider">
+                <div class="orca-tour-footer">
+                    <div class="orca-tour-dots" id="orca-tour-dots-wrap">${dotsHtml}</div>
+                    <div class="orca-tour-btns">
+                        ${currentStep > 0 ? '<button class="orca-tour-btn-back" id="orca-tour-btn-back">← Back</button>' : ''}
+                        <button class="orca-tour-btn-next" id="orca-tour-btn-next">${isLast ? '🚀 Finish' : 'Next Step →'}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Wire event listeners
+        const btnX = parentDoc.getElementById('orca-tour-btn-x');
+        if (btnX) btnX.onclick = () => closeTour(false);
+
+        const btnNext = parentDoc.getElementById('orca-tour-btn-next');
+        if (btnNext) {
+            btnNext.onclick = () => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    renderModalContent();
+                    if (steps[currentStep].tab) {
+                        onNavigateTab(steps[currentStep].tab);
+                    }
+                } else {
+                    closeTour(true);
+                }
+            };
+        }
+
+        const btnBack = parentDoc.getElementById('orca-tour-btn-back');
+        if (btnBack) {
+            btnBack.onclick = () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    renderModalContent();
+                    if (steps[currentStep].tab) {
+                        onNavigateTab(steps[currentStep].tab);
+                    }
+                }
+            };
+        }
+
+        const dotsWrap = parentDoc.getElementById('orca-tour-dots-wrap');
+        if (dotsWrap) {
+            dotsWrap.querySelectorAll('.orca-tour-dot').forEach(d => {
+                d.onclick = () => {
+                    const s = parseInt(d.getAttribute('data-step') || '0', 10);
+                    currentStep = s;
+                    renderModalContent();
+                    if (steps[currentStep].tab) {
+                        onNavigateTab(steps[currentStep].tab);
+                    }
+                };
+            });
+        }
+    }
+
+    function openTour() {
+        let overlay = parentDoc.getElementById('orca-product-tour-overlay');
+        if (!overlay) {
+            overlay = parentDoc.createElement('div');
+            overlay.id = 'orca-product-tour-overlay';
+            parentDoc.body.appendChild(overlay);
+        }
+        currentStep = 0;
+        renderModalContent();
+        if (steps[0].tab) {
+            onNavigateTab(steps[0].tab);
+        }
+        requestAnimationFrame(() => {
+            overlay.classList.add('orca-tour-active');
+        });
+    }
+
+    // Flow:
+    // Exists? -> Do nothing (User can still click Tour Guide button in sidebar)
+    // Null? -> Wait 1200ms -> setIsTourOpen(true)
+    // If forceOpen is true (clicked from sidebar Help button) -> open immediately!
+    if (forceOpen) {
+        setTimeout(openTour, 100);
+    } else {
+        try {
+            const seen = localStorage.getItem('app_tour_seen');
+            if (!seen) {
+                setTimeout(openTour, 1200);
+            }
+        } catch(e) {
+            setTimeout(openTour, 1200);
+        }
+    }
+})();
+</script>
 </body>
 </html>"""
 
-    # Darken the main content area so the card feels like a full-page takeover
-    st.markdown("""
-<style>
-[data-testid="stMain"], [data-testid="stAppViewContainer"] {
-    background-color: #04090F !important;
-}
-section[data-testid="stMain"] > div:first-child {
-    padding-top: 40px !important;
-}
-</style>
-""", unsafe_allow_html=True)
+    tour_html = raw_html.replace("__STEPS_JSON__", steps_json).replace("__FORCE_OPEN__", force_open_js)
 
-    # Render card inside a centred column pair (card takes ~70% of width)
-    _pad_l, _card_col, _pad_r = st.columns([0.8, 3, 0.8])
-    with _card_col:
-        _cv1.html(card_html, height=480, scrolling=False)
-
-    # ── Navigation buttons: centred below the card ─────────────────────────────
-    _bl, c_prev, c_skip, c_next, _br = st.columns([1.2, 1, 1.2, 1, 1.2])
-
-    with c_prev:
-        if step > 1:
-            if st.button("← Back", key="tour_prev_btn", use_container_width=True):
-                st.session_state.orca_tour_step -= 1
-                st.rerun()
-
-    with c_skip:
-        if step < total:
-            if st.button("✕ Skip Tour", key="tour_skip_btn", use_container_width=True):
-                st.session_state.orca_tour_step = 0
-                st.rerun()
-
-    with c_next:
-        lbl = "Next Step →" if step < total else "🚀 Start ORCA!"
-        if st.button(lbl, key="tour_next_btn", type="primary", use_container_width=True):
-            st.session_state.orca_tour_step = 0 if step >= total else step + 1
-            st.rerun()
-
-    # Stop rendering — sidebar already processed, so it still shows.
-    st.stop()
-
+    # Embed the client-side tour controller iframe (zero height, invisible)
+    cv1.html(tour_html, height=0)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Display constants & stylings
@@ -3305,7 +3573,7 @@ with st.sidebar:
         st.rerun()
 
     if st.button("❓ Help / Tour Guide", use_container_width=True):
-        st.session_state.orca_tour_step = 1
+        st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
@@ -3513,8 +3781,11 @@ else:
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
-# ── Tour Guide: auto-show on first visit, callable from sidebar ───────────────
-render_tour_guide()
+# ── Tour Guide: ProductTour modal (auto-show on first visit, or sidebar click) ─
+_force_tour = st.session_state.get("open_tour_modal", False)
+if _force_tour:
+    st.session_state.open_tour_modal = False
+render_product_tour(force_open=_force_tour)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Sticky Persona Selector (Horizontal Radio)
