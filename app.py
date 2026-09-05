@@ -494,20 +494,18 @@ div[role="radiogroup"] > label:has(input:checked) [data-testid="stMarkdownContai
     }
 
     .orca-hero-header {
-        gap: 8px !important;
-        margin: 1px 0 4px 0 !important;
+        gap: 0 !important;
+        margin: 0 !important;
     }
     .orca-hero-logo {
         width: 32px !important;
         height: 32px !important;
         border-radius: 6px !important;
     }
-    .orca-hero-title {
-        font-size: 1.1rem !important;
-    }
+    .orca-hero-text,
+    .orca-hero-title,
     .orca-hero-subtitle {
-        font-size: 0.60rem !important;
-        line-height: 1.15 !important;
+        display: none !important;
     }
 
 
@@ -802,8 +800,8 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.5rem !important;
     }
 
-    /* ── Rule 1: Override Mobile Stacking ──────────────────────── */
-    /* Target the container holding the top header columns and force a single horizontal row */
+    /* ── Rule 1: Override Mobile Stacking & Ensure Single Row ──────── */
+    /* Force top header container into a single non-wrapping horizontal row */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header),
     .main div[data-testid="stHorizontalBlock"]:first-of-type {
         display: flex !important;
@@ -811,49 +809,74 @@ hr { border-color: #E2E8F0 !important; }
         flex-wrap: nowrap !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 6px !important;
+        gap: 8px !important;
         width: 100% !important;
         margin: 0 0 4px 0 !important;
-        overflow: visible !important;
+        overflow: hidden !important;
     }
 
-    /* ── Rule 3: Fit to Screen (Flexible Sizing & No Horizontal Scroll) ── */
+    /* ── Rule 2: Fluid Row Distribution ────────────────────────── */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"],
     .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
         width: auto !important;
         min-width: 0 !important;
-        flex-shrink: 1 !important;
+        overflow: hidden !important;
     }
 
-    /* Proportional column distribution on mobile */
+    /* Column 1: Fit only the logo icon tightly */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1),
     .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
-        flex: 2 1 auto !important;
-        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 34px !important;
+        max-width: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
     }
+
+    /* Column 2: Help / Tour Guide button - fluidly shares remaining space */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2),
     .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2) {
-        flex: 1.2 1 auto !important;
+        flex: 1 1 0 !important;
         min-width: 0 !important;
+        display: flex !important;
+        align-items: center !important;
     }
+
+    /* Column 3: Advisory Language dropdown - fluidly shares remaining space */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3),
     .main div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
-        flex: 1.3 1 auto !important;
+        flex: 1 1 0 !important;
         min-width: 0 !important;
+        display: flex !important;
+        align-items: center !important;
     }
 
     /* Compact Help / Tour Guide Button */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button,
     .main div[data-testid="stHorizontalBlock"]:first-of-type button {
-        height: 35px !important;
-        min-height: 35px !important;
-        padding: 3px 6px !important;
-        font-size: 0.74rem !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 4px 6px !important;
+        font-size: 0.76rem !important;
         white-space: nowrap !important;
         border-radius: 7px !important;
         width: 100% !important;
         min-width: 0 !important;
         flex-shrink: 1 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button p,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type button p {
+        font-size: 0.76rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
     }
 
     /* Compact Advisory Language Dropdown */
@@ -861,51 +884,72 @@ hr { border-color: #E2E8F0 !important; }
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div,
     .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"],
     .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] > div {
-        height: 35px !important;
-        min-height: 35px !important;
+        height: 36px !important;
+        min-height: 36px !important;
         font-size: 0.76rem !important;
         border-radius: 7px !important;
         padding-top: 0 !important;
         padding-bottom: 0 !important;
-        padding-left: 5px !important;
-        padding-right: 5px !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
         min-width: 0 !important;
+        width: 100% !important;
         flex-shrink: 1 !important;
     }
 
-    /* ── Rule 2: Scale the Logo ────────────────────────────────── */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] *,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-baseweb="select"] * {
+        font-size: 0.76rem !important;
+    }
+
+    /* ── Rule 3: Keep the Logo & Hide Title Text ────────────────── */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) .orca-hero-header,
     .main div[data-testid="stHorizontalBlock"]:first-of-type .orca-hero-header {
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        gap: 6px !important;
+        justify-content: flex-start !important;
+        gap: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
-        max-height: 35px !important;
+        height: 36px !important;
+        max-height: 36px !important;
+        width: auto !important;
     }
 
+    /* Keep the logo image visible and crisp */
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) img,
     div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) .orca-hero-logo,
-    .orca-hero-logo {
-        max-width: 26px !important;
-        max-height: 26px !important;
-        width: 26px !important;
-        height: 26px !important;
+    .orca-hero-logo,
+    img.orca-hero-logo {
+        display: block !important;
+        visibility: visible !important;
+        max-width: 34px !important;
+        max-height: 34px !important;
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
         object-fit: contain !important;
-        border-radius: 5px !important;
+        border-radius: 6px !important;
         flex-shrink: 0 !important;
-    }
-
-    .orca-hero-title {
-        font-size: 1.05rem !important;
-        line-height: 1 !important;
         margin: 0 !important;
-        white-space: nowrap !important;
     }
 
-    .orca-hero-subtitle {
+    /* Completely hide title and subtitle text on mobile */
+    .orca-hero-text,
+    .orca-hero-title,
+    .orca-hero-subtitle,
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) .orca-hero-text,
+    .main div[data-testid="stHorizontalBlock"]:first-of-type .orca-hero-text {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
     }
 
     /* ── Rule 4: Hide Labels & Remove Invisible Padding ────────── */
@@ -924,6 +968,7 @@ hr { border-color: #E2E8F0 !important; }
     .main div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="stElementContainer"] {
         margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
     }
 
     div[data-testid="stElementContainer"]:has(#orca-tour-lang-marker) {
