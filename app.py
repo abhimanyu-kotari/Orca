@@ -531,6 +531,14 @@ div[data-testid="stCustomComponentV1"] iframe {
 
 /* ── Mobile Responsive Overhaul (<= 768px) ─────────────────── */
 @media (max-width: 768px) {
+    /* Mobile sizing fixes for Streamlit components */
+    div[data-testid="stExpander"], div.stAlert {
+        width: 90vw !important;
+        max-width: 350px !important;
+        margin: 0 auto !important;
+        padding: 10px !important;
+    }
+
     /* Compact padding in main container */
     .block-container {
         padding-left: 0.75rem !important;
@@ -1495,14 +1503,19 @@ def render_product_tour(force_open: bool = False) -> None:
                     justify-content: center !important;
                 }
                 .orca-tour-modal-card {
-                    max-width: 100% !important;
-                    width: calc(100vw - 20px) !important;
+                    width: 90vw !important;
+                    max-width: 350px !important;
                     max-height: 92vh !important;
                     overflow-y: auto !important;
-                    padding: 16px 16px 14px 16px !important;
+                    padding: 10px !important;
                     border-radius: 16px !important;
-                    margin-left: 0 !important;
-                    margin-right: 0 !important;
+                    margin: 0 auto !important;
+                }
+                .orca-tour-modal-card h3, .orca-tour-modal-card h4 {
+                    font-size: 1.1rem !important;
+                }
+                .orca-tour-modal-card p, .orca-tour-modal-card span {
+                    font-size: 0.9rem !important;
                 }
                 .orca-tour-logo-img {
                     width: 40px !important;
