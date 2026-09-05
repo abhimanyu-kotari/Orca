@@ -787,23 +787,42 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.5rem !important;
     }
 
-    /* ── Mobile Top Header (CSS Grid — viewport-safe) ───────────── */
+    /* ── Mobile Top Header ──────────────────────────────────────── */
     div[data-testid="stHorizontalBlock"]:first-of-type {
-        display: grid !important;
-        grid-template-columns: 45px 1fr 1fr !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
         width: 100% !important;
-        max-width: 100vw !important;
-        overflow: hidden !important;
         gap: 8px !important;
+        box-sizing: border-box !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="column"] {
-        width: 100% !important;
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
         min-width: 0 !important;
+        flex-shrink: 1 !important;
+        align-self: center !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+        flex: 0 0 auto !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
+    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+        flex: 1 1 0 !important;
     }
 
     div[data-testid="stHorizontalBlock"]:first-of-type div[data-testid="column"]:nth-child(1) div[data-testid="stMarkdownContainer"] {
         display: none !important;
+    }
+
+    /* ── Persona Radio: center wrapped row on mobile ─────────── */
+    div[role="radiogroup"],
+    div[data-testid="stRadioGroup"] {
+        justify-content: center !important;
+        align-items: center !important;
     }
 }
 </style>
