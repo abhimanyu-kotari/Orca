@@ -277,66 +277,118 @@ h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !
     text-overflow: ellipsis !important;
     max-width: 220px !important;
 }
-    .orca-hero-logo {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 6px !important;
-    }
-    .orca-hero-title {
-        font-size: 1.15rem !important;
-        line-height: 1.1 !important;
-        margin: 0 !important;
-    }
-    .orca-hero-subtitle {
-        font-size: 0.67rem !important;
-        margin-top: 2px !important;
-    }
+/* ── Prominent, Fluid Persona Selector Navigation Bar ── */
+/* Rule 1: Full Width & Centered with Max-Width 800px */
+div.st-key-sticky_persona_container,
+div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
+div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 8px auto !important;
+    padding: 0 !important;
+}
 
-    /* Sticky Persona Selector on Mobile */
-    header[data-testid="stHeader"] {
-        height: 2.875rem !important;
-        min-height: 2.875rem !important;
-        max-height: 2.875rem !important;
-    }
-    div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
-        top: 2.875rem !important; /* Mobile Streamlit header height */
-        padding-top: 10px !important;
-        padding-bottom: 8px !important;
-    }
+div.st-key-sticky_persona_container div[data-testid="stRadio"],
+div[data-testid="stRadio"] {
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+}
 
-    /* Tighter gap & compact buttons */
-    div[role="radiogroup"],
-    div[data-testid="stRadioGroup"] {
-        gap: 6px !important;
-        width: 100% !important;
-        align-items: stretch !important;
-    }
-    div[role="radiogroup"] > label,
-    div[data-testid="stRadioGroup"] > label,
-    label[data-testid="stRadioOption"],
-    label.react-aria-Radio {
-        padding: 4px 5px !important;
-        height: auto !important;
-        min-height: 42px !important;
-        align-self: stretch !important;
-        border-radius: 6px !important;
-    }
+/* Hide redundant radio group label */
+.stRadio > label,
+div[data-testid="stRadio"] > label {
+    display: none !important;
+}
 
-    /* Small radio indicator dot on mobile */
-    label[data-testid="stRadioOption"] div[class*="eqiohyi4"],
-    label[data-testid="stRadioOption"] div:has(> input[type="radio"]),
-    div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
-        margin-right: 3px !important;
-        transform: scale(0.80) !important;
-    }
+/* Rule 2 & 4: Equal Proportions, Fluid Wrapping & Centered Flexbox */
+div[role="radiogroup"],
+div[data-testid="stRadioGroup"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 800px !important;
+    gap: 12px !important;
+    margin: 0 auto !important;
+}
 
-    /* Compact typography inside buttons */
-    div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-        font-size: 0.70rem !important;
-        line-height: 1.15 !important;
-        letter-spacing: -0.01em !important;
-    }
+/* Rule 2 & 3: Equal Proportions & Substantial Click Targets */
+div[role="radiogroup"] > label,
+div[data-testid="stRadioGroup"] > label,
+label[data-testid="stRadioOption"],
+label.react-aria-Radio {
+    flex: 1 1 200px !important;
+    min-width: 160px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 12px 18px !important;
+    min-height: 48px !important;
+    height: auto !important;
+    background: #FFFFFF !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+}
+
+/* Substantial Typography inside Radio Labels */
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p,
+label[data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    color: #1E293B !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* Radio Indicator Circle Alignment */
+label[data-testid="stRadioOption"] div[class*="eqiohyi4"],
+label[data-testid="stRadioOption"] div:has(> input[type="radio"]),
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child {
+    margin-right: 8px !important;
+    transform: scale(0.95) !important;
+    flex-shrink: 0 !important;
+}
+
+/* Hover State */
+div[role="radiogroup"] > label:hover,
+label[data-testid="stRadioOption"]:hover {
+    border-color: #0EA5A8 !important;
+    background: #F0FDFA !important;
+    box-shadow: 0 2px 6px rgba(14, 165, 168, 0.15) !important;
+}
+
+/* Active / Selected Tab State */
+label[data-testid="stRadioOption"]:has(input:checked),
+label[data-testid="stRadioOption"][aria-checked="true"],
+div[role="radiogroup"] > label:has(input:checked) {
+    background: #F0FDFA !important;
+    border-color: #0EA5A8 !important;
+    border-width: 2px !important;
+    box-shadow: 0 2px 8px rgba(14, 165, 168, 0.2) !important;
+}
+
+label[data-testid="stRadioOption"]:has(input:checked) [data-testid="stMarkdownContainer"] p,
+label[data-testid="stRadioOption"][aria-checked="true"] [data-testid="stMarkdownContainer"] p,
+div[role="radiogroup"] > label:has(input:checked) [data-testid="stMarkdownContainer"] p {
+    color: #0E7490 !important;
+    font-weight: 700 !important;
+}
 
     /* Compact Metrics on mobile */
     [data-testid="stMetric"] {
@@ -458,33 +510,6 @@ h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !
         line-height: 1.15 !important;
     }
 
-    div[data-testid="stElementContainer"]:has(> div.st-key-sticky_persona_container),
-    div[data-testid="stVerticalBlock"] > div:has(.st-key-sticky_persona_container) {
-        top: 2.875rem !important;
-        padding-top: 8px !important;
-        padding-bottom: 6px !important;
-    }
-
-    div[role="radiogroup"],
-    div[data-testid="stRadioGroup"] {
-        gap: 4px !important;
-    }
-    div[role="radiogroup"] > label,
-    div[data-testid="stRadioGroup"] > label,
-    label[data-testid="stRadioOption"],
-    label.react-aria-Radio {
-        padding: 3px 3px !important;
-        min-height: 38px !important;
-        border-radius: 5px !important;
-    }
-    div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-        font-size: 0.65rem !important;
-        line-height: 1.1 !important;
-    }
-    label[data-testid="stRadioOption"] div[class*="eqiohyi4"] {
-        transform: scale(0.72) !important;
-        margin-right: 1px !important;
-    }
 
     [data-testid="stMetric"] {
         padding: 3px 3px !important;
