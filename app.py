@@ -797,18 +797,15 @@ hr { border-color: #E2E8F0 !important; }
         flex-wrap: nowrap !important;
         align-items: center !important;
         overflow: hidden !important;
-        width: 100vw !important;
+        width: 100% !important; /* using 100% instead of 100vw to prevent horizontal scroll blowout */
         gap: 5px !important;
+        box-sizing: border-box !important;
     }
-    /* Let the Tour Guide and Language columns share the remaining space evenly */
+    /* Let the Tour Guide and Language columns share the space evenly (50/50) */
     div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {
         flex: 1 1 0 !important;
         min-width: 0 !important;
-        width: auto !important;
-    }
-    /* Constrain the logo column so it doesn't take up unnecessary space */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
-        flex: 0 0 50px !important;
+        width: 100% !important;
     }
 
     /* Center persona radio tabs when they wrap */
@@ -3992,30 +3989,16 @@ with st.sidebar:
 # Global Top Navigation — Horizontal Persona Selector
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── Single Navbar Row (Logo & Title, Help Button, Advisory Language) ──
-col1, col2, col3 = st.columns([2, 1, 1], vertical_alignment="bottom")
+# ── Navbar Row (Help Button, Advisory Language) ──
+col1, col2 = st.columns([1, 1], vertical_alignment="bottom")
 
 with col1:
-    if LOGO_B64:
-        st.markdown(f"""
-        <div class="orca-hero-header" style="margin: 0 !important;">
-            <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="orca-hero-header" style="margin: 0 !important;">
-            <span class="orca-hero-title">🌊</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-with col2:
     if st.button("Tour Guide", use_container_width=True):
         st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
 
-with col3:
+with col2:
     st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="display:none;"></div>', unsafe_allow_html=True)
     lang_keys = list(LANG_DISPLAY.keys())
     lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
