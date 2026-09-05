@@ -73,6 +73,44 @@ def format_clean_location(full_loc: str) -> str:
     return primary
 
 
+def render_folium_map(fmap, height: int = 360) -> None:
+    """
+    Render a Folium map reliably inside Streamlit tabs and nested views,
+    preventing 0px height collapse and React component iframe unmount issues.
+    Uses Streamlit components.html with explicit height and auto-resize trigger,
+    with st_folium as a reliable fallback.
+    """
+    if fmap is None:
+        return
+    try:
+        import streamlit.components.v1 as components
+        html_content = fmap.get_root().render()
+        # Ensure Leaflet invalidates and recalculates container dimensions on mount
+        resize_script = """
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    window.dispatchEvent(new Event('resize'));
+                }, 200);
+            });
+        </script>
+        """
+        if "</body>" in html_content:
+            html_content = html_content.replace("</body>", f"{resize_script}</body>")
+        else:
+            html_content += resize_script
+
+        components.html(html_content, height=height)
+    except Exception:
+        st_folium(
+            fmap,
+            width=None,
+            height=height,
+            returned_objects=[],
+            use_container_width=True,
+        )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Page configuration
 # ─────────────────────────────────────────────────────────────────────────────
@@ -456,7 +494,9 @@ iframe[title="streamlit_folium.st_folium"],
 div[data-testid="stCustomComponentV1"] iframe {
     border-radius: 12px !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
-    max-height: 380px !important;
+    min-height: 350px !important;
+    height: 360px !important;
+    max-height: 420px !important;
     width: 100% !important;
 }
 .js-plotly-plot, .plot-container {
@@ -586,6 +626,7 @@ div[data-testid="stCustomComponentV1"] iframe {
     /* Maps: Prevent taking 60-90% of screen height */
     iframe[title="streamlit_folium.st_folium"],
     div[data-testid="stCustomComponentV1"] iframe {
+        min-height: 250px !important;
         height: 250px !important;
         max-height: 250px !important;
         width: 100% !important;
@@ -703,6 +744,7 @@ div[data-testid="stCustomComponentV1"] iframe {
 
     iframe[title="streamlit_folium.st_folium"],
     div[data-testid="stCustomComponentV1"] iframe {
+        min-height: 220px !important;
         height: 220px !important;
         max-height: 220px !important;
     }
@@ -1936,20 +1978,26 @@ def render_fisherman_response(
         # ── TAB: Maritime Map ────────────────────────────────────────────────
         if "map" in tab_map:
             with tab_map["map"]:
-                st_folium(fmap, width=None, height=340, returned_objects=[], use_container_width=True)
-                tab_map["map"].caption(loc.get("map_sub", "Click zone markers for details · Green = high potential · Red = hazard zone"))
-                if has_pfz_data:
-                    best_z = pfz_res.get("best_zone") or pfz_res.get("zones", [{}])[0]
-                    sp_list = best_z.get("species", [])
-                    sp_str = ", ".join(sp_list) if isinstance(sp_list, list) else str(sp_list)
-                    dist_km_str = f"{best_z.get('distance_to_user_km', '—')} km"
-                    tab_map["map"].markdown(f"""
+                target_map = fmap
+                if target_map is None and result:
+                    target_map = generate_map_for_result(result, persona="fisherman")
+                if target_map is not None:
+                    render_folium_map(target_map, height=340)
+                    tab_map["map"].caption(loc.get("map_sub", "Click zone markers for details · Green = high potential · Red = hazard zone"))
+                    if has_pfz_data:
+                        best_z = pfz_res.get("best_zone") or pfz_res.get("zones", [{}])[0]
+                        sp_list = best_z.get("species", [])
+                        sp_str = ", ".join(sp_list) if isinstance(sp_list, list) else str(sp_list)
+                        dist_km_str = f"{best_z.get('distance_to_user_km', '—')} km"
+                        tab_map["map"].markdown(f"""
 <div class="hotspot-quick-chip">
   🎯 <b>Top Target:</b> <b>{best_z.get('name', 'Identified Zone')}</b> 
   ({dist_km_str} · Depth: {best_z.get('depth_m', '—')} m) 
   &nbsp;·&nbsp; <i>Species: {sp_str}</i>
 </div>
 """, unsafe_allow_html=True)
+                else:
+                    tab_map["map"].info(f"No maritime map required for {location_str}.")
 
         # ── TAB: Fishing Zones (PFZ) ─────────────────────────────────────────
         if "pfz" in tab_map:
@@ -2390,8 +2438,12 @@ def render_authority_response(
 
     # ── TAB 1: Surveillance & Geofences ──
     with t_map:
-        if fmap is not None:
-            st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
+        target_map = fmap
+        if target_map is None and result:
+            target_map = generate_map_for_result(result, persona="coastal_authority")
+
+        if target_map is not None:
+            render_folium_map(target_map, height=360)
             t_map.caption("Red polygon = Active storm-surge exclusion geofence · Blue track = Monitored vessel corridor · Green pins = PFZ clusters")
             recall_txt = "Enforced 🚨" if verdict == "DANGER" else ("Standby ⚠️" if verdict == "CAUTION" else "Cleared 🟢")
             t_map.markdown(f"""
@@ -2632,10 +2684,13 @@ def render_researcher_response(
         ctx.markdown(synthesis)
 
     # ── 3. Interactive Satellite Map (Default View) ───────────────────────────
-    if fmap is not None:
+    target_map = fmap
+    if target_map is None and result:
+        target_map = generate_map_for_result(result, persona="researcher", show_sst_heatmap=True)
+    if target_map is not None:
         ctx.markdown("#### 🛰️ ISRO Oceansat-3 / Sentinel-3 Satellite Composite")
         ctx.caption("Use layer control to toggle SST Thermal Gradient and Chlorophyll-a Productivity")
-        st_folium(fmap, width=None, height=360, returned_objects=[], use_container_width=True)
+        render_folium_map(target_map, height=360)
 
     # ── 3. Progressive Disclosure: Detailed Scientific Data ───────────────────
     with ctx.expander("🔬 View Detailed Scientific Data", expanded=False):
@@ -3214,12 +3269,12 @@ if active_view == "map":
                 st.rerun()
 
     if st.session_state.current_map is not None:
-        st_folium(st.session_state.current_map, width=None, height=360, returned_objects=[], use_container_width=True)
+        render_folium_map(st.session_state.current_map, height=360)
     else:
         def_loc = "Chennai" if persona == "coastal_authority" else "Kochi"
         res = orchestrator_run({"query": f"Analyze conditions near {def_loc}", "location": def_loc, "persona": persona, "language_code": st.session_state.orca_lang})
         st.session_state.current_map = generate_map_for_result(res, persona=persona, show_sst_heatmap=True)
-        st_folium(st.session_state.current_map, width=None, height=360, returned_objects=[], use_container_width=True)
+        render_folium_map(st.session_state.current_map, height=360)
 
     if st.button("← Return to Dashboard", type="primary"):
         st.session_state.active_nav_view = "dashboard"
@@ -3396,12 +3451,9 @@ else:
     if not st.session_state.messages:
         if st.session_state.current_map is not None:
             st.markdown("**🗺️ Interactive Maritime Map** *(click markers for oceanographic & zone details)*")
-            st_folium(
+            render_folium_map(
                 st.session_state.current_map,
-                width=None,
                 height=360,
-                returned_objects=[],
-                use_container_width=True,
             )
         elif persona == "coastal_authority":
             st.markdown("""
@@ -3430,12 +3482,9 @@ else:
                     safety_verdict="CAUTION",
                     persona="coastal_authority",
                 )
-                st_folium(
+                render_folium_map(
                     default_auth_map,
-                    width=None,
                     height=300,
-                    returned_objects=[],
-                    use_container_width=True,
                 )
                 st.caption("Baseline surveillance map for Zone 4 (Chennai Sector). Enter a query below or use quick action buttons to analyze any sector.")
 
