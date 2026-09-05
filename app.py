@@ -777,54 +777,32 @@ hr { border-color: #E2E8F0 !important; }
         padding-right: 0.65rem !important;
     }
 
-    /* Header Row: Clean, proportional single-line layout on both mobile and desktop */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        gap: 6px !important;
-        width: 100% !important;
+    /* Ensure the container holding the top controls stays visible and stacks cleanly */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+    /* Force the columns inside the header to take up appropriate space on mobile */
+    div[data-testid="column"] {
+        min-width: 120px !important;
+        flex: 1 1 auto !important;
     }
 
-    /* Keep all 3 columns side-by-side using the exact same proportional ratios on mobile */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"] {
-        min-width: 0 !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(1) {
-        flex: 3.2 1 0px !important;
-        overflow: hidden !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(2) {
-        flex: 1.8 1 0px !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:nth-child(3) {
-        flex: 2.4 1 0px !important;
-    }
-
-    /* Align heights and prevent button/selectbox clipping */
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button {
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 2px 6px !important;
-        font-size: 0.76rem !important;
+    div[data-testid="stHorizontalBlock"] button {
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 4px 8px !important;
+        font-size: 0.8rem !important;
         white-space: nowrap !important;
         border-radius: 8px !important;
-        width: 100% !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"],
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div {
-        height: 36px !important;
-        min-height: 36px !important;
+    div[data-testid="stHorizontalBlock"] div[data-baseweb="select"],
+    div[data-testid="stHorizontalBlock"] div[data-baseweb="select"] > div {
+        height: 38px !important;
+        min-height: 38px !important;
         border-radius: 8px !important;
-        width: 100% !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) div[data-baseweb="select"] > div {
-        font-size: 0.78rem !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        padding-left: 6px !important;
-        padding-right: 6px !important;
     }
 
     /* On mobile, hide the long subtitle sentence so Logo + Title fit cleanly in Column 1 */
@@ -4026,51 +4004,54 @@ with st.sidebar:
 # We place the Logo/Title, Tour Guide, and Language Selector in a single responsive row.
 # Injecting align-items: center specifically for the very first HorizontalBlock on the page
 # Custom vertical alignment handled by st.columns natively
-hero_col1, hero_col2, hero_col3 = st.columns([3.2, 1.8, 2.4], vertical_alignment="center")
+# Wrap the header controls inside its own dedicated st.container()
+header_container = st.container()
+with header_container:
+    hero_col1, hero_col2, hero_col3 = st.columns([3.2, 1.8, 2.4], vertical_alignment="center")
 
-with hero_col1:
-    if LOGO_B64:
-        st.markdown(f"""
-        <div class="orca-hero-header" style="margin: 0 !important;">
-            <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
-            <div class="orca-hero-text">
-                <span class="orca-hero-title">ORCA</span>
-                <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+    with hero_col1:
+        if LOGO_B64:
+            st.markdown(f"""
+            <div class="orca-hero-header" style="margin: 0 !important;">
+                <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
+                <div class="orca-hero-text">
+                    <span class="orca-hero-title">ORCA</span>
+                    <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="orca-hero-header" style="margin: 0 !important;">
-            <div class="orca-hero-text">
-                <span class="orca-hero-title">🌊 ORCA</span>
-                <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="orca-hero-header" style="margin: 0 !important;">
+                <div class="orca-hero-text">
+                    <span class="orca-hero-title">🌊 ORCA</span>
+                    <span class="orca-hero-subtitle">Satellite Intelligence · ISRO SIH 26176</span>
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-with hero_col2:
-    if st.button("❓ Tour Guide", use_container_width=True):
-        st.session_state.open_tour_modal = True
-        st.session_state.active_nav_view = "dashboard"
-        st.rerun()
+    with hero_col2:
+        if st.button("❓ Help / Tour Guide", use_container_width=True):
+            st.session_state.open_tour_modal = True
+            st.session_state.active_nav_view = "dashboard"
+            st.rerun()
 
-with hero_col3:
-    st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
-    lang_keys = list(LANG_DISPLAY.keys())
-    lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
-    curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
-    selected_lang_label = st.selectbox(
-        "Advisory Language",
-        options=lang_labels,
-        index=curr_idx,
-        label_visibility="collapsed",
-        help="Select language for safety verdicts and tool execution"
-    )
-    new_lang = lang_keys[lang_labels.index(selected_lang_label)]
-    if new_lang != st.session_state.orca_lang:
-        st.session_state.orca_lang = new_lang
-        st.rerun()
+    with hero_col3:
+        st.markdown('<div id="orca-tour-lang-marker" data-tour-target="language" style="margin:0;padding:0;height:0;line-height:0;overflow:hidden;"></div>', unsafe_allow_html=True)
+        lang_keys = list(LANG_DISPLAY.keys())
+        lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
+        curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
+        selected_lang_label = st.selectbox(
+            "Advisory Language",
+            options=lang_labels,
+            index=curr_idx,
+            label_visibility="collapsed",
+            help="Select language for safety verdicts and tool execution"
+        )
+        new_lang = lang_keys[lang_labels.index(selected_lang_label)]
+        if new_lang != st.session_state.orca_lang:
+            st.session_state.orca_lang = new_lang
+            st.rerun()
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
 
