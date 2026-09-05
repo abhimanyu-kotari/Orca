@@ -1106,6 +1106,10 @@ CARD_LOCALIZATION = {
         "tab_pfz": "🐟 Fishing Zones (PFZ)",
         "tab_nav": "🧭 Route & Navigation",
         "tab_safety": "🛡️ Safety & AI Insights",
+        "tab_auth_map": "🗺️ Surveillance & Geofences",
+        "tab_auth_hazards": "🚨 Hazard & Evacuation Protocols",
+        "tab_auth_telemetry": "📊 Disaster Telemetry & Thresholds",
+        "tab_auth_reasoning": "🧠 IMD Reasoning & Dispatch Chain",
         "tab_res_map": "🛰️ Satellite Composite & GIS Map",
         "tab_res_diagnostics": "📊 Earth Observation Diagnostics",
         "tab_res_timeseries": "📈 Multi-Temporal Time Series",
@@ -1153,6 +1157,10 @@ CARD_LOCALIZATION = {
         "tab_pfz": "🐟 ಮೀನುಗಾರಿಕಾ ವಲಯಗಳು (PFZ)",
         "tab_nav": "🧭 ಮಾರ್ಗ ಮತ್ತು ನ್ಯಾವಿಗೇಷನ್",
         "tab_safety": "🛡️ ಸುರಕ್ಷತೆ ಮತ್ತು ಒಳನೋಟಗಳು",
+        "tab_auth_map": "🗺️ ಕಣ್ಗಾವಲು ಮತ್ತು ಜಿಯೋಫೆನ್ಸ್",
+        "tab_auth_hazards": "🚨 ಅಪಾಯ ಮತ್ತು ಸ್ಥಳಾಂತರಿಸುವ ಪ್ರೋಟೋಕಾಲ್",
+        "tab_auth_telemetry": "📊 ವಿಪತ್ತು ದೂರಮಾಪನ ಮತ್ತು ಮಿತಿಗಳು",
+        "tab_auth_reasoning": "🧠 IMD ಕಾರಣ ಮತ್ತು ರವಾನೆ ಸರಪಳಿ",
         "tab_res_map": "🛰️ ಉಪಗ್ರಹ ಸಂಯೋಜನೆ ಮತ್ತು ನಕ್ಷೆ",
         "tab_res_diagnostics": "📊 ಭೂ ವೀಕ್ಷಣೆ ರೋಗನಿರ್ಣಯ",
         "tab_res_timeseries": "📈 ಬಹು-ತಾತ್ಕಾಲಿಕ ಸಮಯ ಸರಣಿ",
@@ -1820,7 +1828,7 @@ def _generate_gpx_content(waypoints: list, route_title: str = "ORCA Route") -> s
 
 def render_fisherman_response(
     result: dict,
-    fmap,
+    fmap=None,
     container=None,
 ) -> None:
     """
@@ -2317,7 +2325,7 @@ _AUTHORITY_LEVEL_META = {
 
 def render_authority_response(
     result: dict,
-    fmap,
+    fmap=None,
     container=None,
 ) -> None:
     """
@@ -2354,7 +2362,7 @@ def render_authority_response(
             result["language"] = t_name
         except Exception:
             pass
-    loc         = CARD_LOCALIZATION.get(active_lang, CARD_LOCALIZATION.get("en", {}))
+    loc         = get_card_localization(active_lang)
     intent      = result.get("intent", "casual_chat")
     is_casual   = (intent == "casual_chat") or (not weather_res and not pfz_res and not nav_res)
 
@@ -2598,7 +2606,7 @@ def render_authority_response(
 
 def render_researcher_response(
     result: dict,
-    fmap,
+    fmap=None,
     container=None,
 ) -> None:
     """
@@ -2633,6 +2641,7 @@ def render_researcher_response(
     synthesis   = result.get("synthesis", "")
     intent_res  = result.get("intent_result", {}) if isinstance(result, dict) else {}
     active_lang = st.session_state.get("orca_lang") or result.get("language_code") or intent_res.get("language_code", "en")
+    loc         = get_card_localization(active_lang)
     if active_lang != "en" and result.get("language_code", "en") != active_lang and synthesis:
         try:
             from orchestrator import _localize_synthesis, LANG_CODE_TO_NAME
