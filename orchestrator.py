@@ -860,8 +860,10 @@ def _execute_orchestration(inputs: dict) -> dict:
         eo_data = generate_eo_grid(center_lat=float(lat), center_lon=float(lon), radius_km=120.0)
         agents_invoked.append("eo_tools")
 
+        raw_loc = weather_res.get('location', location)
+        clean_loc = format_clean_location(raw_loc)
         synthesis = (
-            f"🛰️ **Earth Observation & Oceanographic Telemetry: {weather_res.get('location', location)}**\n\n"
+            f"🛰️ **Earth Observation & Oceanographic Telemetry: {clean_loc}**\n\n"
             f"**📊 Key Satellite Ocean Colour & Thermal Indices:**\n"
             f"- **Mean Sea Surface Temp (SST):** {eo_data['mean_sst_c']:.1f}°C *(Anomaly: {eo_data['sst_anomaly_c']:+.2f}°C vs climatology)*\n"
             f"- **SST Dynamic Range:** {eo_data['min_sst_c']:.1f}°C to {eo_data['max_sst_c']:.1f}°C\n"
