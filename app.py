@@ -790,8 +790,8 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
 
-    /* THE ROOT CAUSE FIX: Strict Grid layout */
-    div[data-testid="stHorizontalBlock"]:first-of-type {
+    /* THE ROOT CAUSE FIX: Target exactly the header block using :has() */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
         gap: 8px !important;
@@ -799,14 +799,13 @@ hr { border-color: #E2E8F0 !important; }
         box-sizing: border-box !important;
     }
     
-    /* Hide the logo column entirely on mobile */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(1) {
+    /* Hide the specific column containing the logo on mobile */
+    div[data-testid="column"]:has(.orca-hero-header) {
         display: none !important;
     }
 
-    /* Force the 2nd and 3rd columns to strictly obey the 1fr grid cells */
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(2),
-    div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-child(3) {
+    /* Force the remaining columns (Tour Guide, Language) to strictly obey the grid */
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) > div[data-testid="column"]:not(:has(.orca-hero-header)) {
         display: block !important;
         width: 100% !important;
         min-width: 0 !important;
@@ -815,18 +814,18 @@ hr { border-color: #E2E8F0 !important; }
     }
 
     /* CRITICAL FIX: Force internal Streamlit/Base Web elements to shrink */
-    div[data-testid="stHorizontalBlock"]:first-of-type * {
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) * {
         min-width: 0 !important;
     }
     
     /* Truncate text (e.g. 'Tour Gu...') and reduce button padding on extremely small phones */
-    div[data-testid="stHorizontalBlock"]:first-of-type p,
-    div[data-testid="stHorizontalBlock"]:first-of-type span {
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) p,
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) span {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
     }
-    div[data-testid="stHorizontalBlock"]:first-of-type button {
+    div[data-testid="stHorizontalBlock"]:has(.orca-hero-header) button {
         padding-left: 2px !important;
         padding-right: 2px !important;
     }
