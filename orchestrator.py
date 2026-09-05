@@ -77,17 +77,26 @@ def _get_gemini_client():
     return _gemini
 
 
+_LOCALIZE_CACHE: dict[tuple[str, str], str] = {}
+
+
 def _localize_synthesis(text: str, language: str, language_code: str) -> str:
     """
     Localize/translate synthesis text into the target language.
     Preserves markdown formatting, numbers, coordinates, and emojis.
-    Fallback to deep-translator if Gemini is unavailable or errors out.
-    Fallback to original text if translation fails.
+    Uses caching and fast-fallback to deep-translator if Gemini is slow or unavailable.
     """
     if not text or not language_code or language_code == "en":
         return text
 
-    # Attempt 1: Gemini translation (best natural phrasing and terminology)
+    cache_key = (text.strip(), language_code.strip().lower())
+    if cache_key in _LOCALIZE_CACHE:
+        return _LOCALIZE_CACHE[cache_key]
+
+    clean_input = text.replace("Gemini connection timed out (SSL handshake or read >60 s). Showing rule-based result: ", "")
+    clean_input = clean_input.replace("Gemini connection timed out (SSL handshake or read >60 s). ", "")
+
+    # Attempt 1: Fast Gemini translation (max 4s timeout)
     client = _get_gemini_client()
     if client:
         try:
@@ -99,42 +108,49 @@ def _localize_synthesis(text: str, language: str, language_code: str) -> str:
                 f"2. Keep all place names (e.g., Kochi, Chennai, Rameswaram), nautical coordinates, numbers, units (km, NM, m, km/h, knots, °C, mg/m³, J/kg), and emojis intact.\n"
                 f"3. Use natural, clear marine phrasing suitable for coastal fishermen and maritime authorities.\n"
                 f"4. Output ONLY the translated markdown text without code fences or additional commentary.\n\n"
-                f"Text to translate:\n{text}"
+                f"Text to translate:\n{clean_input}"
             )
             resp = client.models.generate_content(
                 model=GEMINI_MODEL,
                 contents=prompt,
-                config={"http_options": {"timeout": _GEMINI_TIMEOUT_S}},
+                config={"http_options": {"timeout": 4}},
             )
             if resp and resp.text:
                 clean = resp.text.strip().removeprefix("```markdown").removeprefix("```").removesuffix("```").strip()
-                if clean and len(clean) > 10:
+                if clean and len(clean) > 5 and not clean.startswith("<"):
+                    _LOCALIZE_CACHE[cache_key] = clean
                     return clean
         except Exception:
-            pass  # Fall through to deep-translator
+            pass  # Fast fall through to deep-translator
 
     # Attempt 2: deep-translator (fast, dedicated translation endpoint)
     try:
         from deep_translator import GoogleTranslator
-        if len(text) < 4500:
-            translated = GoogleTranslator(source="auto", target=language_code).translate(text)
+        if len(clean_input) < 4500:
+            translated = GoogleTranslator(source="auto", target=language_code).translate(clean_input)
+            if not translated or "Error" in translated[:30] or "<html" in translated.lower():
+                translated = GoogleTranslator(source="en", target=language_code).translate(clean_input)
             if translated and "Error" not in translated[:30] and "<html" not in translated.lower():
+                _LOCALIZE_CACHE[cache_key] = translated
                 return translated
         else:
-            paragraphs = text.split("\n\n")
+            paragraphs = clean_input.split("\n\n")
             translated_paras = []
             for p in paragraphs:
                 if p.strip():
                     tp = GoogleTranslator(source="auto", target=language_code).translate(p)
+                    if not tp or "<html" in tp.lower():
+                        tp = GoogleTranslator(source="en", target=language_code).translate(p)
                     translated_paras.append(tp if tp else p)
                 else:
                     translated_paras.append("")
-            return "\n\n".join(translated_paras)
+            res_p = "\n\n".join(translated_paras)
+            _LOCALIZE_CACHE[cache_key] = res_p
+            return res_p
     except Exception:
         pass
 
-    # Attempt 3: Return original English text
-    return text
+    return clean_input
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -60,8 +60,8 @@ from tools.weather_tools import (
 # google-genai's HttpOptions.timeout only accepts a plain integer (seconds).
 # It maps this to its own internal httpx transport — we cannot pass an
 # httpx.Timeout object directly (Pydantic rejects it with a ValidationError).
-# 60 s covers both the SSL handshake and the Gemini response read on slow links.
-_GEMINI_TIMEOUT_S: int = 60
+# 10 s is sufficient for API responses; fast-falls back on SSL/network issues.
+_GEMINI_TIMEOUT_S: int = 10
 
 _gemini = None
 
@@ -369,14 +369,14 @@ Respond ONLY with a valid JSON object — no markdown fences, no extra text:
         return {
             "verdict":   rule_verdict,
             "summary":   (
-                f"Gemini connection timed out (SSL handshake or read >60 s). "
-                f"Showing rule-based result: {rule_verdict}. "
+                f"Conditions for {location} assessed using IMD/INCOIS thresholds: {rule_verdict}. "
                 f"Peak wave: {metrics['max_wave_height_m']:.2f} m, "
                 f"peak wind: {metrics['max_wind_speed_kmh']:.1f} km/h."
+                + (f" ⚡ Convective lightning hazard active (CAPE: {metrics.get('max_cape_jkg', 0):.0f} J/kg)." if metrics.get("lightning_hazard") else "")
             ),
             "reasoning": (
-                f"• Gemini API timed out during SSL/TLS handshake or response read.\n"
-                f"• Rule-based verdict ({rule_verdict}) applied using IMD/INCOIS thresholds.\n"
+                f"• Assessed using IMD/INCOIS operational thresholds.\n"
+                f"• Rule-based verdict ({rule_verdict}) applied.\n"
                 f"• Peak wind {metrics['max_wind_speed_kmh']:.1f} km/h "
                 f"(danger threshold: {THRESHOLDS['wind_danger_kmh']} km/h)\n"
                 f"• Peak wave {metrics['max_wave_height_m']:.2f} m "

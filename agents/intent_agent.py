@@ -53,7 +53,7 @@ from config import GEMINI_API_KEY, GEMINI_MODEL
 # ─────────────────────────────────────────────────────────────────────────────
 # Gemini client — same pattern as weather_agent.py
 # ─────────────────────────────────────────────────────────────────────────────
-_GEMINI_TIMEOUT_S: int = 60
+_GEMINI_TIMEOUT_S: int = 10
 
 _gemini = None
 
@@ -400,34 +400,39 @@ def _classify_intent_from_text(text: str) -> str:
     return "unknown"
 
 
-def _fallback_parse(query: str, error: str) -> dict:
+def _fallback_parse(query: str, error: str, forced_code: str = None, forced_name: str = None) -> dict:
     """
     Rule-based fallback used when Gemini is unavailable or returns bad JSON.
 
     Uses langdetect for language detection and simple keyword matching for
     intent. This ensures the app stays functional even without the LLM.
     """
-    # --- Language detection via langdetect ---
-    q_words = [w.strip("?,.!:;\"'") for w in query.lower().split() if w.strip("?,.!:;\"'")]
-    english_greetings = {"hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "thanks", "thank", "who"}
-    is_common_ascii = all(w.isascii() for w in q_words) if q_words else True
-
-    if any(w in english_greetings for w in q_words):
-        lang_code = "en"
+    # If caller explicitly provided language, honor it
+    if forced_code and forced_code != "auto":
+        lang_code = forced_code
+        lang_name = forced_name or LANG_CODE_TO_NAME.get(forced_code, "English")
     else:
-        try:
-            detected = langdetect_detect(query)
-            if is_common_ascii and detected not in ("hi", "ta", "te", "ml", "kn", "bn", "mr", "gu", "pa", "or", "ur"):
+        # --- Language detection via langdetect ---
+        q_words = [w.strip("?,.!:;\"'") for w in query.lower().split() if w.strip("?,.!:;\"'")]
+        english_greetings = {"hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "thanks", "thank", "who"}
+        is_common_ascii = all(w.isascii() for w in q_words) if q_words else True
+
+        if any(w in english_greetings for w in q_words):
+            lang_code = "en"
+        else:
+            try:
+                detected = langdetect_detect(query)
+                if is_common_ascii and detected not in ("hi", "ta", "te", "ml", "kn", "bn", "mr", "gu", "pa", "or", "ur"):
+                    lang_code = "en"
+                else:
+                    lang_code = detected
+            except LangDetectException:
                 lang_code = "en"
-            else:
-                lang_code = detected
-        except LangDetectException:
+
+        if lang_code not in LANG_CODE_TO_NAME:
             lang_code = "en"
 
-    if lang_code not in LANG_CODE_TO_NAME:
-        lang_code = "en"
-
-    lang_name = LANG_CODE_TO_NAME.get(lang_code, "English")
+        lang_name = LANG_CODE_TO_NAME.get(lang_code, "English")
 
     # --- Translate to English if needed ---
     # All keyword matching and location extraction below runs on English text.
@@ -512,12 +517,15 @@ def run(inputs: dict) -> dict:
             "translated_text": query,
         }
 
+    forced_code = inputs.get("language_code")
+    forced_name = inputs.get("language")
+
     # ── Step 1: Ask Gemini ────────────────────────────────────────────────────
     prompt = _build_prompt(query)
 
     client = _get_gemini_client()
     if not client:
-        return _fallback_parse(query, "GEMINI_API_KEY not configured or client unavailable")
+        return _fallback_parse(query, "GEMINI_API_KEY not configured or client unavailable", forced_code, forced_name)
 
     try:
         response = client.models.generate_content(
@@ -532,11 +540,11 @@ def run(inputs: dict) -> dict:
         parsed     = json.loads(clean_text)
 
     except (TimeoutError, httpx.TimeoutException):
-        return _fallback_parse(query, "Gemini timed out")
+        return _fallback_parse(query, "Gemini timed out", forced_code, forced_name)
     except (json.JSONDecodeError, ValueError) as e:
-        return _fallback_parse(query, f"Bad JSON from Gemini: {e}")
+        return _fallback_parse(query, f"Bad JSON from Gemini: {e}", forced_code, forced_name)
     except Exception as e:
-        return _fallback_parse(query, str(e))
+        return _fallback_parse(query, str(e), forced_code, forced_name)
 
     # ── Step 2: Validate and normalise the parsed response ────────────────────
 

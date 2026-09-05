@@ -50,7 +50,7 @@ from tools.pfz_tools import find_nearest_zones
 # ─────────────────────────────────────────────────────────────────────────────
 # Gemini client — same pattern as all other ORCA agents
 # ─────────────────────────────────────────────────────────────────────────────
-_GEMINI_TIMEOUT_S: int = 60
+_GEMINI_TIMEOUT_S: int = 10
 
 _gemini = None
 
