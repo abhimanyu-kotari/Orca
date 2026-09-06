@@ -819,14 +819,7 @@ hr { border-color: #E2E8F0 !important; }
         position: static !important;
     }
 
-    /* Remove empty product-tour space and tighten the navbar divider. */
-    div[data-testid="stElementContainer"]:has(> iframe) {
-        display: none !important;
-        height: 0 !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
+    /* Keep embedded maps visible on mobile; Folium is rendered in an iframe. */
     .orca-nav-divider {
         margin: 4px 0 !important;
     }
@@ -968,6 +961,40 @@ hr { border-color: #E2E8F0 !important; }
         min-width: 0 !important;
         flex: none !important;
     }
+
+    /* Keep long response labels and provenance text inside the mobile card. */
+    .data-trust {
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 8px !important;
+        align-items: flex-start !important;
+    }
+    .data-trust > span,
+    .hotspot-quick-chip {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+    }
+    .hotspot-quick-chip {
+        line-height: 1.45 !important;
+    }
+
+    /* Allow tab labels to scroll horizontally instead of being clipped. */
+    .stTabs [data-baseweb="tab-list"] {
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        scrollbar-width: none !important;
+    }
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+        display: none !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        flex: 0 0 auto !important;
+        white-space: normal !important;
+        max-width: 46vw !important;
+        text-align: center !important;
+    }
 }
 
 /* ── Modern ORCA UI refinement ───────────────────────────── */
@@ -1106,6 +1133,25 @@ input:focus {
 [data-testid="stChatMessage"] strong,
 [data-testid="stChatMessage"] em {
     color: var(--orca-ink) !important;
+}
+
+/* Safety cards sit inside chat messages, so restore their high-contrast text. */
+.safety-card-safe .safety-verdict,
+.safety-card-safe .safety-subtitle,
+.safety-card-safe .safety-metric-val,
+.safety-card-safe .safety-metric-lbl,
+.safety-card-safe .safety-updated,
+.safety-card-caution .safety-verdict,
+.safety-card-caution .safety-subtitle,
+.safety-card-caution .safety-metric-val,
+.safety-card-caution .safety-metric-lbl,
+.safety-card-caution .safety-updated,
+.safety-card-danger .safety-verdict,
+.safety-card-danger .safety-subtitle,
+.safety-card-danger .safety-metric-val,
+.safety-card-danger .safety-metric-lbl,
+.safety-card-danger .safety-updated {
+    color: #FFF7ED !important;
 }
 
 [data-testid="stChatInput"] {
