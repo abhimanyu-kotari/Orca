@@ -773,12 +773,6 @@ hr { border-color: #E2E8F0 !important; }
 }
 [data-testid="stDataFrameContainer"] { border-radius: 10px !important; }
 
-/* ── Dual-render: Hide sidebar Tour Guide on desktop, reveal on mobile ───── */
-/* The sidebar Tour Guide button is hidden by default (desktop) */
-#sidebar-tour-btn-marker + div[data-testid="stButton"] {
-    display: none !important;
-}
-
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 1280px) { .safety-metrics { gap: 16px; } }
 @media (max-width: 768px)  { 
@@ -4188,12 +4182,6 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     st.markdown("<p style='font-size:1.05rem;font-weight:800;color:#F8FAFC;margin:2px 0 0 0;text-align:center;'>ORCA OS</p><p style='font-size:0.72rem;color:#64B6D0;margin:0 0 10px 0;text-align:center;'>Marine Decision Intelligence</p>", unsafe_allow_html=True)
-
-    st.markdown("<div id='sidebar-tour-btn-marker' style='display:none'></div>", unsafe_allow_html=True)
-    if st.button("Tour Guide", key="tour_sidebar", use_container_width=True):
-        st.session_state.open_tour_modal = True
-        st.session_state.active_nav_view = "dashboard"
-        st.rerun()
 
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
