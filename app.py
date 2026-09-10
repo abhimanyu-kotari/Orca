@@ -73,6 +73,45 @@ def format_clean_location(full_loc: str) -> str:
     return primary
 
 
+def transcribe_voice_query(audio_bytes: bytes, mime_type: str = "audio/wav") -> str:
+    """
+    Transcribe spoken user query using Gemini multimodal capabilities.
+    Supports Indian regional languages and dialect-aware marine queries.
+    """
+    from config import get_gemini_api_key, GEMINI_MODEL
+    api_key = get_gemini_api_key()
+    if not api_key:
+        return ""
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key, http_options={"timeout": 30})
+        prompt = (
+            "You are the dialect-aware voice transcriber for ORCA (ISRO Marine Decision Intelligence).\n"
+            "The user is speaking an oceanographic or maritime query (e.g. asking about weather, fish zones, cyclone alerts, or routes).\n"
+            "Task: Transcribe the spoken audio query verbatim into text.\n"
+            "- If the user speaks in an Indian regional language (such as Tamil, Hindi, Malayalam, Telugu, Gujarati, Bengali, Odia, Marathi, or Kannada), "
+            "transcribe it faithfully in that language script or clear phonetic transliteration.\n"
+            "- Return ONLY the plain transcribed text query string. Do NOT add quotation marks, greetings, explanations, or markdown formatting."
+        )
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                types.Part.from_bytes(
+                    data=audio_bytes,
+                    mime_type=mime_type or "audio/wav",
+                ),
+                prompt,
+            ],
+        )
+        return (response.text or "").strip()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return ""
+
+
 def render_folium_map(fmap, height: int = 360) -> None:
     """
     Render a Folium map reliably inside Streamlit tabs and nested views,
@@ -4811,14 +4850,46 @@ Switch between **Fisherman**, **Coastal Authority**, and **Researcher** at the t
             st.markdown(welcome_text.strip())
 
 
-# ── Chat input ────────────────────────────────────────────────────────────────
-if user_query := st.chat_input("Ask about sea conditions, fishing zones, or safety..."):
+# ── Voice Input (Dialect-Aware Voice AI) & Chat Input ─────────────────────────
+st.markdown("##### 🎙️ Voice & Text Query Console")
+st.caption("Record a voice query in any Indian regional language (Tamil, Hindi, Malayalam, Telugu, Gujarati, Bengali, Odia, etc.), or type below.")
+
+# Native Streamlit audio recorder
+voice_audio = st.audio_input("Record Voice Query:", key="orca_voice_recorder")
+
+user_query = None
+is_voice_query = False
+
+# 1. Process voice query if audio captured
+if voice_audio is not None:
+    import hashlib
+    audio_bytes = voice_audio.getvalue()
+    audio_hash = hashlib.md5(audio_bytes).hexdigest()
+
+    if st.session_state.get("last_processed_audio_hash") != audio_hash:
+        st.session_state["last_processed_audio_hash"] = audio_hash
+        with st.spinner("🎙️ Transcribing and interpreting dialect with Gemini Multimodal AI..."):
+            transcribed = transcribe_voice_query(audio_bytes, mime_type=voice_audio.type)
+            if transcribed:
+                user_query = transcribed
+                is_voice_query = True
+            else:
+                st.warning("⚠️ Could not clearly transcribe the voice audio. Please verify your GEMINI_API_KEY or speak closer to the microphone, or type below.")
+
+# 2. Text input fallback
+if text_input := st.chat_input("Ask about sea conditions, fishing zones, or safety (or speak above)..."):
+    user_query = text_input
+    is_voice_query = False
+
+# 3. Route user query through Orchestrator
+if user_query:
     st.session_state.active_nav_view = "dashboard"
 
     # A. Display user query
-    st.session_state.messages.append({"role": "user", "content": user_query})
+    display_content = f"🎙️ **[Voice Query]**: *\"{user_query}\"*" if is_voice_query else user_query
+    st.session_state.messages.append({"role": "user", "content": display_content})
     with st.chat_message("user"):
-        st.markdown(user_query)
+        st.markdown(display_content)
 
     # B. Route through Orchestrator
     with st.chat_message("assistant"):
