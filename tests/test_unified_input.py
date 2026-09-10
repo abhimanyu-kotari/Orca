@@ -83,6 +83,17 @@ class TestUnifiedVoiceInput(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             transcribe_voice_query(b"RIFF....WAVEfmt " + b"\x00" * 200, mime_type="audio/wav")
 
+    @patch("config.get_gemini_api_key", return_value="fake-api-key")
+    @patch("app._get_voice_gemini_client")
+    def test_transcribe_voice_query_timeout_has_clear_message(self, mock_get_client, mock_get_key):
+        """A Gemini handshake timeout should raise a user-facing message explaining the network cause and fallback."""
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.models.generate_content.side_effect = TimeoutError("The handshake operation timed out")
+
+        with self.assertRaisesRegex(RuntimeError, "internet connection|VPN/proxy|type your query|timed out"):
+            transcribe_voice_query(b"RIFF....WAVEfmt " + b"\x00" * 200, mime_type="audio/wav")
+
 
 class TestChatInputAppTest(unittest.TestCase):
 

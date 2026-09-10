@@ -41,3 +41,6 @@ deep-translator>=1.11.4
 # --- Vector memory store (Phase 4) ---
 chromadb>=0.5.0
 sentence-transformers>=3.0.0
+
+#How to run this
+#streamlit run app.py

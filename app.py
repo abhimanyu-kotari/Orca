@@ -131,6 +131,19 @@ def _get_voice_gemini_client():
     return _voice_client
 
 
+def _voice_error_message(exc: Exception) -> str:
+    """Convert raw network/SSL/Gemini failures into a clear user-facing message."""
+    msg = str(exc).lower()
+    if any(token in msg for token in ["handshake", "timed out", "timeout", "ssl", "readtimeout", "network", "proxy", "connection"]):
+        return (
+            "Voice transcription timed out while contacting Gemini. Please check your internet connection, "
+            "VPN/proxy/firewall settings, then try again or type your query instead."
+        )
+    if "api key" in msg or "gemini_api_key" in msg or "missing" in msg:
+        return "Gemini API key is not configured. Please set GEMINI_API_KEY in .env."
+    return f"Voice transcription failed: {exc}. Please try again or type below."
+
+
 def transcribe_voice_query(audio_bytes: bytes, mime_type: str = "audio/wav") -> str:
     """
     Transcribe spoken user query using Gemini multimodal capabilities.
@@ -192,7 +205,7 @@ def transcribe_voice_query(audio_bytes: bytes, mime_type: str = "audio/wav") -> 
         print(f"[VOICE] Gemini API Error during transcription: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
-        raise e
+        raise RuntimeError(_voice_error_message(e)) from e
 
 
 def render_folium_map(fmap, height: int = 360) -> None:
@@ -1299,32 +1312,6 @@ input:focus {
     box-shadow: 0 8px 24px rgba(14, 165, 168, 0.16) !important;
 }
 
-/* Unpack button container so microphone sits on the left and submit on the right */
-div[data-testid="stChatInput"] div:has(> button[data-testid="stChatInputMicButton"]),
-div[data-testid="stChatInput"] div:has(> button[data-testid="stChatInputSubmitButton"]),
-div[data-testid="stChatInput"] div[class*="e1vtqrcf6"] {
-    display: contents !important;
-}
-
-/* Microphone button on the LEFT */
-div[data-testid="stChatInput"] button[data-testid="stChatInputMicButton"] {
-    order: -1 !important;
-    margin-left: 6px !important;
-    margin-right: 4px !important;
-    color: #0EA5A8 !important;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 50% !important;
-    cursor: pointer !important;
-    transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease !important;
-}
-
-div[data-testid="stChatInput"] button[data-testid="stChatInputMicButton"]:hover {
-    color: #087F83 !important;
-    background: #F0FDFA !important;
-    transform: scale(1.08) !important;
-}
-
 /* Text area in the MIDDLE */
 div[data-testid="stChatInput"] div:has(> textarea[data-testid="stChatInputTextArea"]) {
     order: 0 !important;
@@ -1487,7 +1474,7 @@ PRODUCT_TOUR_STEPS = [
         "badge": "9 INDIAN LANGUAGES",
         "title": "Ask in Your Native Language",
         "body": "Ask in your own language! ORCA supports <strong>English, हिन्दी, ಕನ್ನಡ, தமிழ், తెలుగు, മലയാളം, বাংলা, मराठी, and ગુજરાતી</strong> with automatic dialect detection and localized maritime terminology.",
-        "pills": ["Auto-Detection", "9 Regional Scripts", "Voice-Ready"],
+        "pills": ["Auto-Detection", "9 Regional Scripts", "Text-Only Input"],
         "tip": "Look at the glowing dropdown in the top header: you can pick your language here!",
         "target_type": "language",
         "location_label": "Top Header ➔ 🌐 Advisory Language",
@@ -2450,6 +2437,207 @@ LANG_DISPLAY = {
     "ta": "தமிழ்",   "te": "తెలుగు", "kn": "ಕನ್ನಡ",
     "bn": "বাংলা",   "mr": "मराठी",  "gu": "ગુજરાતી",
 }
+
+UI_TEXT = {
+    "en": {
+        "tour_guide": "Tour Guide",
+        "advisory_language": "Advisory Language",
+        "clear_chat": "Clear Chat",
+        "current_mode": "CURRENT MODE",
+        "contextual_query_tools": "Contextual Query Tools",
+        "orca_intelligence": "ORCA INTELLIGENCE (Architecture)",
+        "select_role": "Select Role:",
+        "chat_placeholder": "Ask about sea conditions, fishing zones, or safety...",
+        "weather_location": "Weather Location",
+        "time_window": "Time Window",
+        "run_weather_check": "Run Weather Check",
+        "return_dashboard": "Return to Dashboard",
+        "marine_intel": "Marine Decision Intelligence",
+        "supported_languages": "Supported Languages",
+        "satellite_intelligence": "Satellite Intelligence",
+        "fishing_scope": "Fishing • Safety • Navigation",
+        "hazard_scope": "Hazards • Surveillance • Response",
+        "research_scope": "Ocean Science • Analysis • Trends",
+    },
+    "hi": {
+        "tour_guide": "टूर गाइड",
+        "advisory_language": "सलाह की भाषा",
+        "clear_chat": "चैट साफ़ करें",
+        "current_mode": "वर्तमान मोड",
+        "contextual_query_tools": "संदर्भक प्रश्न उपकरण",
+        "orca_intelligence": "ORCA इंटेलिजेंस (आर्किटेक्चर)",
+        "select_role": "भूमिका चुनें:",
+        "chat_placeholder": "समुद्री स्थिति, मछली क्षेत्र या सुरक्षा के बारे में पूछें...",
+        "weather_location": "मौसम स्थान",
+        "time_window": "समय窗口",
+        "run_weather_check": "मौसम जाँच चलाएँ",
+        "return_dashboard": "डैशबोर्ड पर लौटें",
+        "marine_intel": "सागरीय निर्णय बौद्धिकता",
+        "supported_languages": "समर्थित भाषाएँ",
+        "satellite_intelligence": "उपग्रह बौद्धिकता",
+        "fishing_scope": "मछली पकड़ना • सुरक्षा • नौवहन",
+        "hazard_scope": "खतरे • निगरानी • प्रतिक्रिया",
+        "research_scope": "समुद्री विज्ञान • विश्लेषण • रुझान",
+        "welcome": "ORCA में आपका स्वागत है! आप {mode} मोड में कार्य कर रहे हैं।",
+        "try_asking": "यह पूछकर देखें:",
+        "switch_roles": "डैशबोर्ड के ऊपर मछुआरा, तटीय प्राधिकरण या समुद्री शोधकर्ता चुनें।",
+    },
+    "ta": {
+        "tour_guide": "சுற்றுலா வழிகாட்டி",
+        "advisory_language": "அறிவுரைக் மொழி",
+        "clear_chat": "சாட் அழி",
+        "current_mode": "நடப்பு பயன்முறை",
+        "contextual_query_tools": "சூழல் கேள்வி கருவிகள்",
+        "orca_intelligence": "ORCA நுண்ணறிவு (கட்டமைப்பு)",
+        "select_role": "பாத்திரத்தைத் தேர்ந்தெடுக்கவும்:",
+        "chat_placeholder": "கடல் நிலை, மீன்பிடி மண்டலங்கள் அல்லது பாதுகாப்பு பற்றி கேளுங்கள்...",
+        "weather_location": "வானிலை இடம்",
+        "time_window": "நேர சாளரம்",
+        "run_weather_check": "வானிலை சரிபார்ப்பு",
+        "return_dashboard": "டாஷ்போர்டுக்கு திரும்பு",
+        "marine_intel": "கடல் முடிவெடுக்கும் நுண்ணறிவு",
+        "supported_languages": "ஆதரிக்கப்படும் மொழிகள்",
+        "satellite_intelligence": "செயற்கைக்கோள் நுண்ணறிவு",
+        "fishing_scope": "மீன்பிடி • பாதுகாப்பு • வழிசெலுத்தல்",
+        "hazard_scope": "அபாயங்கள் • கண்காணிப்பு • பதில் நடவடிக்கை",
+        "research_scope": "கடல் அறிவியல் • பகுப்பாய்வு • போக்குகள்",
+        "welcome": "ORCA-க்கு வரவேற்கிறோம்! நீங்கள் {mode} பயன்முறையில் இருக்கிறீர்கள்.",
+        "try_asking": "இவற்றைக் கேட்கலாம்:",
+        "switch_roles": "டாஷ்போர்டின் மேலே மீனவர், கடலோர ஆணையம் அல்லது கடல் ஆராய்ச்சியாளரைத் தேர்ந்தெடுக்கவும்.",
+    },
+    "te": {
+        "tour_guide": "టూర్ గైడ్",
+        "advisory_language": "సలహా భాష",
+        "clear_chat": "చాట్ను క్లియర్ చేయండి",
+        "current_mode": "ప్రస్తుత మోడ్",
+        "contextual_query_tools": "సందర్భ ఆధారిత ప్రశ్న సాధనాలు",
+        "orca_intelligence": "ORCA ఇంటెలిజెన్స్ (ఆర్కిటెక్చర్)",
+        "select_role": "రోల్ని ఎంచుకోండి:",
+        "chat_placeholder": "సముద్ర పరిస్థితి, చేపల ప్రాంతాలు లేదా భద్రత గురించి అడిగండి...",
+        "weather_location": "వాతావరణ స్థానం",
+        "time_window": "సమయం విండో",
+        "run_weather_check": "వాతావరణను తనిఖీ చేయండి",
+        "return_dashboard": "డాష్‌బోర్డ్కు తిరిగి వెళ్ళు",
+        "marine_intel": "సముద్ర నిర్ణయ నైపుణ్యం",
+        "supported_languages": "మద్దతు ఉన్న భాషలు",
+        "satellite_intelligence": "ఉపగ్రహ మేధస్సు",
+        "fishing_scope": "చేపల వేట • భద్రత • నావిగేషన్",
+        "hazard_scope": "ప్రమాదాలు • పర్యవేక్షణ • స్పందన",
+        "research_scope": "సముద్ర శాస్త్రం • విశ్లేషణ • పోకడలు",
+        "welcome": "ORCAకు స్వాగతం! మీరు {mode} మోడ్‌లో ఉన్నారు.",
+        "try_asking": "ఇవీ అడగండి:",
+        "switch_roles": "డాష్‌బోర్డ్ పైన మత్స్యకారుడు, తీరప్రాంత అధికారం లేదా సముద్ర పరిశోధకుడిని ఎంచుకోండి.",
+    },
+    "ml": {
+        "tour_guide": "ടൂർ ഗൈഡ്",
+        "advisory_language": "അറിയിപ്പ് ഭാഷ",
+        "clear_chat": "ചാറ്റ് മായ്ക്കുക",
+        "current_mode": "നിലവിലെ മോഡ്",
+        "contextual_query_tools": "സന്ദർഭപരമായ ചോദ്യ ഉപകരണങ്ങൾ",
+        "orca_intelligence": "ORCA ഇന്റലിജൻസ് (ആർക്കിടെക്ചർ)",
+        "select_role": "രാലെ തിരഞ്ഞെടുക്കുക:",
+        "chat_placeholder": "കടലിലെ അവസ്ഥ, മത്സ്യ മേഖല അല്ലെങ്കിൽ സുരക്ഷയെക്കുറിച്ച് ചോദിക്കൂ...",
+        "weather_location": "കാലാവസ്ഥ സ്ഥലം",
+        "time_window": "സമയ വിൻഡോ",
+        "run_weather_check": "കാലാവസ്ഥ പരിശോധിക്കുക",
+        "return_dashboard": "ഡാഷ്‌ബോർഡിലേയ്ക്ക് തിരിച്ചുപോവുക",
+        "marine_intel": "സമുദ്ര തീരുമാന വിവേകം",
+        "supported_languages": "പിന്തുണയ്ക്കുന്ന ഭാഷകൾ",
+        "satellite_intelligence": "ഉപഗ്രഹ ബുദ്ധിവിവരം",
+        "fishing_scope": "മത്സ്യബന്ധനം • സുരക്ഷ • നാവിഗേഷൻ",
+        "hazard_scope": "അപകടങ്ങൾ • നിരീക്ഷണം • പ്രതികരണം",
+        "research_scope": "സമുദ്രശാസ്ത്രം • വിശകലനം • പ്രവണതകൾ",
+        "welcome": "ORCA-യിലേക്ക് സ്വാഗതം! നിങ്ങൾ {mode} മോഡിലാണ്.",
+        "try_asking": "ഇവ ചോദിക്കാം:",
+        "switch_roles": "ഡാഷ്‌ബോർഡിന്റെ മുകളിൽ മത്സ്യത്തൊഴിലാളി, തീരദേശ അതോറിറ്റി അല്ലെങ്കിൽ സമുദ്ര ഗവേഷകനെ തിരഞ്ഞെടുക്കുക.",
+    },
+    "kn": {
+        "tour_guide": "ಮಾರ್ಗದರ್ಶಿ",
+        "advisory_language": "ಸಲಹೆಯ ಭಾಷೆ",
+        "clear_chat": "ಚಾಟ್ ತೆರವುಗೊಳಿಸಿ",
+        "current_mode": "ಪ್ರಸ್ತುತ ಮೋಡ್",
+        "contextual_query_tools": "ಸಂದರ್ಭಾಧಾರಿತ ಪ್ರಶ್ನೆ ಉಪಕರಣಗಳು",
+        "orca_intelligence": "ORCA ಬುದ್ಧಿಮತ್ತೆ (ವಿನ್ಯಾಸ)",
+        "select_role": "ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
+        "chat_placeholder": "ಸಮುದ್ರದ ಪರಿಸ್ಥಿತಿ, ಮೀನುಗಾರಿಕೆ ವಲಯಗಳು ಅಥವಾ ಸುರಕ್ಷತೆಯ ಬಗ್ಗೆ ಕೇಳಿ...",
+        "weather_location": "ಹವಾಮಾನ ಸ್ಥಳ",
+        "time_window": "ಸಮಯಾವಧಿ",
+        "run_weather_check": "ಹವಾಮಾನ ಪರಿಶೀಲನೆ ನಡೆಸಿ",
+        "return_dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹಿಂತಿರುಗಿ",
+        "marine_intel": "ಸಾಗರ ನಿರ್ಧಾರ ಬುದ್ಧಿಮತ್ತೆ",
+        "supported_languages": "ಬೆಂಬಲಿತ ಭಾಷೆಗಳು",
+        "satellite_intelligence": "ಉಪಗ್ರಹ ಬುದ್ಧಿಮತ್ತೆ",
+        "fishing_scope": "ಮೀನುಗಾರಿಕೆ • ಸುರಕ್ಷತೆ • ಸಂಚಾರ",
+        "hazard_scope": "ಅಪಾಯಗಳು • ಮೇಲ್ವಿಚಾರಣೆ • ಪ್ರತಿಕ್ರಿಯೆ",
+        "research_scope": "ಸಾಗರ ವಿಜ್ಞಾನ • ವಿಶ್ಲೇಷಣೆ • ಪ್ರವೃತ್ತಿಗಳು",
+        "welcome": "ORCA ಗೆ ಸ್ವಾಗತ! ನೀವು {mode} ಮೋಡ್‌ನಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತಿದ್ದೀರಿ.",
+        "try_asking": "ಇವುಗಳನ್ನು ಕೇಳಿ:",
+        "switch_roles": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ನ ಮೇಲ್ಭಾಗದಲ್ಲಿ ಮೀನುಗಾರ, ಕರಾವಳಿ ಪ್ರಾಧಿಕಾರ ಅಥವಾ ಸಮುದ್ರ ಸಂಶೋಧಕರನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+        "fisherman": "🎣 ಮೀನುಗಾರ",
+        "authority": "🚨 ಕರಾವಳಿ ಪ್ರಾಧಿಕಾರ",
+        "researcher": "🔬 ಸಮುದ್ರ ಸಂಶೋಧಕ",
+    },
+    "bn": {
+        "tour_guide": "নির্দেশিকা", "advisory_language": "পরামর্শের ভাষা", "clear_chat": "চ্যাট পরিষ্কার করুন",
+        "current_mode": "বর্তমান মোড", "contextual_query_tools": "প্রাসঙ্গিক প্রশ্নের সরঞ্জাম",
+        "orca_intelligence": "ORCA বুদ্ধিমত্তা (স্থাপত্য)", "select_role": "ভূমিকা নির্বাচন করুন:",
+        "chat_placeholder": "সমুদ্রের অবস্থা, মাছ ধরার অঞ্চল বা নিরাপত্তা সম্পর্কে জিজ্ঞাসা করুন...",
+        "weather_location": "আবহাওয়ার স্থান", "time_window": "সময়ের পরিসর", "run_weather_check": "আবহাওয়া পরীক্ষা চালান",
+        "return_dashboard": "ড্যাশবোর্ডে ফিরে যান", "marine_intel": "সামুদ্রিক সিদ্ধান্ত বুদ্ধিমত্তা",
+        "supported_languages": "সমর্থিত ভাষা", "satellite_intelligence": "উপগ্রহ বুদ্ধিমত্তা",
+        "fishing_scope": "মাছ ধরা • নিরাপত্তা • নেভিগেশন", "hazard_scope": "বিপদ • নজরদারি • প্রতিক্রিয়া",
+        "research_scope": "সমুদ্র বিজ্ঞান • বিশ্লেষণ • প্রবণতা", "welcome": "ORCA-তে স্বাগতম! আপনি {mode} মোডে আছেন।",
+        "try_asking": "এগুলো জিজ্ঞাসা করুন:", "switch_roles": "ড্যাশবোর্ডের উপরে জেলে, উপকূলীয় কর্তৃপক্ষ বা সামুদ্রিক গবেষক নির্বাচন করুন।",
+    },
+    "mr": {
+        "tour_guide": "मार्गदर्शक", "advisory_language": "सल्ल्याची भाषा", "clear_chat": "चॅट साफ करा",
+        "current_mode": "सध्याचा मोड", "contextual_query_tools": "संदर्भ प्रश्न साधने",
+        "orca_intelligence": "ORCA बुद्धिमत्ता (रचना)", "select_role": "भूमिका निवडा:",
+        "chat_placeholder": "समुद्राची स्थिती, मासेमारी क्षेत्रे किंवा सुरक्षिततेबद्दल विचारा...",
+        "weather_location": "हवामानाचे ठिकाण", "time_window": "कालावधी", "run_weather_check": "हवामान तपासा",
+        "return_dashboard": "डॅशबोर्डवर परत जा", "marine_intel": "सागरी निर्णय बुद्धिमत्ता",
+        "supported_languages": "समर्थित भाषा", "satellite_intelligence": "उपग्रह बुद्धिमत्ता",
+        "fishing_scope": "मासेमारी • सुरक्षा • नेव्हिगेशन", "hazard_scope": "धोके • निरीक्षण • प्रतिसाद",
+        "research_scope": "समुद्र विज्ञान • विश्लेषण • कल", "welcome": "ORCA मध्ये स्वागत! तुम्ही {mode} मोडमध्ये आहात.",
+        "try_asking": "हे विचारून पाहा:", "switch_roles": "डॅशबोर्डच्या वर मच्छीमार, किनारी प्राधिकरण किंवा सागरी संशोधक निवडा.",
+    },
+    "gu": {
+        "tour_guide": "માર્ગદર્શક", "advisory_language": "સલાહની ભાષા", "clear_chat": "ચેટ સાફ કરો",
+        "current_mode": "વર્તમાન મોડ", "contextual_query_tools": "સંદર્ભ પ્રશ્ન સાધનો",
+        "orca_intelligence": "ORCA બુદ્ધિ (આર્કિટેક્ચર)", "select_role": "ભૂમિકા પસંદ કરો:",
+        "chat_placeholder": "સમુદ્રની સ્થિતિ, માછીમારી વિસ્તારો અથવા સલામતી વિશે પૂછો...",
+        "weather_location": "હવામાનનું સ્થળ", "time_window": "સમયગાળો", "run_weather_check": "હવામાન તપાસો",
+        "return_dashboard": "ડેશબોર્ડ પર પાછા જાઓ", "marine_intel": "દરિયાઈ નિર્ણય બુદ્ધિ",
+        "supported_languages": "સમર્થિત ભાષાઓ", "satellite_intelligence": "સેટેલાઇટ બુદ્ધિ",
+        "fishing_scope": "માછીમારી • સલામતી • નેવિગેશન", "hazard_scope": "જોખમો • દેખરેખ • પ્રતિસાદ",
+        "research_scope": "સમુદ્ર વિજ્ઞાન • વિશ્લેષણ • વલણો", "welcome": "ORCAમાં આપનું સ્વાગત છે! તમે {mode} મોડમાં છો.",
+        "try_asking": "આ પૂછો:", "switch_roles": "ડેશબોર્ડની ઉપર માછીમાર, દરિયાકાંઠા સત્તા અથવા દરિયાઈ સંશોધક પસંદ કરો.",
+    },
+}
+
+
+def get_ui_text(key: str, default: str | None = None) -> str:
+    lang = st.session_state.get("orca_lang", "en")
+    return UI_TEXT.get(lang, UI_TEXT["en"]).get(key, default or key)
+
+
+PERSONA_LABELS = {
+    "en": {"fisherman": "🎣 Artisanal Fisherman", "authority": "🚨 Coastal Authority", "researcher": "🔬 Marine Researcher"},
+    "hi": {"fisherman": "🎣 मछुआरा", "authority": "🚨 तटीय प्राधिकरण", "researcher": "🔬 समुद्री शोधकर्ता"},
+    "ta": {"fisherman": "🎣 மீனவர்", "authority": "🚨 கடலோர ஆணையம்", "researcher": "🔬 கடல் ஆராய்ச்சியாளர்"},
+    "te": {"fisherman": "🎣 మత్స్యకారుడు", "authority": "🚨 తీరప్రాంత అధికారం", "researcher": "🔬 సముద్ర పరిశోధకుడు"},
+    "ml": {"fisherman": "🎣 മത്സ്യത്തൊഴിലാളി", "authority": "🚨 തീരദേശ അതോറിറ്റി", "researcher": "🔬 സമുദ്ര ഗവേഷകൻ"},
+    "kn": {"fisherman": "🎣 ಮೀನುಗಾರ", "authority": "🚨 ಕರಾವಳಿ ಪ್ರಾಧಿಕಾರ", "researcher": "🔬 ಸಮುದ್ರ ಸಂಶೋಧಕ"},
+    "bn": {"fisherman": "🎣 জেলে", "authority": "🚨 উপকূলীয় কর্তৃপক্ষ", "researcher": "🔬 সামুদ্রিক গবেষক"},
+    "mr": {"fisherman": "🎣 मच्छीमार", "authority": "🚨 किनारी प्राधिकरण", "researcher": "🔬 सागरी संशोधक"},
+    "gu": {"fisherman": "🎣 માછીમાર", "authority": "🚨 દરિયાકાંઠા સત્તા", "researcher": "🔬 દરિયાઈ સંશોધક"},
+}
+
+
+def persona_label_for(role: str) -> str:
+    lang = st.session_state.get("orca_lang", "en")
+    labels = PERSONA_LABELS.get(lang, PERSONA_LABELS["en"])
+    return labels[role]
 
 CARD_LOCALIZATION = {
     "en": {
@@ -4416,7 +4604,7 @@ with st.sidebar:
         """, unsafe_allow_html=True)
     st.markdown("<p style='font-size:1.05rem;font-weight:800;color:#F8FAFC;margin:2px 0 0 0;text-align:center;'>ORCA OS</p><p style='font-size:0.72rem;color:#64B6D0;margin:0 0 10px 0;text-align:center;'>Marine Decision Intelligence</p>", unsafe_allow_html=True)
 
-    if st.button("🗑️ Clear Chat", use_container_width=True):
+    if st.button(f"🗑️ {get_ui_text('clear_chat')}", use_container_width=True):
         st.session_state.messages = []
         st.session_state.current_map = None
         st.session_state.active_nav_view = "dashboard"
@@ -4429,26 +4617,26 @@ with st.sidebar:
         st.session_state.current_persona = st.session_state.stakeholder_persona_radio
 
     _sidebar_persona_label = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
-    if "Fisherman" in _sidebar_persona_label:
+    if _sidebar_persona_label.startswith("🎣") or _sidebar_persona_label == "fisherman":
         _sidebar_badge_icon = "🎣"
-        _sidebar_badge_name = "Artisanal Fisherman"
-        _sidebar_badge_scope = "Fishing • Safety • Navigation"
+        _sidebar_badge_name = persona_label_for("fisherman").split(" ", 1)[1]
+        _sidebar_badge_scope = get_ui_text("fishing_scope")
         _sidebar_persona = "fisherman"
-    elif "Authority" in _sidebar_persona_label:
+    elif _sidebar_persona_label.startswith("🚨") or _sidebar_persona_label == "coastal_authority":
         _sidebar_badge_icon = "🚨"
-        _sidebar_badge_name = "Coastal Authority"
-        _sidebar_badge_scope = "Hazards • Surveillance • Response"
+        _sidebar_badge_name = persona_label_for("authority").split(" ", 1)[1]
+        _sidebar_badge_scope = get_ui_text("hazard_scope")
         _sidebar_persona = "coastal_authority"
     else:
         _sidebar_badge_icon = "🔬"
-        _sidebar_badge_name = "Marine Researcher"
-        _sidebar_badge_scope = "Ocean Science • Analysis • Trends"
+        _sidebar_badge_name = persona_label_for("researcher").split(" ", 1)[1]
+        _sidebar_badge_scope = get_ui_text("research_scope")
         _sidebar_persona = "researcher"
 
     st.markdown(f"""
     <div style="background:#0B2638; border:1px solid #1E3A52; border-radius:10px; padding:10px 12px; margin-bottom:12px;">
         <div style="font-size:0.65rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#0EA5A8;">
-            CURRENT MODE
+            {get_ui_text('current_mode')}
         </div>
         <div style="font-size:0.88rem; font-weight:700; color:#F8FAFC; margin-top:2px;">
             {_sidebar_badge_icon} {_sidebar_badge_name}
@@ -4462,12 +4650,12 @@ with st.sidebar:
     show_sst = True
 
     # ── Contextual Query Tools ────────────────────────────────────────────────
-    with st.expander("⚡ Contextual Query Tools", expanded=False):
+    with st.expander(f"⚡ {get_ui_text('contextual_query_tools')}", expanded=False):
         st.caption("Trigger multi-agent orchestration for specific locations.")
-        manual_location = st.text_input("Weather Location", placeholder="e.g. Kochi, Veraval", key="sb_weather_loc")
-        manual_time = st.selectbox("Time Window", ["today", "tomorrow", "3 days"], key="sb_weather_time")
+        manual_location = st.text_input(get_ui_text("weather_location"), placeholder="e.g. Kochi, Veraval", key="sb_weather_loc")
+        manual_time = st.selectbox(get_ui_text("time_window"), ["today", "tomorrow", "3 days"], key="sb_weather_time")
 
-        if st.button("🔍 Run Weather Check", use_container_width=True):
+        if st.button(f"🔍 {get_ui_text('run_weather_check')}", use_container_width=True):
             if manual_location.strip():
                 with st.spinner(f"Querying weather for **{manual_location}**..."):
                     orch_result = orchestrator_run({
@@ -4547,7 +4735,7 @@ with st.sidebar:
                 st.rerun()
 
     # ── Section 10: ORCA INTELLIGENCE ─────────────────────────────────────────
-    with st.expander("🧠 ORCA INTELLIGENCE (Architecture)", expanded=False):
+    with st.expander(f"🧠 {get_ui_text('orca_intelligence')}", expanded=False):
         st.markdown("""
 <div style="font-size:0.75rem;line-height:1.6;color:#94A3B8;">
   <p style="font-weight:700;color:#F8FAFC;margin:0 0 6px 0;">Multi-Agent Orchestration Flow</p>
@@ -4585,7 +4773,7 @@ with col1:
             <img src="data:image/png;base64,{LOGO_B64}" class="orca-hero-logo" alt="ORCA Logo">
             <div class="orca-hero-text">
                 <span class="orca-hero-title">ORCA</span>
-                <span class="orca-hero-subtitle">Satellite Intelligence</span>
+                <span class="orca-hero-subtitle">{get_ui_text("satellite_intelligence")}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -4594,13 +4782,13 @@ with col1:
         <div class="orca-hero-header" style="margin: 0 !important;">
             <div class="orca-hero-text">
                 <span class="orca-hero-title">🌊 ORCA</span>
-                <span class="orca-hero-subtitle">Satellite Intelligence</span>
+                <span class="orca-hero-subtitle">{get_ui_text("satellite_intelligence")}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
 with col2:
-    if st.button("Tour Guide", key="tour_header", use_container_width=True):
+    if st.button(get_ui_text("tour_guide"), key="tour_header", use_container_width=True):
         st.session_state.open_tour_modal = True
         st.session_state.active_nav_view = "dashboard"
         st.rerun()
@@ -4611,7 +4799,7 @@ with col3:
     lang_labels = [f"{LANG_FLAG.get(k, '🌐')} {LANG_DISPLAY[k]}" for k in lang_keys]
     curr_idx = lang_keys.index(st.session_state.orca_lang) if st.session_state.orca_lang in lang_keys else 0
     selected_lang_label = st.selectbox(
-        "Advisory Language",
+        get_ui_text("advisory_language"),
         options=lang_labels,
         index=curr_idx,
         label_visibility="collapsed",
@@ -4620,6 +4808,8 @@ with col3:
     new_lang = lang_keys[lang_labels.index(selected_lang_label)]
     if new_lang != st.session_state.orca_lang:
         st.session_state.orca_lang = new_lang
+        st.session_state.messages = []
+        st.session_state.current_map = None
         st.rerun()
 
 st.markdown("<hr class='orca-nav-divider'>", unsafe_allow_html=True)
@@ -4635,9 +4825,9 @@ render_product_tour(force_open=_force_tour)
 # ─────────────────────────────────────────────────────────────────────────────
 
 persona_options = [
-    "🎣 Artisanal Fisherman",
-    "🚨 Coastal Authority",
-    "🔬 Marine Researcher",
+    persona_label_for("fisherman"),
+    persona_label_for("authority"),
+    persona_label_for("researcher"),
 ]
 
 def _on_persona_change():
@@ -4649,23 +4839,23 @@ def _on_persona_change():
     st.session_state.current_map = None
     st.rerun()
 
-current_stored = st.session_state.get("current_persona", "🎣 Artisanal Fisherman")
+current_stored = st.session_state.get("current_persona", "fisherman")
 default_idx = 0
 for idx, opt in enumerate(persona_options):
     if (opt == current_stored
-            or (current_stored == "fisherman" and "Fisherman" in opt)
-            or (current_stored == "coastal_authority" and "Authority" in opt)
-            or (current_stored == "researcher" and "Researcher" in opt)
-            or ("Fisherman" in current_stored and "Fisherman" in opt)
-            or ("Authority" in current_stored and "Authority" in opt)
-            or ("Researcher" in current_stored and "Researcher" in opt)):
+            or (current_stored == "fisherman" and opt.startswith("🎣"))
+            or (current_stored == "coastal_authority" and opt.startswith("🚨"))
+            or (current_stored == "researcher" and opt.startswith("🔬"))
+            or (current_stored.startswith("🎣") and opt.startswith("🎣"))
+            or (current_stored.startswith("🚨") and opt.startswith("🚨"))
+            or (current_stored.startswith("🔬") and opt.startswith("🔬"))):
         default_idx = idx
         break
 # Wrap the st.radio persona selector in its own dedicated st.container()
 sticky_persona_container = st.container(key="sticky_persona_container")
 with sticky_persona_container:
     persona_label = st.radio(
-        "Select Role:",
+        get_ui_text("select_role"),
         persona_options,
         index=default_idx,
         key="stakeholder_persona_radio",
@@ -4681,9 +4871,9 @@ if st.session_state.get("current_persona") != persona_label:
     st.session_state.current_map = None
 
 # Resolve internal persona key
-if "Fisherman" in persona_label or persona_label == "fisherman":
+if persona_label.startswith("🎣") or persona_label == "fisherman":
     persona = "fisherman"
-elif "Authority" in persona_label or persona_label == "coastal_authority":
+elif persona_label.startswith("🚨") or persona_label == "coastal_authority":
     persona = "coastal_authority"
 else:
     persona = "researcher"
@@ -4955,7 +5145,56 @@ else:
     if not st.session_state.messages:
         with st.chat_message("assistant"):
             clean_mode = persona_label.split("\n")[0].strip()
-            if persona == "coastal_authority":
+            if st.session_state.orca_lang == "kn":
+                if persona == "coastal_authority":
+                    welcome_text = f"""
+👋 **ORCA ಕಾರ್ಯಾಚರಣೆಗಳಿಗೆ ಸ್ವಾಗತ!** ನೀವು **{clean_mode}** ಮೋಡ್‌ನಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತಿದ್ದೀರಿ.
+
+**{get_ui_text('try_asking')}**
+- *"ಚೆನ್ನೈ ಬಳಿಯ ಚಂಡಮಾರುತದ ಅಪಾಯವನ್ನು ಪರಿಶೀಲಿಸಿ"*
+- *"ವಿಶಾಖಪಟ್ಟಣದ ಚಂಡಮಾರುತ ಎಚ್ಚರಿಕೆಯ ಮಟ್ಟ ಏನು?"*
+- *"ಪಾರದೀಪ್ ಬಳಿ ಹಡಗುಗಳನ್ನು ಸ್ಥಳಾಂತರಿಸಬೇಕೇ?"*
+- *"ಮುಂಬೈ ಬಳಿ ಸಕ್ರಿಯ ಎತ್ತರದ ಅಲೆಗಳ ಅಪಾಯ ವಲಯ ತೋರಿಸಿ"*
+"""
+                elif persona == "researcher":
+                    welcome_text = f"""
+👋 **ORCA ಸಂಶೋಧನೆಗೆ ಸ್ವಾಗತ!** ನೀವು **{clean_mode}** ಮೋಡ್‌ನಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತಿದ್ದೀರಿ.
+
+**{get_ui_text('try_asking')}**
+- *"ಕೊಚ್ಚಿ ಬಳಿಯ SST ವ್ಯತ್ಯಾಸ ಮತ್ತು ಕ್ಲೋರೊಫಿಲ್ ಸಾಂದ್ರತೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಿ"*
+- *"ಮಂಗಳೂರಿನ ಬಳಿಯ ಥರ್ಮೋಕ್ಲೈನ್ ಆಳ ಮತ್ತು ಅಪ್‌ವೆಲಿಂಗ್ ಸ್ಥಿತಿ ಏನು?"*
+- *"ವೆರಾವಲ್ ಬಳಿಯ ಸಮುದ್ರ ಉತ್ಪಾದಕತೆಯನ್ನು ಹೋಲಿಸಿ"*
+- *"ತೂತಿಕೋರಿನ್ ಬಳಿಯ ಉಪ್ಪಿನಾಂಶ ಮತ್ತು ಗಾಳಿ ಒತ್ತಡವನ್ನು ಪರಿಶೀಲಿಸಿ"*
+"""
+                else:
+                    lang_pills_str = " · ".join(LANG_DISPLAY.values())
+                    welcome_text = f"""
+👋 **ORCA ಗೆ ಸ್ವಾಗತ!** ನೀವು **{clean_mode}** ಮೋಡ್‌ನಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತಿದ್ದೀರಿ.
+
+🌐 **{get_ui_text('supported_languages')}:** {lang_pills_str}
+
+**{get_ui_text('try_asking')}**
+- *"ಇಂದು ಕೊಚ್ಚಿ ಬಳಿ ಎಲ್ಲಿ ಮೀನು ಹಿಡಿಯಬಹುದು?"*
+- *"ನಾಳೆ ರಾಮೇಶ್ವರಂ ಬಳಿ ಮೀನುಗಾರಿಕೆಗೆ ಹೋಗುವುದು ಸುರಕ್ಷಿತವೇ?"*
+- *"ಮುಂಬೈ ಬಳಿ ಮೀನುಗಾರಿಕೆ ವಲಯಗಳನ್ನು ತೋರಿಸಿ"*
+
+{get_ui_text('switch_roles')} 🧭
+"""
+            elif st.session_state.orca_lang != "en":
+                lang_pills_str = " · ".join(LANG_DISPLAY.values())
+                welcome_text = f"""
+👋 **{get_ui_text('welcome').format(mode=clean_mode)}**
+
+🌐 **{get_ui_text('supported_languages')}:** {lang_pills_str}
+
+**{get_ui_text('try_asking')}**
+- *Kochi* — sea conditions
+- *PFZ* — fishing zones
+- *Safety* — voyage risk
+
+{get_ui_text('switch_roles')} 🧭
+"""
+            elif persona == "coastal_authority":
                 welcome_text = f"""
 👋 **Welcome to ORCA Operations!** Operating in **{clean_mode}** mode.
 
@@ -4998,148 +5237,21 @@ Switch between **Fisherman**, **Coastal Authority**, and **Researcher** at the t
             st.markdown(welcome_text.strip())
 
 
-# ── Browser-Side Voice Diagnostics (Logs to DevTools Console) ────────────────
-import streamlit.components.v1 as _voice_components
-_voice_components.html("""
-<script>
-(function() {
-    try {
-        const pWin = window.parent || window;
-        if (pWin.__orca_voice_logged) return;
-        pWin.__orca_voice_logged = true;
-
-        if (!pWin.navigator || !pWin.navigator.mediaDevices) {
-            console.warn("[VOICE] navigator.mediaDevices not supported (check if HTTPS or localhost is used)");
-            return;
-        }
-
-        // Intercept getUserMedia for permission logging
-        const origGUM = pWin.navigator.mediaDevices.getUserMedia.bind(pWin.navigator.mediaDevices);
-        pWin.navigator.mediaDevices.getUserMedia = async function(constraints) {
-            console.log("[VOICE] Requesting microphone permission with constraints:", constraints);
-            try {
-                const stream = await origGUM(constraints);
-                console.log("[VOICE] Microphone permission: granted");
-                return stream;
-            } catch (err) {
-                console.error("[VOICE] Microphone permission: denied or error:", err.name, err.message);
-                throw err;
-            }
-        };
-
-        // Intercept MediaRecorder for lifecycle logging
-        if (pWin.MediaRecorder) {
-            const OrigMR = pWin.MediaRecorder;
-            pWin.MediaRecorder = function(stream, options) {
-                console.log("[VOICE] Initializing MediaRecorder with options:", options);
-                const recorder = new OrigMR(stream, options);
-                let chunkCount = 0;
-                let totalBytes = 0;
-
-                recorder.addEventListener("start", () => {
-                    chunkCount = 0;
-                    totalBytes = 0;
-                    console.log("[VOICE] Recording started");
-                });
-
-                recorder.addEventListener("dataavailable", (evt) => {
-                    if (evt.data && evt.data.size > 0) {
-                        chunkCount++;
-                        totalBytes += evt.data.size;
-                        console.log(`[VOICE] Audio chunks received: ${chunkCount} (${evt.data.size} bytes)`);
-                    }
-                });
-
-                recorder.addEventListener("stop", () => {
-                    console.log(`[VOICE] Recording stopped`);
-                    console.log(`[VOICE] Audio size: ${totalBytes} bytes`);
-                    console.log(`[VOICE] MIME type: ${recorder.mimeType || options?.mimeType || 'audio/webm'}`);
-                    console.log(`[VOICE] Sending audio for transcription`);
-                });
-
-                return recorder;
-            };
-            pWin.MediaRecorder.prototype = OrigMR.prototype;
-            pWin.MediaRecorder.isTypeSupported = OrigMR.isTypeSupported.bind(OrigMR);
-        }
-    } catch (e) {
-        console.warn("[VOICE] Diagnostic observer initialization note:", e);
-    }
-})();
-</script>
-""", height=0)
-
-# ── Unified Query Input (Voice & Text) ────────────────────────────────────────
-# Clean, unobtrusive feedback banner near the input box if notice or error exists
-if voice_error := st.session_state.get("voice_error"):
-    st.markdown(
-        f'<div style="background:#FEF2F2; border:1px solid #FECACA; color:#DC2626; border-radius:8px; '
-        f'padding:6px 14px; font-size:0.82rem; margin:6px 0; display:flex; align-items:center; gap:8px;">'
-        f'<span>⚠️</span> <span>{voice_error}</span>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
-elif voice_notice := st.session_state.get("voice_notice"):
-    st.markdown(
-        f'<div style="background:#F0FDFA; border:1px solid #CCFBF1; color:#0F766E; border-radius:8px; '
-        f'padding:6px 14px; font-size:0.82rem; margin:6px 0; display:flex; align-items:center; gap:8px;">'
-        f'<span>🎙️</span> <span>{voice_notice}</span>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
-
+# ── Unified Query Input (Text-only, no voice) ───────────────────────────────
 user_query = None
 is_voice_query = False
 
-# Unified single chat input container at the bottom with audio recording enabled
 chat_val = st.chat_input(
-    placeholder="Ask about sea conditions, fishing zones, or safety...",
-    accept_audio=True,
+    placeholder=get_ui_text("chat_placeholder"),
     key="orca_chat_input",
 )
 
 if chat_val is not None:
-    audio_file = getattr(chat_val, "audio", None) if not isinstance(chat_val, str) else None
-    text_content = (getattr(chat_val, "text", chat_val) or "").strip()
-
-    # 1. Spoken query captured inline from the microphone
-    if audio_file is not None:
-        try:
-            audio_bytes = audio_file.getvalue() if hasattr(audio_file, "getvalue") else audio_file.read()
-            mime_type = getattr(audio_file, "type", "audio/wav") or "audio/wav"
-            print(f"[VOICE] Recording stopped")
-            print(f"[VOICE] Audio file received: name={audio_file.name}, size={len(audio_bytes)} bytes, declared_type={mime_type}")
-
-            with st.spinner("🎙️ Transcribing and interpreting dialect with Gemini Multimodal AI..."):
-                transcribed = transcribe_voice_query(audio_bytes, mime_type=mime_type)
-
-            if transcribed:
-                # Pre-populate transcribed text into the SAME text input box for review / editing
-                st.session_state["orca_chat_input"] = transcribed
-                st.session_state["voice_notice"] = "Speech transcribed! You can edit above or submit."
-                st.session_state["is_voice_query"] = True
-                st.session_state.pop("voice_error", None)
-            else:
-                st.session_state["voice_error"] = "No speech detected in audio. Please speak closer to the microphone and try again."
-                st.session_state.pop("voice_notice", None)
-        except Exception as e:
-            err_msg = str(e)
-            if "GEMINI_API_KEY" in err_msg:
-                st.session_state["voice_error"] = "Gemini API key is not configured. Please set GEMINI_API_KEY in .env."
-            else:
-                st.session_state["voice_error"] = f"Voice transcription error: {e}. Please try again or type below."
-            st.session_state.pop("voice_notice", None)
-        st.rerun()
-
-    # 2. Text submitted (either typed directly or after editing transcribed voice)
-    elif text_content:
+    text_content = (str(chat_val) or "").strip()
+    if text_content:
         user_query = text_content
-        is_voice_query = st.session_state.pop("is_voice_query", False)
-        # Clear transient notices upon submission
-        st.session_state.pop("voice_notice", None)
-        st.session_state.pop("voice_error", None)
 
-# 3. Route user query through Orchestrator
+# Route user query through Orchestrator
 if user_query:
     st.session_state.active_nav_view = "dashboard"
 
