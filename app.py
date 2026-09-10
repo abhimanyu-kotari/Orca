@@ -1193,27 +1193,92 @@ input:focus {
     color: #FFF7ED !important;
 }
 
+/* ── Unified Voice & Text Chat Input (Bottom bar) ───────────── */
 [data-testid="stChatInput"] {
-    background: rgba(245, 248, 250, 0.92) !important;
+    background: rgba(245, 248, 250, 0.95) !important;
     border-top: 1px solid var(--orca-line) !important;
-    padding-top: 10px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    backdrop-filter: blur(8px) !important;
 }
 
 [data-testid="stChatInput"] > div {
-    border: 1px solid var(--orca-line) !important;
-    border-radius: 14px !important;
+    border: 1.5px solid var(--orca-line) !important;
+    border-radius: 16px !important;
     background: #FFFFFF !important;
-    box-shadow: 0 8px 22px rgba(16, 42, 67, 0.10) !important;
+    box-shadow: 0 8px 24px rgba(16, 42, 67, 0.08) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    padding: 2px 4px !important;
 }
 
-[data-testid="stChatInput"] textarea {
+[data-testid="stChatInput"] > div:focus-within {
+    border-color: #0EA5A8 !important;
+    box-shadow: 0 8px 24px rgba(14, 165, 168, 0.16) !important;
+}
+
+/* Unpack button container so microphone sits on the left and submit on the right */
+div[data-testid="stChatInput"] div:has(> button[data-testid="stChatInputMicButton"]),
+div[data-testid="stChatInput"] div:has(> button[data-testid="stChatInputSubmitButton"]),
+div[data-testid="stChatInput"] div[class*="e1vtqrcf6"] {
+    display: contents !important;
+}
+
+/* Microphone button on the LEFT */
+div[data-testid="stChatInput"] button[data-testid="stChatInputMicButton"] {
+    order: -1 !important;
+    margin-left: 6px !important;
+    margin-right: 4px !important;
+    color: #0EA5A8 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease !important;
+}
+
+div[data-testid="stChatInput"] button[data-testid="stChatInputMicButton"]:hover {
+    color: #087F83 !important;
+    background: #F0FDFA !important;
+    transform: scale(1.08) !important;
+}
+
+/* Text area in the MIDDLE */
+div[data-testid="stChatInput"] div:has(> textarea[data-testid="stChatInputTextArea"]) {
+    order: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+div[data-testid="stChatInput"] textarea {
     background: transparent !important;
     color: var(--orca-ink) !important;
+    font-size: 0.92rem !important;
 }
 
-[data-testid="stChatInput"] textarea::placeholder {
+div[data-testid="stChatInput"] textarea::placeholder {
     color: var(--orca-muted) !important;
     opacity: 1 !important;
+}
+
+/* Submit button on the RIGHT */
+div[data-testid="stChatInput"] button[data-testid="stChatInputSubmitButton"] {
+    order: 1 !important;
+    margin-right: 6px !important;
+    color: #0EA5A8 !important;
+    border-radius: 50% !important;
+    transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+div[data-testid="stChatInput"] button[data-testid="stChatInputSubmitButton"]:hover {
+    color: #087F83 !important;
+    transform: scale(1.08) !important;
+}
+
+/* Active recording controls */
+div[data-testid="stChatInput"] button[data-testid="stChatInputCancelButton"] {
+    order: 2 !important;
+}
+div[data-testid="stChatInput"] button[data-testid="stChatInputApproveButton"] {
+    order: 3 !important;
 }
 
 details {
@@ -4850,36 +4915,68 @@ Switch between **Fisherman**, **Coastal Authority**, and **Researcher** at the t
             st.markdown(welcome_text.strip())
 
 
-# ── Voice Input (Dialect-Aware Voice AI) & Chat Input ─────────────────────────
-st.markdown("##### 🎙️ Voice & Text Query Console")
-st.caption("Record a voice query in any Indian regional language (Tamil, Hindi, Malayalam, Telugu, Gujarati, Bengali, Odia, etc.), or type below.")
-
-# Native Streamlit audio recorder
-voice_audio = st.audio_input("Record Voice Query:", key="orca_voice_recorder")
+# ── Unified Query Input (Voice & Text) ────────────────────────────────────────
+# Clean, unobtrusive feedback banner near the input box if notice or error exists
+if voice_error := st.session_state.get("voice_error"):
+    st.markdown(
+        f'<div style="background:#FEF2F2; border:1px solid #FECACA; color:#DC2626; border-radius:8px; '
+        f'padding:6px 14px; font-size:0.82rem; margin:6px 0; display:flex; align-items:center; gap:8px;">'
+        f'<span>⚠️</span> <span>{voice_error}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+elif voice_notice := st.session_state.get("voice_notice"):
+    st.markdown(
+        f'<div style="background:#F0FDFA; border:1px solid #CCFBF1; color:#0F766E; border-radius:8px; '
+        f'padding:6px 14px; font-size:0.82rem; margin:6px 0; display:flex; align-items:center; gap:8px;">'
+        f'<span>🎙️</span> <span>{voice_notice}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 user_query = None
 is_voice_query = False
 
-# 1. Process voice query if audio captured
-if voice_audio is not None:
-    import hashlib
-    audio_bytes = voice_audio.getvalue()
-    audio_hash = hashlib.md5(audio_bytes).hexdigest()
+# Unified single chat input container at the bottom with audio recording enabled
+chat_val = st.chat_input(
+    placeholder="Ask about sea conditions, fishing zones, or safety...",
+    accept_audio=True,
+    key="orca_chat_input",
+)
 
-    if st.session_state.get("last_processed_audio_hash") != audio_hash:
-        st.session_state["last_processed_audio_hash"] = audio_hash
-        with st.spinner("🎙️ Transcribing and interpreting dialect with Gemini Multimodal AI..."):
-            transcribed = transcribe_voice_query(audio_bytes, mime_type=voice_audio.type)
+if chat_val is not None:
+    audio_file = getattr(chat_val, "audio", None) if not isinstance(chat_val, str) else None
+    text_content = (getattr(chat_val, "text", chat_val) or "").strip()
+
+    # 1. Spoken query captured inline from the microphone
+    if audio_file is not None:
+        try:
+            audio_bytes = audio_file.getvalue() if hasattr(audio_file, "getvalue") else audio_file.read()
+            mime_type = getattr(audio_file, "type", "audio/wav") or "audio/wav"
+            with st.spinner("🎙️ Transcribing and interpreting dialect with Gemini Multimodal AI..."):
+                transcribed = transcribe_voice_query(audio_bytes, mime_type=mime_type)
+
             if transcribed:
-                user_query = transcribed
-                is_voice_query = True
+                # Pre-populate transcribed text into the SAME text input box for review / editing
+                st.session_state["orca_chat_input"] = transcribed
+                st.session_state["voice_notice"] = "Speech transcribed! You can edit above or submit."
+                st.session_state["is_voice_query"] = True
+                st.session_state.pop("voice_error", None)
             else:
-                st.warning("⚠️ Could not clearly transcribe the voice audio. Please verify your GEMINI_API_KEY or speak closer to the microphone, or type below.")
+                st.session_state["voice_error"] = "Couldn't understand the voice. Please try again or type your question."
+                st.session_state.pop("voice_notice", None)
+        except Exception as e:
+            st.session_state["voice_error"] = f"Voice processing error: {e}. Please type your question."
+            st.session_state.pop("voice_notice", None)
+        st.rerun()
 
-# 2. Text input fallback
-if text_input := st.chat_input("Ask about sea conditions, fishing zones, or safety (or speak above)..."):
-    user_query = text_input
-    is_voice_query = False
+    # 2. Text submitted (either typed directly or after editing transcribed voice)
+    elif text_content:
+        user_query = text_content
+        is_voice_query = st.session_state.pop("is_voice_query", False)
+        # Clear transient notices upon submission
+        st.session_state.pop("voice_notice", None)
+        st.session_state.pop("voice_error", None)
 
 # 3. Route user query through Orchestrator
 if user_query:
