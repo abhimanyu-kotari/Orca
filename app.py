@@ -369,6 +369,8 @@ h1 { font-size: 1.8rem !important; }
 h2 { font-size: 1.3rem !important; }
 h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
 h4 { color: #334155 !important; font-size: 0.9rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.06em !important; }
+.surveillance-sector h4 { color: #F8FAFC !important; }
+.research-console h4 { color: #F8FAFC !important; }
 
 /* ── Responsive Brand Hero Header ──────────────────────────── */
 .orca-hero-header {
@@ -5208,11 +5210,11 @@ else:
             )
         elif persona == "coastal_authority":
             st.markdown("""
-<div style="background:linear-gradient(135deg, #061826, #0f2d42); border:1px solid #1e3a5f; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
+<div class="surveillance-sector" style="background:linear-gradient(135deg, #061826, #0f2d42); border:1px solid #1e3a5f; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
     <div>
       <span style="background:#dc2626; color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; letter-spacing:0.05em;">ACTIVE SURVEILLANCE SECTOR</span>
-      <h4 style="margin:6px 0 2px 0; color:#F8FAFC; font-size:1.1rem;">Zone 4: Chennai–Ennore Maritime Corridor</h4>
+    <h4 style="margin:6px 0 2px 0; color:#F8FAFC !important; font-size:1.1rem;">Zone 4: Chennai–Ennore Maritime Corridor</h4>
       <p style="margin:0; font-size:12px; color:#94A3B8;">Pre-loaded operational baseline · 15 km Coastal Exclusion Geofence · IMD Cyclone Watch</p>
     </div>
     <div style="text-align:right;">
@@ -5240,7 +5242,7 @@ else:
                 st.caption("Baseline surveillance map for Zone 4 (Chennai Sector). Enter a query below or use quick action buttons to analyze any sector.")
         elif persona == "researcher":
             st.markdown("""
-<div style="background:linear-gradient(135deg, #061826, #0A2540); border:1px solid #1e3a5f; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
+<div class="research-console" style="background:linear-gradient(135deg, #061826, #0A2540); border:1px solid #1e3a5f; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
     <div>
       <span style="background:#0284c7; color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; letter-spacing:0.05em;">OCEANOGRAPHIC RESEARCH CONSOLE</span>
