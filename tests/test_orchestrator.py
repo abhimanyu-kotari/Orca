@@ -272,6 +272,21 @@ class TestOrchestratorUnit(unittest.TestCase):
         result = orchestrator_run({"query": "where to fish"})
         self.assertIn("intent_result", result)
 
+    def test_native_script_queries_classify_without_translation(self):
+        """Hindi and Kannada marine queries must not fall into unknown offline."""
+        from agents.intent_agent import _classify_intent_from_text, _extract_location_from_text
+
+        self.assertEqual(
+            _classify_intent_from_text("मुंबई के पास मछली कहाँ पकड़ें?"),
+            "pfz_location",
+        )
+        self.assertEqual(
+            _classify_intent_from_text("ಕೊಚ್ಚಿ ಬಳಿ ಮೀನುಗಾರಿಕೆ ಸುರಕ್ಷಿತವೇ?"),
+            "safety_check",
+        )
+        self.assertEqual(_extract_location_from_text("मुंबई के पास मछली कहाँ पकड़ें?"), "Mumbai")
+        self.assertEqual(_extract_location_from_text("ಕೊಚ್ಚಿ ಬಳಿ ಮೀನುಗಾರಿಕೆ"), "Kochi")
+
     # ------------------------------------------------------------------ #
     # 4. Structural guarantees
     # ------------------------------------------------------------------ #

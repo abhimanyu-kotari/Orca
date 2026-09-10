@@ -160,6 +160,15 @@ CANONICAL_LOCATION_NAMES = {
     "kumta": "Kumta",
 }
 
+NATIVE_LOCATION_ALIASES = {
+    # Hindi spellings
+    "मुंबई": "Mumbai", "चेन्नई": "Chennai", "कोच्चि": "Kochi", "कोची": "Kochi",
+    "रामेश्वरम": "Rameswaram", "मंगलुरु": "Mangalore", "मैंगलोर": "Mangalore",
+    # Kannada spellings
+    "ಮುಂಬೈ": "Mumbai", "ಚೆನ್ನೈ": "Chennai", "ಕೊಚ್ಚಿ": "Kochi", "ರಾಮೇಶ್ವರಂ": "Rameswaram",
+    "ಮಂಗಳೂರು": "Mangalore", "ಗೋವಾ": "Goa",
+}
+
 NON_LOCATION_WORDS = {
     "what", "where", "when", "which", "how", "safe", "fishing", "sea", "near", "morning",
     "today", "tomorrow", "ocean", "weather", "wave", "condition", "the", "is", "it",
@@ -217,6 +226,10 @@ def _extract_location_from_text(text: str) -> str | None:
     """
     if not text:
         return None
+
+    for native_name, canonical_name in NATIVE_LOCATION_ALIASES.items():
+        if native_name in text:
+            return canonical_name
 
     lower_text = text.lower()
 
@@ -354,6 +367,20 @@ def _classify_intent_from_text(text: str) -> str:
     if not text:
         return "unknown"
     q = text.lower()
+
+    # Keep common native-script queries usable when the translation service is
+    # unavailable. Gemini and the translation fallback still handle richer phrasing.
+    native_terms = {
+        "alert_query": ("चक्रवात", "तूफान", "चेतावनी", "बाढ़", "ಮಾರುತ", "ಚಂಡಮಾರುತ", "ಎಚ್ಚರಿಕೆ", "ಪ್ರವಾಹ"),
+        "safety_check": ("सुरक्षित", "सुरक्षा", "खतरा", "जा सकता", "ಸುರಕ್ಷಿತ", "ಸುರಕ್ಷತೆ", "ಅಪಾಯ", "ಹೋಗಬಹುದೇ"),
+        "route_planning": ("मार्ग", "रास्ता", "नौवहन", "ಮಾರ್ಗ", "ದಾರಿ", "ಸಂಚಾರ"),
+        "ecosystem_query": ("क्लोरोफिल", "समुद्री तापमान", "पारिस्थितिकी", "ಕ್ಲೋರೊಫಿಲ್", "ಸಮುದ್ರದ ತಾಪಮಾನ", "ಪರಿಸರ"),
+        "weather_check": ("मौसम", "समुद्र की स्थिति", "लहर", "हवा", "बारिश", "ಹವಾಮಾನ", "ಸಮುದ್ರದ ಪರಿಸ್ಥಿತಿ", "ಅಲೆ", "ಗಾಳಿ", "ಮಳೆ"),
+        "pfz_location": ("मछली", "मछली पकड़", "मछली पकड़ने", "मछली क्षेत्र", "मछली कहाँ", "ಮೀನು", "ಮೀನುಗಾರಿಕೆ", "ಮೀನುಗಾರಿಕೆ ವಲಯ", "ಮೀನು ಎಲ್ಲಿದೆ"),
+    }
+    for intent, terms in native_terms.items():
+        if any(term in text for term in terms):
+            return intent
 
     # 1. Alert / Disaster
     if any(w in q for w in ["cyclone", "surge", "hazard", "alert", "warning", "lightning", "flood", "disaster", "evacuat", "tsunami", "gale"]):
