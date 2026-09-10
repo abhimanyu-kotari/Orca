@@ -61,7 +61,7 @@ from tools.weather_tools import (
 # It maps this to its own internal httpx transport — we cannot pass an
 # httpx.Timeout object directly (Pydantic rejects it with a ValidationError).
 # 10 s is sufficient for API responses; fast-falls back on SSL/network issues.
-_GEMINI_TIMEOUT_S: int = 10
+_GEMINI_TIMEOUT_S: int = 60
 
 _gemini = None
 

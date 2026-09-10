@@ -783,13 +783,13 @@ div.stButton > button {
 /* ── Route card ──────────────────────────────── */
 .route-card {
     background: linear-gradient(135deg, #0B2638 0%, #0F3554 100%);
-    border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; color: #F8FAFC;
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; color: #F8FAFC !important;
 }
-.route-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #64B6D0; margin-bottom: 8px; }
-.route-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; color: #F8FAFC; }
+.route-card p.route-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9ED9EA !important; margin-bottom: 8px; }
+.route-card p.route-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; color: #F8FAFC !important; }
 .route-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 16px; }
-.route-stat-val { font-size: 1.05rem; font-weight: 700; color: #22D3EE; display: block; }
-.route-stat-lbl { font-size: 0.68rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.06em; }
+.route-card .route-stat-val { font-size: 1.05rem; font-weight: 700; color: #67E8F9 !important; display: block; }
+.route-card .route-stat-lbl { font-size: 0.68rem; color: #CBD5E1 !important; text-transform: uppercase; letter-spacing: 0.06em; }
 .route-cta {
     display: inline-block; background: #0EA5A8; color: white !important;
     font-weight: 700; font-size: 0.85rem; padding: 10px 24px;
@@ -1217,6 +1217,20 @@ div.stButton > button:hover {
 div.stButton > button[kind="primary"] {
     background: var(--orca-teal) !important;
     border-color: var(--orca-teal) !important;
+}
+
+/* Keep button labels readable on Streamlit's dark secondary-button surface. */
+div.stButton > button:not([kind="primary"]) {
+    background: #FFFFFF !important;
+    color: #0B2638 !important;
+    border-color: var(--orca-line) !important;
+}
+
+div.stButton > button:not([kind="primary"]) p,
+div.stButton > button:not([kind="primary"]) span,
+div.stButton > button[kind="primary"] p,
+div.stButton > button[kind="primary"] span {
+    color: inherit !important;
 }
 
 div[data-baseweb="select"],

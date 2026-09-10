@@ -54,7 +54,7 @@ from tools.map_tools import _generate_coastal_geofence_coords
 from tools.eo_tools import generate_eo_grid
 from tools.weather_tools import get_coordinates, format_clean_location
 
-_GEMINI_TIMEOUT_S = 30
+_GEMINI_TIMEOUT_S = 60
 _gemini = None
 
 
@@ -165,7 +165,7 @@ def _localize_synthesis(text: str, language: str, language_code: str) -> str:
             resp = client.models.generate_content(
                 model=GEMINI_MODEL,
                 contents=prompt,
-                config={"http_options": {"timeout": 4}},
+                config={"http_options": {"timeout": 60}},
             )
             if resp and resp.text:
                 clean = resp.text.strip().removeprefix("```markdown").removeprefix("```").removesuffix("```").strip()

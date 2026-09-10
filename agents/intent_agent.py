@@ -53,7 +53,7 @@ from config import GEMINI_API_KEY, GEMINI_MODEL
 # ─────────────────────────────────────────────────────────────────────────────
 # Gemini client — same pattern as weather_agent.py
 # ─────────────────────────────────────────────────────────────────────────────
-_GEMINI_TIMEOUT_S: int = 10
+_GEMINI_TIMEOUT_S: int = 60
 
 _gemini = None
 

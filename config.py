@@ -69,4 +69,4 @@ MARINE_API_BASE: str = "https://marine-api.open-meteo.com/v1/marine"
 DEFAULT_FORECAST_DAYS: int = 3
 
 # Gemini model used for all agent reasoning calls
-GEMINI_MODEL: str = "gemini-3.6-flash"
+GEMINI_MODEL: str = "gemini-2.5-flash"
