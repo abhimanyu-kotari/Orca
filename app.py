@@ -73,6 +73,64 @@ def format_clean_location(full_loc: str) -> str:
     return primary
 
 
+def detect_audio_mime_type(audio_bytes: bytes, fallback_mime: str = "audio/wav") -> str:
+    """
+    Detect the true audio container MIME type from binary magic bytes.
+    Streamlit's JS records WebM/Opus via MediaRecorder but packages it in a File
+    with hardcoded type 'audio/wav'. Gemini strictly validates MIME type against
+    actual file payload, rejecting mismatched MIME types with 400 INVALID_ARGUMENT.
+    """
+    if not audio_bytes or len(audio_bytes) < 4:
+        return fallback_mime or "audio/wav"
+
+    # WebM EBML header: 0x1A 0x45 0xDF 0xA3
+    if audio_bytes.startswith(b"\x1a\x45\xdf\xa3"):
+        return "audio/webm"
+
+    # RIFF WAVE
+    if audio_bytes.startswith(b"RIFF") and len(audio_bytes) >= 12 and audio_bytes[8:12] == b"WAVE":
+        return "audio/wav"
+
+    # OGG container
+    if audio_bytes.startswith(b"OggS"):
+        return "audio/ogg"
+
+    # MP3 (ID3v2 header or sync frame)
+    if audio_bytes.startswith(b"ID3") or (audio_bytes[0] == 0xFF and (audio_bytes[1] & 0xE0) == 0xE0):
+        return "audio/mp3"
+
+    # FLAC
+    if audio_bytes.startswith(b"fLaC"):
+        return "audio/flac"
+
+    # MP4 / M4A / AAC container (Safari / WebKit / iOS)
+    if len(audio_bytes) >= 12 and (b"ftyp" in audio_bytes[:16] or b"moov" in audio_bytes[:16]):
+        return "audio/mp4"
+
+    # AAC ADTS header
+    if audio_bytes[0] == 0xFF and (audio_bytes[1] & 0xF6) == 0xF0:
+        return "audio/aac"
+
+    return fallback_mime or "audio/wav"
+
+
+_voice_client = None
+
+
+def _get_voice_gemini_client():
+    """Lazily instantiate or return cached Gemini client with connection reuse."""
+    global _voice_client
+    if _voice_client is not None:
+        return _voice_client
+    from config import get_gemini_api_key
+    api_key = get_gemini_api_key()
+    if not api_key:
+        return None
+    from google import genai
+    _voice_client = genai.Client(api_key=api_key, http_options={"timeout": 60})
+    return _voice_client
+
+
 def transcribe_voice_query(audio_bytes: bytes, mime_type: str = "audio/wav") -> str:
     """
     Transcribe spoken user query using Gemini multimodal capabilities.
@@ -81,35 +139,60 @@ def transcribe_voice_query(audio_bytes: bytes, mime_type: str = "audio/wav") -> 
     from config import get_gemini_api_key, GEMINI_MODEL
     api_key = get_gemini_api_key()
     if not api_key:
+        print("[VOICE] ERROR: GEMINI_API_KEY is not configured in environment or Streamlit secrets.")
+        raise ValueError("GEMINI_API_KEY is missing. Please configure it in .env or secrets.toml.")
+
+    if not audio_bytes or len(audio_bytes) < 128:
+        print(f"[VOICE] Audio too small ({len(audio_bytes) if audio_bytes else 0} bytes) to contain audible speech.")
         return ""
+
+    true_mime = detect_audio_mime_type(audio_bytes, fallback_mime=mime_type)
+    print(f"[VOICE] Audio size: {len(audio_bytes)} bytes")
+    print(f"[VOICE] MIME type: {true_mime} (declared was: {mime_type})")
+    print(f"[VOICE] Sending audio for transcription to Gemini ({GEMINI_MODEL})...")
+
     try:
-        from google import genai
         from google.genai import types
 
-        client = genai.Client(api_key=api_key, http_options={"timeout": 30})
+        client = _get_voice_gemini_client()
+        if client is None:
+            raise RuntimeError("Failed to initialize Gemini client.")
+
         prompt = (
-            "You are the dialect-aware voice transcriber for ORCA (ISRO Marine Decision Intelligence).\n"
-            "The user is speaking an oceanographic or maritime query (e.g. asking about weather, fish zones, cyclone alerts, or routes).\n"
-            "Task: Transcribe the spoken audio query verbatim into text.\n"
+            "You are an accurate multilingual voice transcriber for ORCA (ISRO Marine Decision Intelligence).\n"
+            "Task: Transcribe the user's spoken audio query verbatim into plain text.\n"
+            "- If the user speaks in English, transcribe accurately in English.\n"
             "- If the user speaks in an Indian regional language (such as Tamil, Hindi, Malayalam, Telugu, Gujarati, Bengali, Odia, Marathi, or Kannada), "
-            "transcribe it faithfully in that language script or clear phonetic transliteration.\n"
-            "- Return ONLY the plain transcribed text query string. Do NOT add quotation marks, greetings, explanations, or markdown formatting."
+            "transcribe it faithfully in that language script or standard phonetic transliteration.\n"
+            "- Return ONLY the plain transcribed query string. Do NOT add quotation marks, greetings, explanations, punctuation commentary, or markdown formatting.\n"
+            "- If there is no discernible speech or only static/silence, return exactly: [NO_SPEECH]"
         )
+
         response = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=[
                 types.Part.from_bytes(
                     data=audio_bytes,
-                    mime_type=mime_type or "audio/wav",
+                    mime_type=true_mime,
                 ),
                 prompt,
             ],
         )
-        return (response.text or "").strip()
+
+        raw_text = (response.text or "").strip().strip('"').strip("'")
+        print(f"[VOICE] Transcription response received")
+        print(f'[VOICE] Transcript: "{raw_text}"')
+
+        if raw_text in ("[NO_SPEECH]", "NO_SPEECH", "None", ""):
+            return ""
+
+        return raw_text
+
     except Exception as e:
+        print(f"[VOICE] Gemini API Error during transcription: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
-        return ""
+        raise e
 
 
 def render_folium_map(fmap, height: int = 360) -> None:
@@ -4915,6 +4998,77 @@ Switch between **Fisherman**, **Coastal Authority**, and **Researcher** at the t
             st.markdown(welcome_text.strip())
 
 
+# ── Browser-Side Voice Diagnostics (Logs to DevTools Console) ────────────────
+import streamlit.components.v1 as _voice_components
+_voice_components.html("""
+<script>
+(function() {
+    try {
+        const pWin = window.parent || window;
+        if (pWin.__orca_voice_logged) return;
+        pWin.__orca_voice_logged = true;
+
+        if (!pWin.navigator || !pWin.navigator.mediaDevices) {
+            console.warn("[VOICE] navigator.mediaDevices not supported (check if HTTPS or localhost is used)");
+            return;
+        }
+
+        // Intercept getUserMedia for permission logging
+        const origGUM = pWin.navigator.mediaDevices.getUserMedia.bind(pWin.navigator.mediaDevices);
+        pWin.navigator.mediaDevices.getUserMedia = async function(constraints) {
+            console.log("[VOICE] Requesting microphone permission with constraints:", constraints);
+            try {
+                const stream = await origGUM(constraints);
+                console.log("[VOICE] Microphone permission: granted");
+                return stream;
+            } catch (err) {
+                console.error("[VOICE] Microphone permission: denied or error:", err.name, err.message);
+                throw err;
+            }
+        };
+
+        // Intercept MediaRecorder for lifecycle logging
+        if (pWin.MediaRecorder) {
+            const OrigMR = pWin.MediaRecorder;
+            pWin.MediaRecorder = function(stream, options) {
+                console.log("[VOICE] Initializing MediaRecorder with options:", options);
+                const recorder = new OrigMR(stream, options);
+                let chunkCount = 0;
+                let totalBytes = 0;
+
+                recorder.addEventListener("start", () => {
+                    chunkCount = 0;
+                    totalBytes = 0;
+                    console.log("[VOICE] Recording started");
+                });
+
+                recorder.addEventListener("dataavailable", (evt) => {
+                    if (evt.data && evt.data.size > 0) {
+                        chunkCount++;
+                        totalBytes += evt.data.size;
+                        console.log(`[VOICE] Audio chunks received: ${chunkCount} (${evt.data.size} bytes)`);
+                    }
+                });
+
+                recorder.addEventListener("stop", () => {
+                    console.log(`[VOICE] Recording stopped`);
+                    console.log(`[VOICE] Audio size: ${totalBytes} bytes`);
+                    console.log(`[VOICE] MIME type: ${recorder.mimeType || options?.mimeType || 'audio/webm'}`);
+                    console.log(`[VOICE] Sending audio for transcription`);
+                });
+
+                return recorder;
+            };
+            pWin.MediaRecorder.prototype = OrigMR.prototype;
+            pWin.MediaRecorder.isTypeSupported = OrigMR.isTypeSupported.bind(OrigMR);
+        }
+    } catch (e) {
+        console.warn("[VOICE] Diagnostic observer initialization note:", e);
+    }
+})();
+</script>
+""", height=0)
+
 # ── Unified Query Input (Voice & Text) ────────────────────────────────────────
 # Clean, unobtrusive feedback banner near the input box if notice or error exists
 if voice_error := st.session_state.get("voice_error"):
@@ -4953,6 +5107,9 @@ if chat_val is not None:
         try:
             audio_bytes = audio_file.getvalue() if hasattr(audio_file, "getvalue") else audio_file.read()
             mime_type = getattr(audio_file, "type", "audio/wav") or "audio/wav"
+            print(f"[VOICE] Recording stopped")
+            print(f"[VOICE] Audio file received: name={audio_file.name}, size={len(audio_bytes)} bytes, declared_type={mime_type}")
+
             with st.spinner("🎙️ Transcribing and interpreting dialect with Gemini Multimodal AI..."):
                 transcribed = transcribe_voice_query(audio_bytes, mime_type=mime_type)
 
@@ -4963,10 +5120,14 @@ if chat_val is not None:
                 st.session_state["is_voice_query"] = True
                 st.session_state.pop("voice_error", None)
             else:
-                st.session_state["voice_error"] = "Couldn't understand the voice. Please try again or type your question."
+                st.session_state["voice_error"] = "No speech detected in audio. Please speak closer to the microphone and try again."
                 st.session_state.pop("voice_notice", None)
         except Exception as e:
-            st.session_state["voice_error"] = f"Voice processing error: {e}. Please type your question."
+            err_msg = str(e)
+            if "GEMINI_API_KEY" in err_msg:
+                st.session_state["voice_error"] = "Gemini API key is not configured. Please set GEMINI_API_KEY in .env."
+            else:
+                st.session_state["voice_error"] = f"Voice transcription error: {e}. Please try again or type below."
             st.session_state.pop("voice_notice", None)
         st.rerun()
 

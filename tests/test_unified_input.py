@@ -1,51 +1,87 @@
 """
 tests/test_unified_input.py — Tests for ORCA's unified voice & text input interface.
-Verifies transcription helpers, session state prefilling, error handling,
-and chat input submission flows.
+Verifies transcription helpers, MIME-type autodetection, session state prefilling,
+error handling, and chat input submission flows.
 """
 
 import unittest
 from unittest.mock import patch, MagicMock
-from app import transcribe_voice_query
+from app import transcribe_voice_query, detect_audio_mime_type
 from streamlit.testing.v1 import AppTest
 
 
 class TestUnifiedVoiceInput(unittest.TestCase):
 
+    def test_detect_audio_mime_type(self):
+        """Verifies binary magic byte detection for various browser audio containers."""
+        # WebM
+        webm_bytes = b"\x1a\x45\xdf\xa3" + b"\x00" * 200
+        self.assertEqual(detect_audio_mime_type(webm_bytes, "audio/wav"), "audio/webm")
+
+        # WAV
+        wav_bytes = b"RIFF" + b"\x00" * 4 + b"WAVEfmt " + b"\x00" * 100
+        self.assertEqual(detect_audio_mime_type(wav_bytes, "audio/octet-stream"), "audio/wav")
+
+        # OGG
+        ogg_bytes = b"OggS\x00\x02" + b"\x00" * 100
+        self.assertEqual(detect_audio_mime_type(ogg_bytes, "audio/wav"), "audio/ogg")
+
+        # MP3 (ID3)
+        mp3_bytes = b"ID3\x03\x00" + b"\x00" * 100
+        self.assertEqual(detect_audio_mime_type(mp3_bytes, "audio/wav"), "audio/mp3")
+
+        # MP4 / M4A
+        mp4_bytes = b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 100
+        self.assertEqual(detect_audio_mime_type(mp4_bytes, "audio/wav"), "audio/mp4")
+
+        # Fallback for unknown
+        unknown_bytes = b"\x01\x02\x03\x04" + b"\x00" * 100
+        self.assertEqual(detect_audio_mime_type(unknown_bytes, "audio/wav"), "audio/wav")
+
     def test_transcribe_voice_query_no_api_key(self):
-        """When GEMINI_API_KEY is missing, transcribe_voice_query returns empty string."""
+        """When GEMINI_API_KEY is missing, transcribe_voice_query raises ValueError."""
         with patch("config.get_gemini_api_key", return_value=""):
-            result = transcribe_voice_query(b"fake_audio_bytes", mime_type="audio/wav")
+            with self.assertRaises(ValueError):
+                transcribe_voice_query(b"fake_audio_bytes" * 20, mime_type="audio/wav")
+
+    def test_transcribe_voice_query_too_short(self):
+        """Audio under 128 bytes returns empty string without calling Gemini API."""
+        with patch("config.get_gemini_api_key", return_value="fake-key"):
+            result = transcribe_voice_query(b"short", mime_type="audio/wav")
             self.assertEqual(result, "")
 
     @patch("config.get_gemini_api_key", return_value="fake-api-key")
-    @patch("google.genai.Client")
-    def test_transcribe_voice_query_success(self, mock_client_cls, mock_get_key):
-        """Verifies Gemini multimodal transcription extracts the spoken text verbatim."""
+    @patch("app._get_voice_gemini_client")
+    def test_transcribe_voice_query_webm_mime_autodetected(self, mock_get_client, mock_get_key):
+        """Verifies that WebM bytes labeled as audio/wav are corrected to audio/webm when sent to Gemini."""
         mock_client = MagicMock()
-        mock_client_cls.return_value = mock_client
+        mock_get_client.return_value = mock_client
         mock_response = MagicMock()
-        mock_response.text = "मुंबई के पास मछली कहाँ पकड़ें?"
+        mock_response.text = "Where are the safest fishing zones today?"
         mock_client.models.generate_content.return_value = mock_response
 
-        audio_bytes = b"RIFF....WAVEfmt "
-        result = transcribe_voice_query(audio_bytes, mime_type="audio/wav")
+        # WebM magic header
+        webm_audio = b"\x1a\x45\xdf\xa3" + b"\x00" * 300
+        result = transcribe_voice_query(webm_audio, mime_type="audio/wav")
 
-        self.assertEqual(result, "मुंबई के पास मछली कहाँ पकड़ें?")
+        self.assertEqual(result, "Where are the safest fishing zones today?")
         mock_client.models.generate_content.assert_called_once()
         call_kwargs = mock_client.models.generate_content.call_args[1]
-        self.assertIn("contents", call_kwargs)
+        contents = call_kwargs["contents"]
+        # Verify that the Part was created with audio/webm despite declared audio/wav
+        part = contents[0]
+        self.assertEqual(part.inline_data.mime_type, "audio/webm")
 
     @patch("config.get_gemini_api_key", return_value="fake-api-key")
-    @patch("google.genai.Client")
-    def test_transcribe_voice_query_exception_returns_empty(self, mock_client_cls, mock_get_key):
-        """When an exception occurs during transcription, returns an empty string without crashing."""
+    @patch("app._get_voice_gemini_client")
+    def test_transcribe_voice_query_exception_raised(self, mock_get_client, mock_get_key):
+        """When Gemini API throws an exception, it is re-raised so caller can provide clear error feedback."""
         mock_client = MagicMock()
-        mock_client_cls.return_value = mock_client
-        mock_client.models.generate_content.side_effect = RuntimeError("Network timeout")
+        mock_get_client.return_value = mock_client
+        mock_client.models.generate_content.side_effect = RuntimeError("Connection timed out")
 
-        result = transcribe_voice_query(b"fake_audio", mime_type="audio/wav")
-        self.assertEqual(result, "")
+        with self.assertRaises(RuntimeError):
+            transcribe_voice_query(b"RIFF....WAVEfmt " + b"\x00" * 200, mime_type="audio/wav")
 
 
 class TestChatInputAppTest(unittest.TestCase):
