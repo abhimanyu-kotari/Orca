@@ -1179,6 +1179,18 @@ h1, h2, h3, h4, p, label, button, input, textarea {
 h1, h2, h3, h4 {
     color: var(--orca-ink) !important;
 }
+.query-result-authority h4,
+.query-result-authority h4 b,
+.query-result-authority .result-kicker,
+.query-result-authority .result-title,
+.query-result-authority .result-meta,
+.query-result-authority .result-classification,
+.query-result-authority .result-classification b,
+.query-result-researcher h4,
+.query-result-researcher h4 b,
+.query-result-researcher .result-meta {
+    color: #F8FAFC !important;
+}
 
 .orca-hero-header {
     min-height: 40px !important;
@@ -4101,14 +4113,14 @@ def render_authority_response(
     pill_a = f'<span class="alert-severity-pill pill-advisory">🟡 ADVISORY ({n_advisory})</span>' if n_advisory else              f'<span class="alert-severity-pill pill-safe">🟢 ADVISORY (0)</span>'
 
     ctx.markdown(f"""
-<div class="orca-card-dark" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;margin-bottom:4px;">
+<div class="orca-card-dark query-result-authority" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;margin-bottom:4px;">
   <div>
-    <p style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:#64B6D0;text-transform:uppercase;margin:0 0 4px 0;">ORCA Marine Intelligence</p>
-    <p style="font-size:1.2rem;font-weight:800;color:#F8FAFC;margin:0;">COASTAL OPERATIONS CENTER</p>
-    <p style="font-size:0.8rem;color:#94A3B8;margin:4px 0 0 0;">📍 Monitored Sector: {location_str} &nbsp;·&nbsp; {now_str}</p>
+    <p class="result-kicker" style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:#64B6D0;text-transform:uppercase;margin:0 0 4px 0;">ORCA Marine Intelligence</p>
+    <p class="result-title" style="font-size:1.2rem;font-weight:800;color:#F8FAFC;margin:0;">COASTAL OPERATIONS CENTER</p>
+    <p class="result-meta" style="font-size:0.8rem;color:#94A3B8;margin:4px 0 0 0;">📍 Monitored Sector: {location_str} &nbsp;·&nbsp; {now_str}</p>
   </div>
   <div style="text-align:right;">
-    <p style="font-size:0.75rem;color:#CBD5E1;margin:0 0 6px 0;">IMD Classification: {level_dot} <b style="color:#F8FAFC;">{level_label}</b></p>
+    <p class="result-classification" style="font-size:0.75rem;color:#CBD5E1;margin:0 0 6px 0;">IMD Classification: {level_dot} <b style="color:#F8FAFC;">{level_label}</b></p>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">{pill_c}{pill_w}{pill_a}</div>
   </div>
 </div>
@@ -4401,12 +4413,12 @@ def render_researcher_response(
 
     # ── 1. Unified Oceanographic Research Hero Briefing ──────────────────────
     ctx.markdown(f"""
-<div style="background:linear-gradient(135deg, #061826, #0A2540); border:1px solid #1e3a5f; border-radius:12px; padding:14px 18px; margin-bottom:12px;">
+<div class="query-result-researcher" style="background:linear-gradient(135deg, #061826, #0A2540); border:1px solid #1e3a5f; border-radius:12px; padding:14px 18px; margin-bottom:12px;">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
     <div>
       <span style="background:#0284c7; color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; letter-spacing:0.05em;">ISRO OCEANSAT-3 / SENTINEL-3</span>
       <h4 style="margin:4px 0 2px 0; color:#F8FAFC; font-size:1.05rem;">🔬 Oceanographic Observation Sector: <b>{location_str}</b></h4>
-      <p style="margin:0; font-size:12px; color:#94A3B8;">{sst_sensor} (1 km) · {chl_sensor} ({chl_res}) · Climatology: {clim_base}</p>
+    <p class="result-meta" style="margin:0; font-size:12px; color:#94A3B8;">{sst_sensor} (1 km) · {chl_sensor} ({chl_res}) · Climatology: {clim_base}</p>
     </div>
     <div style="text-align:right;">
       <span style="font-size:12px; color:#38bdf8; font-weight:600;">{now_str}</span>
